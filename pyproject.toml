@@ -1,0 +1,26 @@
+[project]
+name = "lc-first"
+version = "0.0.0"
+description = "LC-First: a computational test of the locus coeruleus rate-controller hypothesis"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+# Session 0 needs only config parsing and the plotting theme.
+# Analysis dependencies (numpy, scipy, pymc, ...) are added in the session
+# that first needs them, so every pin in uv.lock is justified by real code.
+dependencies = [
+    "pyyaml",
+    "matplotlib",
+]
+
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "validation: reproduces a published result (tests/validation/)",
+]

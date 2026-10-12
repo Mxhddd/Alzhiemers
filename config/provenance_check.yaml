@@ -1,0 +1,11 @@
+# Session 0 provenance check. Not an analysis: it proves that a run writes a
+# complete provenance header (commit, config hash, lockfile hashes, package
+# versions, seed) and that the plotting theme renders. `make provenance-check`.
+
+# Recorded in the header to show seeds are logged. Nothing random happens in
+# this run; the value is arbitrary (the date this file was written).
+seed: 20261012
+
+# Python distributions whose versions every run header must list. Each module
+# config will carry its own list of the packages its results depend on.
+packages: [pyyaml, matplotlib]
