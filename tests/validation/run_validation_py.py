@@ -21,7 +21,7 @@ from src.common.runlog import start_run
 from src.common.validation import record
 
 CONFIGS = {"baserate": CONFIG_DIR / "baserate.yaml", "dynamics": CONFIG_DIR / "dynamics.yaml",
-           "mediation": CONFIG_DIR / "mediation.yaml"}
+           "mediation": CONFIG_DIR / "mediation.yaml", "network": CONFIG_DIR / "network.yaml"}
 
 
 def main(argv: list[str]) -> int:

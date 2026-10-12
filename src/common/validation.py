@@ -45,6 +45,8 @@ FINGERPRINT_PATHS: dict[str, tuple[str, ...]] = {
     "mediation": ("src/common", "src/mediation", "sim/mediation_sim.py", "tests/validation/test_mediation.py",
                   "tests/validation/targets/mediation_published.yaml", "tests/validation/run_validation_py.py",
                   "config/mediation.yaml"),
+    "network": ("src/common", "src/network", "sim/network_sim.py", "tests/validation/test_network.py",
+                "tests/validation/run_validation_py.py", "config/network.yaml"),
     "baserate": ("src/common", "src/baserate", "sim/baserate_sim.py", "tests/validation/test_baserate.py",
                  "tests/validation/run_validation_py.py", "config/baserate.yaml"),
 }

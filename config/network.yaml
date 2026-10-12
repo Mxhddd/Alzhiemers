@@ -1,0 +1,46 @@
+# Module 6 — network diffusion (Killer 1's geometric cousin), PROJECT_BRIEF.md §5.
+# `null` = researcher must supply. Real data (HCP connectome, ADNI tau-PET) are
+# not yet available; the real path fails loudly until they are.
+
+# Seed for the spin rotations.
+seed: 20261021
+
+data:
+  # RESEARCHER: square, symmetric structural connectome; header row and first
+  # column are region names (same order).
+  connectome: data/raw/connectome.csv
+  # RESEARCHER: one row per region: region, hemisphere (L/R/none), cortical
+  # (true/false), sphere_x, sphere_y, sphere_z (centroid on the hemisphere's
+  # spherical surface; needed only for cortical regions, blank otherwise).
+  regions: data/raw/regions.csv
+  # RESEARCHER: observed regional tau (columns region, value) — the EARLIEST
+  # stage pattern available (late patterns are nearly seed-independent).
+  tau: data/raw/tau_regional.csv
+
+seeds:
+  # RESEARCHER: LC region name(s) in the connectome.
+  lc: null
+  # RESEARCHER: entorhinal region name(s).
+  entorhinal: null
+  # RESEARCHER: control seeds, {label: [region names]} (e.g. a primary sensory area).
+  controls: null
+
+model:
+  # Raj 2012 used the degree-normalised Laplacian; normalisation stops hubs
+  # dominating purely by degree. A choice; the unnormalised one is the alternative.
+  laplacian: normalized
+  # Diffusion-time grid (tau = beta * t) over which each seed's fit is maximised.
+  tau_min: 0.01
+  # Upper end of the grid.
+  tau_max: 50.0
+  # Grid points (log-spaced).
+  n_tau: 400
+  # Two seeds are "indistinguishable" once their predicted cortical patterns
+  # correlate at least this much; the first such tau is the crossover time.
+  crossover_threshold: 0.95
+
+spin:
+  # Rotations for the spatial null; 10000 resolves p down to 1e-4.
+  n_perm: 10000
+  # Parcel reassignment without duplicates (Váša 2018), not nearest-neighbour.
+  method: hungarian
