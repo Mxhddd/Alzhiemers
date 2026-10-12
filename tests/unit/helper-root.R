@@ -12,3 +12,4 @@ source(file.path(lc_test_root, "src", "mr", "estimators.R"))
 for (f in c("regions", "sumstats", "instruments", "coloc", "steiger", "targets")) {
   source(file.path(lc_test_root, "src", "mr", paste0(f, ".R")))
 }
+source(file.path(lc_test_root, "src", "metaanalysis", "meta.R"))

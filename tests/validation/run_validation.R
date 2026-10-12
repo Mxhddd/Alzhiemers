@@ -10,15 +10,24 @@
 options(warn = 2)  # fail loudly: every warning is an error
 source("src/common/provenance.R")
 source("src/common/io.R")
-source("src/mr/harmonise.R")
-source("src/mr/estimators.R")
 source("tests/validation/harness.R")
 
+# Per module: the settings file the validation uses and every source file the
+# validation scripts call into.
+module_setup <- list(
+  mr = list(config = "config/mr_methods.yaml",
+            sources = c("src/mr/harmonise.R", "src/mr/estimators.R", "src/mr/regions.R", "src/mr/sumstats.R")),
+  metaanalysis = list(config = "config/metaanalysis.yaml", sources = "src/metaanalysis/meta.R")
+)
+
 args <- commandArgs(trailingOnly = TRUE)
-if (length(args) != 1) stop("usage: Rscript tests/validation/run_validation.R <module>")
+if (length(args) != 1 || !args[[1]] %in% names(module_setup)) {
+  stop(sprintf("usage: Rscript tests/validation/run_validation.R {%s}", paste(names(module_setup), collapse = ",")))
+}
 module <- args[[1]]
 root <- lc_repo_root()
-config_path <- file.path(root, "config", sprintf("%s_methods.yaml", module))
+for (f in module_setup[[module]]$sources) source(file.path(root, f))
+config_path <- file.path(root, module_setup[[module]]$config)
 settings <- lc_read_yaml(config_path)
 
 target_files <- list.files(file.path(root, "tests", "validation", "targets"), pattern = "\\.yaml$", full.names = TRUE)

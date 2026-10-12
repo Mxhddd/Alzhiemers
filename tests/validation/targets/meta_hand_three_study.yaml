@@ -1,0 +1,19 @@
+# Module 5 validation (brief §5): a hand-computable three-study example. The
+# researcher supplies the inputs AND the arithmetic; the pipeline must agree.
+id: meta_hand_three_study
+module: metaanalysis
+kind: hand_arithmetic
+
+inputs:
+  yi: null              # RESEARCHER: three log effect sizes
+  vi: null              # RESEARCHER: their three sampling variances
+  provided_by: researcher, hand-worked example
+
+expected:
+  fe_estimate: null     # RESEARCHER: inverse-variance fixed-effect estimate
+  fe_se: null           # RESEARCHER
+  q: null               # RESEARCHER: Cochran's Q
+  tau2_dl: null         # RESEARCHER: DerSimonian–Laird tau^2
+  re_dl_estimate: null  # RESEARCHER: DL random-effects estimate
+  re_dl_se: null        # RESEARCHER
+  tolerance: null       # RESEARCHER: absolute tolerance matching the hand rounding

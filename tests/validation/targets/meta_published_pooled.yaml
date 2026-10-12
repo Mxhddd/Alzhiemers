@@ -1,0 +1,25 @@
+# Module 5 validation (brief §5): reproduce a published pooled estimate from
+# the study-level numbers in the same paper. RESEARCHER fields only.
+id: meta_published_pooled
+module: metaanalysis
+kind: meta_published
+
+published:
+  citation: null        # RESEARCHER
+  doi: null             # RESEARCHER
+  locator: null         # RESEARCHER: figure/table with the pooled estimate
+  method: null          # RESEARCHER: REML | DL | FE | ML | PM ... (metafor names)
+  knapp_hartung: null   # RESEARCHER: true if the paper used HKSJ CIs, else false
+  reported_as: null     # RESEARCHER: ratio | log
+  estimate: null        # RESEARCHER
+  ci_lower: null        # RESEARCHER
+  ci_upper: null        # RESEARCHER
+  ci_level: null        # RESEARCHER
+  transcribed_by: null  # RESEARCHER
+  transcribed_on: null  # RESEARCHER
+
+inputs:
+  # Columns: study_id, estimate, ci_lower, ci_upper, ci_level (ratio scale,
+  # as printed in the paper's forest plot / table).
+  studies: data/raw/validation/meta_published_studies.csv
+  provided_by: researcher, transcribed from the same paper's study-level results

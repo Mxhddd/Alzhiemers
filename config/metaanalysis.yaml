@@ -1,0 +1,113 @@
+# Module 5 — meta-analysis and triangulation (PROJECT_BRIEF.md §5).
+# `null` = researcher must supply. The extraction file is researcher-only:
+# code never creates or fills it.
+
+# Seed for anything random (none of the pooling is random; kept for the run header).
+seed: 20261017
+
+extraction:
+  # Hand-extracted by the researcher.
+  file: data/raw/extraction.csv
+  # Transcribed CIs are checked for symmetry on the log scale: the estimate
+  # must sit within this fraction of the half-width from the CI midpoint.
+  # 0.15 tolerates two-decimal rounding; larger asymmetry suggests a
+  # transcription error and stops the run (listing the rows).
+  log_symmetry_tolerance: 0.15
+
+pooling:
+  # Random-effects estimator for between-study variance. REML is less biased
+  # than DerSimonian–Laird (Veroniki 2016); DL is reported alongside.
+  method: REML
+  # Hartung–Knapp–Sidik–Jonkman adjustment: better CI coverage with few
+  # studies (IntHout 2014). A choice; flag if it changes conclusions.
+  knapp_hartung: true
+  # Fisher-scoring controls for REML: step halving and more iterations, the
+  # remedy metafor documents for non-convergence when tau^2 is near 0. Used
+  # for every fit (not only after a failure); still failing is an error.
+  rma_control: {stepadj: 0.5, maxiter: 1000}
+  # Ratio measures pooled together on the log scale. HR, RR and IRR are
+  # treated as comparable for an outcome as rare as incident dementia; ORs are
+  # pooled separately unless the researcher adds them here.
+  combinable_measures: [HR, RR, IRR]
+  # A pooled estimate needs at least this many studies; fewer are listed as
+  # "not pooled" with their individual estimates.
+  min_studies: 2
+
+publication_bias:
+  # Egger test and trim-and-fill only with at least this many studies
+  # (Cochrane Handbook 10.4.3.1: tests are underpowered below 10).
+  min_studies: 10
+
+triangulation:
+  # Which comparator type feeds the triangulation figure. Active comparators
+  # largely cancel confounding by indication (brief §5), so they are used;
+  # non-user comparisons are still pooled and reported, just not triangulated.
+  comparator_type: active
+
+positive_control:
+  # Brief: anticholinergic burden must show its known association with
+  # dementia, or the pipeline is broken. drug_class label in the extraction.
+  drug_class: anticholinergic
+  # Known direction: harmful (ratio > 1). The pooled CI must exclude 1 on this side.
+  expected_direction: harmful
+
+# Pharmacology of each drug class: which MR target it acts on and how. Used
+# to put the drug-use estimate and the MR estimate (per higher expression) on
+# one direction: inhibitors/antagonists mimic LOWER expression, so their
+# expected-concordant MR sign is the opposite of the drug effect's.
+# From the brief's target table. RESEARCHER: confirm, and add a line for
+# every drug_class label used in the extraction (unknown labels stop the run).
+drug_classes:
+  atomoxetine:
+    # Brief: SLC6A2 — atomoxetine (noradrenaline transporter inhibitor).
+    target: SLC6A2
+    # Inhibitor.
+    action: inhibits
+  lipophilic_beta_blocker:
+    # Brief: ADRB1 — lipophilic beta-blockers.
+    target: ADRB1
+    # Antagonist.
+    action: inhibits
+  alpha1_blocker:
+    # Brief: ADRA1A — prazosin, doxazosin (terazosin, alfuzosin).
+    target: ADRA1A
+    # Antagonist.
+    action: inhibits
+  guanfacine:
+    # Brief: ADRA2A — guanfacine is an agonist.
+    target: ADRA2A
+    # Agonist.
+    action: activates
+  dhp_calcium_channel_blocker:
+    # Brief: CACNA1D — isradipine.
+    target: CACNA1D
+    # Blocker.
+    action: inhibits
+  dual_orexin_antagonist:
+    # Brief: HCRTR2 — suvorexant, lemborexant.
+    target: HCRTR2
+    # Antagonist.
+    action: inhibits
+  mao_a_inhibitor:
+    # Brief: MAOA — MAO-A inhibitors.
+    target: MAOA
+    # Inhibitor.
+    action: inhibits
+  disulfiram:
+    # Brief: DBH — disulfiram (DBH inhibition).
+    target: DBH
+    # Inhibitor.
+    action: inhibits
+  anticholinergic:
+    # Positive control; no noradrenergic MR target.
+    target: none
+    # Not used for triangulation.
+    action: none
+
+# The informative active-comparator contrasts (brief §5). Each extraction row
+# carries a `contrast` label; these labels are the subgroups reported first.
+contrasts:
+  - lipophilic_vs_hydrophilic_beta_blocker
+  - alpha1_blocker_vs_tamsulosin
+  - z_drug_vs_dual_orexin_antagonist
+  - atomoxetine_vs_stimulant

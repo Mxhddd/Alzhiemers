@@ -3,6 +3,26 @@
     "Version": "4.3.3",
     "Repositories": [
       {
+        "Name": "BioCsoft",
+        "URL": "https://bioconductor.org/packages/3.18/bioc"
+      },
+      {
+        "Name": "BioCann",
+        "URL": "https://bioconductor.org/packages/3.18/data/annotation"
+      },
+      {
+        "Name": "BioCexp",
+        "URL": "https://bioconductor.org/packages/3.18/data/experiment"
+      },
+      {
+        "Name": "BioCworkflows",
+        "URL": "https://bioconductor.org/packages/3.18/workflows"
+      },
+      {
+        "Name": "BioCbooks",
+        "URL": "https://bioconductor.org/packages/3.18/books"
+      },
+      {
         "Name": "CRAN",
         "URL": "https://cloud.r-project.org"
       }
@@ -181,6 +201,23 @@
         "png"
       ],
       "Hash": "8d6e9f4dce69aec9c588c27ae79be08e"
+    },
+    "Matrix": {
+      "Package": "Matrix",
+      "Version": "1.6-5",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "grDevices",
+        "graphics",
+        "grid",
+        "lattice",
+        "methods",
+        "stats",
+        "utils"
+      ],
+      "Hash": "8c7115cd3a0e048bda2a7cd110549f7a"
     },
     "R6": {
       "Package": "R6",
@@ -629,6 +666,21 @@
       ],
       "Hash": "e1b9c55281c5adc4dd113652d9e26768"
     },
+    "lattice": {
+      "Package": "lattice",
+      "Version": "0.22-5",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "grDevices",
+        "graphics",
+        "grid",
+        "stats",
+        "utils"
+      ],
+      "Hash": "7c5e89f04e72d6611c77451f6331a091"
+    },
     "lifecycle": {
       "Package": "lifecycle",
       "Version": "1.0.4",
@@ -652,6 +704,13 @@
       ],
       "Hash": "7ce2733a9826b3aeb1775d56fd305472"
     },
+    "mathjaxr": {
+      "Package": "mathjaxr",
+      "Version": "1.6-0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "87da6ccdcee6077a7d5719406bf3ae45"
+    },
     "memoise": {
       "Package": "memoise",
       "Version": "2.0.1",
@@ -663,6 +722,40 @@
       ],
       "Hash": "e2817ccf4a065c5d9d7f2cfbe7c1d78c"
     },
+    "metadat": {
+      "Package": "metadat",
+      "Version": "1.2-0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "mathjaxr",
+        "tools",
+        "utils"
+      ],
+      "Hash": "197625f3d9a294849a2759be23f76831"
+    },
+    "metafor": {
+      "Package": "metafor",
+      "Version": "4.4-0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "Matrix",
+        "R",
+        "grDevices",
+        "graphics",
+        "mathjaxr",
+        "metadat",
+        "methods",
+        "nlme",
+        "numDeriv",
+        "pbapply",
+        "stats",
+        "utils"
+      ],
+      "Hash": "e350b77c80601d5ea55cd126be065b1c"
+    },
     "mime": {
       "Package": "mime",
       "Version": "0.12",
@@ -673,6 +766,30 @@
       ],
       "Hash": "18e9c28c1d3ca1560ce30658b22ce104"
     },
+    "nlme": {
+      "Package": "nlme",
+      "Version": "3.1-164",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "graphics",
+        "lattice",
+        "stats",
+        "utils"
+      ],
+      "Hash": "a623a2239e642806158bc4dc3f51565d"
+    },
+    "numDeriv": {
+      "Package": "numDeriv",
+      "Version": "2016.8-1.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "df58958f293b166e4ab885ebcad90e02"
+    },
     "openssl": {
       "Package": "openssl",
       "Version": "2.1.1",
@@ -682,6 +799,17 @@
         "askpass"
       ],
       "Hash": "2a0dc8c6adfb6f032e4d4af82d258ab5"
+    },
+    "pbapply": {
+      "Package": "pbapply",
+      "Version": "1.7-2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "parallel"
+      ],
+      "Hash": "68a2d681e10cf72f0afa1d84d45380e5"
     },
     "pillar": {
       "Package": "pillar",

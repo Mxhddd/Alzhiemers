@@ -1,0 +1,15 @@
+# Module 5 validation (brief §5): simulated homogeneous data must return I^2
+# near zero. Data are generated inside the test from these settings (seeded);
+# nothing is stored. All values are test settings, not empirical numbers.
+id: meta_sim_homogeneous
+module: metaanalysis
+kind: simulation
+
+settings:
+  seed: 20261018          # reproducible draw
+  n_reps: 500             # simulated meta-analyses
+  k: 10                   # studies per meta-analysis
+  true_log_effect: 0.1    # common true effect (arbitrary; homogeneity is what matters)
+  se_min: 0.05            # study standard errors drawn uniformly in [se_min, se_max]
+  se_max: 0.3             # (spread of study sizes)
+  max_median_i2: 0.05     # pass if the median I^2 across replicates is at most this
