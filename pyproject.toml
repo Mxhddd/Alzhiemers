@@ -15,6 +15,7 @@ dependencies = [
     "pandas>=3.0.6",
     "statsmodels>=0.15.0",
     "salib>=1.6.0",
+    "pymc>=5.28.5",
 ]
 
 [dependency-groups]
@@ -28,4 +29,5 @@ testpaths = ["tests"]
 addopts = "-ra --strict-markers"
 markers = [
     "validation: reproduces a published result (tests/validation/)",
+    "slow: takes minutes (MCMC); run by `make test-slow`, which `make all` includes",
 ]

@@ -1,0 +1,108 @@
+# Module 2 — Markov base-rate model (PROJECT_BRIEF.md §5).
+# `null` = researcher must supply; the pipeline stops naming the field.
+
+# Seed for multi-start MLE initial values and for PyMC sampling.
+seed: 20261016
+
+data:
+  # Hand-transcribed by the researcher (brief: never created by code).
+  braak_counts: data/raw/braak_counts.csv
+  # RESEARCHER: ordered stage labels exactly as they appear in the `stage`
+  # column, earliest first (e.g. pretangle and Braak stages). Defines the chain.
+  stage_order: null
+  # RESEARCHER: label of the first CORTICAL stage. The transition into it from
+  # the stage before is the LC -> cortex transition that variant A gates on
+  # amyloid and variant B frees from LC stage.
+  first_cortical_stage: null
+  # RESEARCHER: amyloid-positivity probability by age for variant A
+  # (columns age_lower, age_upper, prevalence, source). Used piecewise-constant
+  # within each age band — no interpolation between bands.
+  amyloid_prevalence: data/raw/amyloid_prevalence.csv
+  # RESEARCHER: published dementia incidence the model never sees, for the
+  # falsification test (columns age_lower, age_upper, rate_per_1000_py, source).
+  dementia_incidence: data/raw/dementia_incidence.csv
+  # RESEARCHER: first stage label counted as clinically demented for the
+  # incidence prediction (an assumption the researcher must own).
+  dementia_threshold_stage: null
+
+solver:
+  # RESEARCHER: integration step (years) for the piecewise matrix exponential,
+  # from the hand error analysis (Q(t1), Q(t2) do not commute). Brief: ask,
+  # never pick.
+  step_years: null
+  # Age at which every person is in the first stage (p(0) = e_0). 0 = birth.
+  start_age: 0
+  # Ages are centred here inside the rates, exp(alpha + beta (t - centre)):
+  # the same model as the brief's exp(alpha + beta t), better conditioned.
+  # Reported alphas are log-rates at this age.
+  age_centre: 50
+  # Age enters the rates as (t - centre) / age_scale, so beta is per decade.
+  # Same model; puts alpha and beta on similar scales, which NUTS needs.
+  age_scale: 10
+  # Stage probabilities for an age band are evaluated at the band midpoint.
+  # A choice; averaging over the band is the alternative.
+  evaluate_at: midpoint
+
+variants:
+  # Brief §5: three variants sharing one interface; none favoured.
+  fit: [A_gated, B_independent, C_multihit]
+  # Number of hits for variant C. A structural choice; 2 is the smallest
+  # value that differs from a one-hit (constant hazard) model. Compare others
+  # by cross-validation rather than tuning to fit.
+  c_hits: 2
+
+mle:
+  # Independent random starts; the best optimum is kept and the spread of
+  # optima reported (a flat or multi-modal likelihood is a result).
+  n_starts: 20
+  # Nelder-Mead first (tolerates parameter regions with negative rates, where
+  # the likelihood is -inf), then an L-BFGS-B polish.
+  method: nelder-mead+l-bfgs-b
+  # Iteration cap for the Nelder-Mead stage.
+  nm_maxiter: 4000
+  # Initial values for log-rate intercepts drawn uniformly in this range
+  # (per-year rates ~ e^-8 to e^-2).
+  init_alpha_range: [-8.0, -2.0]
+  # Initial age slopes drawn uniformly in this range (per decade).
+  init_beta_range: [-0.5, 1.0]
+
+bayes:
+  # Weakly-informative priors on the log-scale intercepts: N(-5, 3) spans
+  # per-year rates from ~1e-6 to ~0.5 at +/-2 SD.
+  alpha_prior: {mu: -5.0, sigma: 3.0}
+  # Age slopes per decade N(0, 1): +/-2 per decade at 2 SD covers rate
+  # doubling times from ~3.5 years upward, in either direction.
+  beta_prior: {mu: 0.0, sigma: 1.0}
+  # Amyloid effect gamma centred on ZERO so the prior does not favour the
+  # hypothesis (gamma > 0 means amyloid speeds LC -> cortex).
+  gamma_prior: {mu: 0.0, sigma: 1.0}
+  # NUTS settings; R-hat and divergences are always reported.
+  draws: 1000
+  # Warm-up iterations per chain.
+  tune: 1000
+  # Four chains: the minimum for a meaningful R-hat.
+  chains: 4
+  # Target acceptance: raised from 0.8 to reduce divergences in curved posteriors.
+  target_accept: 0.9
+  # Credible interval reported.
+  ci_level: 0.95
+
+gamma_check:
+  # RESEARCHER: gamma derived by hand from published amyloid hazard ratios,
+  # with its uncertainty. The fit is flagged loudly if the researcher's value
+  # lies outside the posterior credible interval.
+  expected: null
+  # RESEARCHER
+  source: null
+
+falsification:
+  # RESEARCHER: what counts as the model FAILING the falsification test
+  # (brief §5 (d)): the largest tolerated |log(predicted / observed)| dementia
+  # incidence in any age band. Must be fixed before the model sees the data
+  # (pre-register it); Claude does not pick it.
+  max_abs_log_ratio: null
+
+cross_validation:
+  # Folds are formed from whole age bands (brief: k-fold by age band). 5 is
+  # a choice balancing bias and variance; fewer bands than folds is an error.
+  k: 5
