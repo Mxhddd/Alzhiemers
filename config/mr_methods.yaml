@@ -1,0 +1,45 @@
+# MR estimator and harmonisation settings shared by the validation test
+# (tests/validation, Session 1) and Module 1 (Session 2), so the module runs
+# with exactly the settings that were validated. Changing anything here
+# invalidates the validation status (it is part of the code fingerprint).
+
+# Seed for the weighted-median parametric bootstrap, the only random step.
+seed: 20261013
+
+# Two-sided confidence level for every reported interval; 95% is the
+# convention in the MR literature we compare against.
+ci_level: 0.95
+
+harmonise:
+  # Palindromic (A/T, C/G) variants are kept only if allele frequencies can
+  # resolve the strand: both datasets' minor-allele frequency must be at most
+  # this value. 0.42 is the TwoSampleMR default, chosen so our harmonisation
+  # matches most published drug-target MR. Above it the strand is ambiguous
+  # and the variant is dropped (and logged).
+  palindrome_maf_max: 0.42
+
+ivw:
+  # Multiplicative random effects: SE = fixed-effect SE x max(1, residual SE).
+  # Standard choice (Burgess 2017; TwoSampleMR mr_ivw); never shrinks the SE
+  # below the fixed-effect SE when instruments are under-dispersed.
+  model: multiplicative_random_effects
+
+egger:
+  # MR-Egger needs >= 3 variants to estimate slope and intercept with a
+  # residual; fewer is reported as "not estimable", never computed.
+  min_variants: 3
+
+weighted_median:
+  # Bowden et al. 2016 needs >= 3 variants for a median to differ from IVW.
+  min_variants: 3
+  # Parametric bootstrap replicates for the SE (Bowden 2016 used 1000).
+  n_boot: 1000
+  # Weights from second-order variance of the ratio (includes exposure SE),
+  # as in Bowden 2016 / TwoSampleMR weighted_median.
+  weights: second_order
+
+wald_ratio:
+  # First-order SE (se_out / |beta_exp|), as in TwoSampleMR mr_wald_ratio.
+  # Ignores exposure uncertainty; acceptable when instruments are strong
+  # (F > 10), which Module 1 enforces.
+  se: first_order

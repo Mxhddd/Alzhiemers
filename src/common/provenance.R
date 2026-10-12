@@ -27,6 +27,17 @@ lc_repo_root <- function(start = getwd()) {
   }
 }
 
+# All YAML is read as UTF-8 explicitly. In a non-UTF-8 locale R otherwise stops
+# reading at the first non-ASCII character with only a warning (a silent
+# truncation). Duplicate keys are an error in the yaml package.
+lc_read_yaml <- function(path) {
+  if (!file.exists(path)) stop(sprintf("YAML file not found: %s", path))
+  txt <- readChar(path, file.size(path), useBytes = TRUE)
+  if (!validUTF8(txt)) stop(sprintf("%s is not valid UTF-8", path))
+  Encoding(txt) <- "UTF-8"
+  yaml::yaml.load(txt)
+}
+
 lc_relpath <- function(path, root) {
   prefix <- paste0(root, "/")
   if (startsWith(path, prefix)) substring(path, nchar(prefix) + 1) else path
@@ -218,11 +229,11 @@ lc_require_preregistration <- function(name, root = lc_repo_root()) {
   if (!is.null(status) && status != 0) {
     stop(paste(c(sprintf("pre-registration gate for '%s' FAILED:", name), out), collapse = "\n"))
   }
-  yaml::read_yaml(file.path(root, "prereg", paste0(name, ".freeze.yaml")))
+  lc_read_yaml(file.path(root, "prereg", paste0(name, ".freeze.yaml")))
 }
 
 lc_read_header <- function(log_path) {
-  lines <- readLines(log_path)
+  lines <- readLines(log_path, encoding = "UTF-8")
   if (length(lines) == 0 || lines[[1]] != "---") stop(sprintf("%s: no provenance header", log_path))
   end <- which(lines == "---")[-1][1]
   if (is.na(end)) stop(sprintf("%s: unterminated provenance header", log_path))

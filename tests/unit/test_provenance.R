@@ -1,12 +1,6 @@
 # Unit tests for src/common/provenance.R. Run with `make test-r`.
 library(testthat)
-# testthat runs from tests/unit/; walk up to the repository root.
-root <- normalizePath(getwd())
-while (!file.exists(file.path(root, "PROJECT_BRIEF.md"))) {
-  if (dirname(root) == root) stop("repository root not found")
-  root <- dirname(root)
-}
-source(file.path(root, "src", "common", "provenance.R"))
+root <- lc_test_root  # set in helper-root.R
 cfg <- file.path(root, "config", "provenance_check.yaml")
 
 test_that("header records commit, config hash, lockfiles, seed and package versions", {

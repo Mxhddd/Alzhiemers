@@ -1,0 +1,44 @@
+# Validation target for Module 1 — the Session 1 gate in PROJECT_BRIEF.md:
+# reproduce a published two-sample MR of LDL cholesterol, instrumented by
+# HMGCR variants, on coronary artery disease, and require our estimate to
+# fall inside the published confidence interval.
+#
+# Every field marked RESEARCHER is transcribed by the researcher from the
+# paper. Claude must never fill these in. Until they are present, `make
+# validate` FAILS (it does not skip) and Module 1 is blocked.
+id: mr_ldl_hmgcr_cad
+module: mr
+description: LDL cholesterol (HMGCR variants) -> coronary artery disease, two-sample MR
+
+published:
+  citation: null        # RESEARCHER: full reference
+  doi: null             # RESEARCHER
+  locator: null         # RESEARCHER: table / figure / page holding the estimate
+  method: null          # RESEARCHER: ivw | mr_egger | weighted_median | wald_ratio
+  scale: null           # RESEARCHER: words, e.g. "OR for CAD per 1 mmol/L lower LDL-C"
+  reported_as: null     # RESEARCHER: ratio (OR/HR as printed) or log (log-OR / beta)
+  estimate: null        # RESEARCHER
+  ci_lower: null        # RESEARCHER
+  ci_upper: null        # RESEARCHER
+  ci_level: null        # RESEARCHER: e.g. 0.95
+  transcribed_by: null  # RESEARCHER: name
+  transcribed_on: null  # RESEARCHER: YYYY-MM-DD
+
+conversion:
+  # Our estimate is per unit of the exposure GWAS beta, for the exposure-
+  # increasing allele. Multiply by `factor` to reach the published scale
+  # (e.g. -1 for "per lower LDL"; a per-SD -> per-mmol/L factor, which is an
+  # empirical number the researcher must supply with its source). 1 if the
+  # scales already match.
+  factor: null          # RESEARCHER
+  reason: null          # RESEARCHER: why this factor, with source
+
+inputs:
+  genome_build: null    # RESEARCHER: build of both variant tables, e.g. GRCh37
+  # Per-variant summary statistics, columns:
+  #   SNP, effect_allele, other_allele, beta, se, eaf, source
+  exposure: data/raw/validation/mr_ldl_hmgcr_cad_exposure.csv
+  outcome: data/raw/validation/mr_ldl_hmgcr_cad_outcome.csv
+  provided_by: >-
+    researcher: per-variant statistics for the paper's HMGCR instruments,
+    transcribed from its supplement or extracted from the GWAS it names
