@@ -25,7 +25,7 @@ RSCRIPT := Rscript
 # Modules that are built and gated. Append as each session's gate is passed.
 BUILT_MODULES :=
 
-.PHONY: help setup test test-py test-r test-slow validate validate-mr validate-baserate validate-metaanalysis validate-dynamics check-validated provenance-check all lock \
+.PHONY: help setup test test-py test-r test-slow validate validate-mr validate-baserate validate-metaanalysis validate-dynamics validate-mediation check-validated provenance-check all lock \
         freeze-prereg check-prereg clean-results \
         mr baserate mediation dynamics metaanalysis network
 
@@ -52,7 +52,7 @@ test-r:
 # plus a code fingerprint in results/validation/<module>.status.yaml; analysis
 # entry points refuse to run unless it passed on the current code.
 # A target whose published numbers have not been transcribed FAILS (never skips).
-validate: validate-mr validate-baserate validate-metaanalysis validate-dynamics
+validate: validate-mr validate-baserate validate-metaanalysis validate-dynamics validate-mediation
 
 validate-mr:
 	$(RSCRIPT) tests/validation/run_validation.R mr
@@ -62,6 +62,9 @@ validate-metaanalysis:
 
 validate-dynamics:
 	$(PY) -m tests.validation.run_validation_py dynamics
+
+validate-mediation:
+	$(PY) -m tests.validation.run_validation_py mediation
 
 validate-baserate:
 	$(PY) -m tests.validation.run_validation_py baserate
@@ -111,5 +114,7 @@ metaanalysis:
 # + frozen prereg/dynamics.md; the LC model equations are the researcher's.
 dynamics:
 	$(PY) -m src.dynamics.run_dynamics
-mediation:    ; @echo "Module 3 (mediation) is not built yet — Session 6." >&2; exit 1
+# Module 3 (Killer 2). Real data only; gated on validation + frozen DAG prereg.
+mediation:
+	$(PY) -m src.mediation.run_mediation
 network:      ; @echo "Module 6 (network diffusion) is not built yet — Session 7." >&2; exit 1

@@ -1,0 +1,53 @@
+# Module 3 — causal mediation (Killer 2), PROJECT_BRIEF.md §5.
+# `null` = researcher must supply. The real data path fails loudly while absent.
+
+# Seed for the bootstrap.
+seed: 20261020
+
+data:
+  # RESEARCHER: the cohort file (not yet available). Never a public substitute
+  # without the researcher's explicit say-so (brief §5).
+  file: data/raw/mediation_cohort.csv
+  # RESEARCHER: exposure columns (risk factors), e.g. hearing loss, social
+  # isolation, physical inactivity — names as in the file.
+  exposures: null
+  # RESEARCHER: the LC-integrity mediator column (e.g. neuromelanin MRI contrast).
+  mediator: null
+  # RESEARCHER: the tau outcome column (e.g. tau-PET SUVR in a Braak region).
+  outcome: null
+  # RESEARCHER: adjustment set, exactly as implied by the frozen DAG.
+  covariates: null
+  # Missing values stop the run (brief: missing data raises). The alternative,
+  # complete_case_logged, drops incomplete rows and logs each with its reason;
+  # it assumes data missing completely at random and must be pre-registered.
+  missing: raise
+
+model:
+  # Linear mediator and outcome models, no exposure x mediator interaction.
+  # Under these, ACME = beta2 * gamma and the Imai-Keele-Yamamoto rho
+  # sensitivity has a closed form. Interaction is not implemented; a request
+  # for it stops the run rather than being ignored.
+  type: linear_no_interaction
+
+bootstrap:
+  # Nonparametric case-resampling bootstrap; percentile intervals.
+  # 5000 replicates keep Monte Carlo error in 95% limits small.
+  n_boot: 5000
+  # Confidence level of every interval.
+  ci_level: 0.95
+
+sensitivity:
+  # rho = correlation between mediator- and outcome-model errors (unmeasured
+  # mediator-outcome confounding). Grid over (-1, 1), open at the ends.
+  rho_min: -0.95
+  # Upper end of the grid.
+  rho_max: 0.95
+  # Grid step.
+  rho_step: 0.01
+
+killer2:
+  # Pre-registered reading of Killer 2 (brief §2): for a harmful exposure the
+  # hypothesis predicts a POSITIVE indirect effect on tau through lower LC
+  # integrity. Killer 2 is met (hypothesis fails) for an exposure if the ACME
+  # 95% CI includes 0 or lies on the negative side. RESEARCHER to confirm.
+  predicted_acme_sign: 1

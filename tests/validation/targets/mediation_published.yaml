@@ -1,0 +1,25 @@
+# Module 3 validation (brief ground rule 1): reproduce a published causal
+# mediation analysis (linear-linear, no interaction) from its public data.
+# RESEARCHER fields only. Brief §5: no public cohort may be substituted for
+# the analysis without the researcher's say-so — this is validation only.
+id: mediation_published
+module: mediation
+kind: published_mediation
+
+published:
+  citation: null          # RESEARCHER
+  doi: null               # RESEARCHER
+  locator: null           # RESEARCHER: table with ACME / ADE
+  acme: null              # RESEARCHER
+  acme_ci_lower: null     # RESEARCHER
+  acme_ci_upper: null     # RESEARCHER
+  ade: null               # RESEARCHER
+  transcribed_by: null    # RESEARCHER
+  transcribed_on: null    # RESEARCHER
+
+inputs:
+  data: null              # RESEARCHER: path under data/raw/validation/
+  exposure: null          # RESEARCHER: column names as in the paper's model
+  mediator: null          # RESEARCHER
+  outcome: null           # RESEARCHER
+  covariates: null        # RESEARCHER: list (may be empty: [])

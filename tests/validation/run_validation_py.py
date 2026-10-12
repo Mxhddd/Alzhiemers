@@ -20,7 +20,8 @@ from src.common.paths import CONFIG_DIR, REPO_ROOT
 from src.common.runlog import start_run
 from src.common.validation import record
 
-CONFIGS = {"baserate": CONFIG_DIR / "baserate.yaml", "dynamics": CONFIG_DIR / "dynamics.yaml"}
+CONFIGS = {"baserate": CONFIG_DIR / "baserate.yaml", "dynamics": CONFIG_DIR / "dynamics.yaml",
+           "mediation": CONFIG_DIR / "mediation.yaml"}
 
 
 def main(argv: list[str]) -> int:
