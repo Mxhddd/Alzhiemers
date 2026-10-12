@@ -6,6 +6,7 @@
 #   make check-validated MODULE=mr   is the module's last validation still valid?
 #   make provenance-check   Session 0 gate: a run that writes a full provenance header
 #   make all                everything that is built so far
+#   make todo               list every input the researcher still has to supply
 #   make lock               re-resolve and re-pin dependencies (then commit the lockfiles)
 #   make freeze-prereg NAME=mediation OSF=https://osf.io/xxxxx/
 #   make check-prereg NAME=mediation
@@ -26,12 +27,12 @@ RSCRIPT := Rscript
 # refuses to run until its validation passed and its prereg is frozen.
 BUILT_MODULES := mr baserate metaanalysis dynamics mediation network
 
-.PHONY: help setup test test-py test-r test-slow validate validate-mr validate-baserate validate-metaanalysis validate-dynamics validate-mediation validate-network check-validated provenance-check all lock \
+.PHONY: help todo setup test test-py test-r test-slow validate validate-mr validate-baserate validate-metaanalysis validate-dynamics validate-mediation validate-network check-validated provenance-check all lock \
         freeze-prereg check-prereg clean-results \
         mr baserate mediation dynamics metaanalysis network
 
 help:
-	@sed -n '1,15p' Makefile | sed 's/^# \{0,1\}//'
+	@sed -n '1,16p' Makefile | sed 's/^# \{0,1\}//'
 
 setup:
 	uv sync --frozen
@@ -72,6 +73,9 @@ validate-network:
 
 validate-baserate:
 	$(PY) -m tests.validation.run_validation_py baserate
+
+todo:
+	@$(PY) -m src.common.todo
 
 check-validated:
 	@test -n "$(MODULE)" || { echo "usage: make check-validated MODULE=<module>"; exit 2; }

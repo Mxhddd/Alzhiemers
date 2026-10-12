@@ -25,6 +25,13 @@ full scientific brief, ground rules and build order are in
 | 6 | Module 3 — mediation analysis (Killer 2) | **built; 4/5 validation checks pass** (published reproduction awaits researcher) — DAG draft in `prereg/mediation.DRAFT.md`; real data path fails loudly until the cohort exists |
 | 7 | Module 6 — network diffusion | **built; spin test validated on a known null** (6% false positives vs 57% for naive shuffling) — HCP connectome + ADNI tau needed |
 
+## What the researcher must supply
+
+`make todo` prints it, computed from the repository (every `null` field in
+`config/` and `tests/validation/targets/`, every referenced data file that is
+absent, and every pre-registration still in draft). Nothing on that list is
+ever filled in by code.
+
 ## Quick start
 
 Requirements: Python 3.11 with [uv](https://docs.astral.sh/uv/), R ≥ 4.3, git, make.
