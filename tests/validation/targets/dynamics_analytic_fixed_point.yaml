@@ -1,0 +1,15 @@
+# Module 4 gate (brief §6, Session 5): the numerically found fixed point must
+# match the researcher's hand derivation. RESEARCHER fields only.
+id: dynamics_analytic_fixed_point
+module: dynamics
+kind: hand_fixed_point
+
+# RESEARCHER: parameter values used in the hand derivation, {name: value}
+# (any parameter not listed keeps its config/dynamics_params.yaml value).
+parameters: null
+# RESEARCHER: the hand-derived fixed point, {state: value}.
+fixed_point: null
+# RESEARCHER: its stability as derived by hand: stable | unstable | saddle
+stability: null
+# RESEARCHER: absolute tolerance matching the precision of the hand result.
+tolerance: null

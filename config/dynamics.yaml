@@ -1,0 +1,51 @@
+# Module 4 — ODE dynamical model: analysis settings. Parameter values are in
+# config/dynamics_params.yaml (researcher-written, with units/source/confidence).
+
+# Seed for Sobol sampling and the Latin hypercube.
+seed: 20261019
+
+simulation:
+  # RESEARCHER: simulated time span in the model's time units [start, end].
+  t_span: null
+  # Number of output time points.
+  n_out: 400
+  # Working tolerances for the stiff solvers; the solver-independence check
+  # reruns with both tightened 10x (brief §5).
+  rtol: 1.0e-8
+  # Absolute tolerance, same rationale.
+  atol: 1.0e-10
+  # Primary stiff solver; BDF is the second for the independence check.
+  method: Radau
+  # Radau vs BDF max relative difference with tolerances tightened 10x; above
+  # this (or if tightening does not shrink it) results are declared
+  # numerics-dependent and the run stops. 1e-3 = agreement to 0.1%.
+  max_solver_disagreement: 1.0e-3
+
+fixed_points:
+  # RESEARCHER: per-state search box for root-finding guesses, {state: [lo, hi]}.
+  bounds: null
+  # Grid points per state dimension for initial guesses (5^n guesses).
+  grid_per_dim: 5
+
+bifurcation:
+  # RESEARCHER: name of the "second-hit" parameter swept in the bifurcation scan.
+  parameter: null
+  # RESEARCHER: [low, high] of that sweep.
+  range: null
+  # Values in the scan; fold locations are only as precise as this spacing.
+  n_values: 201
+
+dose_response:
+  # RESEARCHER: dose grid (model units) per drug, {drug: [d0, d1, ...]}, d0 = 0.
+  doses: null
+  # A dose-response is U-shaped only if both ends exceed the minimum by more
+  # than this fraction: 5% so numerical ripples are not called U-shapes.
+  min_relative_rise: 0.05
+
+sensitivity:
+  # Saltelli base sample size N (total evaluations N * (d + 2)); 1024 gives
+  # Sobol CIs of a few percent for smooth outputs.
+  sobol_n_base: 1024
+  # Latin hypercube samples for the U-shape robustness fraction; 1000 gives a
+  # Wilson 95% CI half-width of at most ~3 percentage points.
+  lhs_n_samples: 1000

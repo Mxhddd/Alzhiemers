@@ -19,9 +19,9 @@ full scientific brief, ground rules and build order are in
 | 0 | Scaffold and provenance | **built** |
 | 1 | Validation harness + MR validation (LDL–CAD via HMGCR) | **built, gate not yet passed** — waiting for the researcher to transcribe the published target and supply the variant tables (see below) |
 | 2 | Module 1 — drug-target Mendelian randomization (R) | **built, cannot run yet** — blocked (correctly) by the validation gate and the unfrozen pre-registration; needs downloads + researcher inputs |
-| 3 | Module 2 — Markov base-rate model (Python) | not started — needs `data/raw/braak_counts.csv` from the researcher |
-| 4 | Module 5 — meta-analysis and triangulation (R) | not started — needs `data/raw/extraction.csv` from the researcher |
-| 5 | Module 4 — ODE dynamical model (Python) | not started |
+| 3 | Module 2 — Markov base-rate model (Python) | **built; validation passes** — needs `braak_counts.csv`, amyloid prevalence, incidence, stage order, step size, frozen prereg |
+| 4 | Module 5 — meta-analysis and triangulation (R) | **built; simulation validation passes** — published pooled estimate, hand example and `extraction.csv` from the researcher |
+| 5 | Module 4 — ODE dynamical model (Python) | **machinery built and validated on analytic test systems** — the LC model equations, parameters and hand fixed point are the researcher's (proposal in `manuscript/notes/`) |
 | 6 | Module 3 — mediation analysis (Killer 2) | not started |
 | 7 | Module 6 — network diffusion | not started |
 

@@ -35,6 +35,15 @@ STATUS_DIR = RESULTS_DIR / "validation"
 # in the session that builds it.
 FINGERPRINT_PATHS: dict[str, tuple[str, ...]] = {
     "mr": ("src/common", "src/mr", "tests/validation", "config/mr_methods.yaml"),
+    "metaanalysis": ("src/common", "src/metaanalysis", "tests/validation/harness.R",
+                     "tests/validation/run_validation.R", "tests/validation/targets",
+                     "tests/validation/meta_published_pooled.R", "tests/validation/meta_hand_three_study.R",
+                     "tests/validation/meta_sim_homogeneous.R", "config/metaanalysis.yaml"),
+    "dynamics": ("src/common", "src/dynamics", "tests/validation/test_dynamics.py",
+                 "tests/validation/test_dynamics_lc_model.py", "tests/validation/targets/dynamics_analytic_fixed_point.yaml",
+                 "tests/validation/run_validation_py.py", "config/dynamics.yaml", "config/dynamics_params.yaml"),
+    "baserate": ("src/common", "src/baserate", "sim/baserate_sim.py", "tests/validation/test_baserate.py",
+                 "tests/validation/run_validation_py.py", "config/baserate.yaml"),
 }
 
 _EXCLUDE_PARTS = {"__pycache__", ".pytest_cache"}

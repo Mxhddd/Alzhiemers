@@ -25,7 +25,7 @@ RSCRIPT := Rscript
 # Modules that are built and gated. Append as each session's gate is passed.
 BUILT_MODULES :=
 
-.PHONY: help setup test test-py test-r validate validate-mr check-validated provenance-check all lock \
+.PHONY: help setup test test-py test-r test-slow validate validate-mr validate-baserate validate-metaanalysis validate-dynamics check-validated provenance-check all lock \
         freeze-prereg check-prereg clean-results \
         mr baserate mediation dynamics metaanalysis network
 
@@ -39,7 +39,11 @@ setup:
 test: test-py test-r
 
 test-py:
-	$(PY) -m pytest tests/unit
+	$(PY) -m pytest -m "not slow" tests/unit
+
+# Minutes-long tests (MCMC). Never skipped: `make all` runs them.
+test-slow:
+	$(PY) -m pytest -m slow tests/unit
 
 test-r:
 	$(RSCRIPT) -e 'testthat::test_dir("tests/unit", stop_on_failure = TRUE, stop_on_warning = TRUE)'
@@ -48,10 +52,19 @@ test-r:
 # plus a code fingerprint in results/validation/<module>.status.yaml; analysis
 # entry points refuse to run unless it passed on the current code.
 # A target whose published numbers have not been transcribed FAILS (never skips).
-validate: validate-mr
+validate: validate-mr validate-baserate validate-metaanalysis validate-dynamics
 
 validate-mr:
 	$(RSCRIPT) tests/validation/run_validation.R mr
+
+validate-metaanalysis:
+	$(RSCRIPT) tests/validation/run_validation.R metaanalysis
+
+validate-dynamics:
+	$(PY) -m tests.validation.run_validation_py dynamics
+
+validate-baserate:
+	$(PY) -m tests.validation.run_validation_py baserate
 
 check-validated:
 	@test -n "$(MODULE)" || { echo "usage: make check-validated MODULE=<module>"; exit 2; }
@@ -61,7 +74,7 @@ provenance-check:
 	$(PY) -m src.common.provenance_check --config config/provenance_check.yaml
 	$(RSCRIPT) src/common/provenance_check.R config/provenance_check.yaml
 
-all: test validate provenance-check $(BUILT_MODULES)
+all: test test-slow validate provenance-check $(BUILT_MODULES)
 
 lock:
 	uv lock
@@ -85,8 +98,18 @@ clean-results:
 mr:
 	$(RSCRIPT) src/mr/run_mr.R
 	$(PY) -m src.mr.forest_plot --summary results/tables/mr_summary.csv
-baserate:     ; @echo "Module 2 (Markov base-rate) is not built yet — Session 3." >&2; exit 1
-metaanalysis: ; @echo "Module 5 (meta-analysis) is not built yet — Session 4." >&2; exit 1
-dynamics:     ; @echo "Module 4 (ODE dynamics) is not built yet — Session 5." >&2; exit 1
+# Module 2. Refuses to run unless validated on the current code and
+# prereg/baserate.md is frozen; needs the researcher's hand-transcribed files.
+baserate:
+	$(PY) -m src.baserate.run_baserate
+# Module 5. Gated on validation + frozen prereg/metaanalysis.md; the
+# anticholinergic positive control must be recovered before anything else.
+metaanalysis:
+	$(RSCRIPT) src/metaanalysis/run_meta.R
+	$(PY) -m src.metaanalysis.plots
+# Module 4. Gated on validation (incl. the researcher's analytic fixed point)
+# + frozen prereg/dynamics.md; the LC model equations are the researcher's.
+dynamics:
+	$(PY) -m src.dynamics.run_dynamics
 mediation:    ; @echo "Module 3 (mediation) is not built yet — Session 6." >&2; exit 1
 network:      ; @echo "Module 6 (network diffusion) is not built yet — Session 7." >&2; exit 1

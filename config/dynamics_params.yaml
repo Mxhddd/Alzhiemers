@@ -1,0 +1,11 @@
+# Module 4 parameters — RESEARCHER to write. One entry per parameter:
+#
+#   name:
+#     value: <number>          # point value (never reported if confidence is weak)
+#     units: <string>
+#     source: <citation or "assumption: ...">
+#     confidence: strong | moderate | weak
+#     range: [low, high]       # required for weak; the plausible sweep range
+#
+# Empty until the researcher fills it; the module stops if it is empty.
+parameters: {}
