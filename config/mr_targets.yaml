@@ -1,0 +1,214 @@
+# Module 1 — drug-target Mendelian randomization (PROJECT_BRIEF.md §5).
+# Estimator and harmonisation settings live in config/mr_methods.yaml (shared
+# with the validation test). This file holds data sources, instrument rules
+# and the pre-registered targets.
+#
+# `null` means "the researcher must supply this". The pipeline stops with a
+# message naming the field; it never substitutes a value.
+
+# Seed for every random step in the module (weighted-median bootstrap uses
+# mr_methods.yaml's seed; this one covers anything module-level).
+seed: 20261014
+
+# Every input file must be on this build. Bellenguez 2022 stage 1 on the GWAS
+# Catalog is GRCh37 (brief §5); exposures must match or the run stops.
+genome_build: GRCh37
+
+outcome:
+  # Bellenguez et al. 2022, stage 1 discovery (includes UK Biobank proxy cases).
+  gwas_catalog_id: GCST90027158
+  # RESEARCHER: path under data/raw/ after download (see `make mr-download-help`).
+  file: null
+  # RESEARCHER: map our names -> the file's column headers (loader checks each).
+  columns: null
+  # Outcome type decides the coloc prior and the Steiger r^2 formula.
+  type: case_control
+  # RESEARCHER: total cases and controls (for Steiger r^2 and coloc).
+  n_cases: null
+  # RESEARCHER
+  n_controls: null
+  # Sensitivity analysis without UK Biobank proxy cases (brief §5). RESEARCHER:
+  # a proxy-free summary-statistics file if one exists; null = analysis is
+  # reported as "not run: no proxy-free file supplied".
+  proxy_free_file: null
+
+# FinnGen public Alzheimer's endpoint for replication. RESEARCHER: endpoint
+# name, release and file; null = replication reported as not run.
+replication:
+  # RESEARCHER: e.g. a FinnGen release and endpoint code
+  finngen_endpoint: null
+  # RESEARCHER
+  file: null
+  # RESEARCHER
+  columns: null
+  # RESEARCHER
+  n_cases: null
+  # RESEARCHER
+  n_controls: null
+
+exposures:
+  eqtlgen:
+    # Blood cis-eQTLs (eQTLGen). Z-scores only: beta and SE are derived from
+    # Z, allele frequency and N (Zhu et al. 2016) in fetch_exposure().
+    tissue: blood
+    # RESEARCHER: path under data/raw/
+    file: null
+    # RESEARCHER: separate allele-frequency file eQTLGen distributes
+    allele_frequency_file: null
+    # RESEARCHER: column mapping (loader checks every name exists)
+    columns: null
+    # Must match genome_build above.
+    build: GRCh37
+  metabrain:
+    # Cortex cis-eQTLs (MetaBrain). RESEARCHER: file, columns, build.
+    tissue: cortex
+    # RESEARCHER
+    file: null
+    # RESEARCHER
+    columns: null
+    # RESEARCHER: MetaBrain release build — must match genome_build or be lifted over first
+    build: null
+  pqtl:
+    # UKB-PPP / deCODE cis-pQTLs where available. RESEARCHER: file, columns, build.
+    tissue: plasma
+    # RESEARCHER
+    file: null
+    # RESEARCHER
+    columns: null
+    # RESEARCHER: UKB-PPP is distributed on GRCh38 — needs liftover to GRCh37 first
+    build: null
+
+instruments:
+  # Genome-wide significance for cis instruments. A choice (brief left it
+  # open): 5e-8 is the conservative convention; looser thresholds add weak
+  # instruments and Module 1 already has F > 10 as a separate filter.
+  p_max: 5.0e-8
+  # Brief §5: minimum per-variant F statistic.
+  f_stat_min: 10
+  # Brief §5: minimum minor-allele frequency.
+  maf_min: 0.01
+  # Brief §5: LD clumping r^2 threshold (near-independent instruments).
+  ld_r2_max: 0.001
+  # Brief §5: LD clumping window, kb.
+  ld_window_kb: 10000
+  # RESEARCHER: PLINK binary fileset (without extension) of the LD reference
+  # panel, e.g. 1000 Genomes EUR on GRCh37. Needed for clumping.
+  ld_reference_bfile: null
+
+coloc:
+  # Brief §5: colocalisation supported if PP4 >= this.
+  pp4_min: 0.8
+  # Prior probability a variant is associated with trait 1 / trait 2
+  # (coloc defaults, Giambartolomei 2014).
+  p1: 1.0e-4
+  # Same as p1.
+  p2: 1.0e-4
+  # Prior for a shared causal variant. 5e-6 rather than the coloc default
+  # 1e-5, following Wallace 2020 (PLoS Genet) who showed 1e-5 is too permissive.
+  p12: 5.0e-6
+  # Prior SD of effect sizes (Wakefield ABF): 0.15 for a standardised
+  # quantitative trait (eQTL), 0.2 for log-OR of a case-control trait — the
+  # coloc package defaults.
+  prior_sd_quantitative: 0.15
+  # See prior_sd_quantitative.
+  prior_sd_case_control: 0.2
+
+positive_control:
+  # A positive-control MR passes if p < this AND the sign matches expectation.
+  # 0.05 is a choice: the control is a sanity check of instrument function,
+  # not a discovery, so no multiple-testing correction.
+  p_max: 0.05
+
+# Pre-registered targets (brief §5 table). `predicted_lower_activity` is copied
+# from the brief. Expression eQTLs are oriented to the expression-INCREASING
+# allele, so "lower activity protective" means a POSITIVE MR estimate (higher
+# expression -> higher AD risk); the code derives the expected sign.
+# window_kb: cis window either side of the gene body. 100 kb is a choice
+# (common in drug-target MR); the brief asked for a per-target window, so each
+# target can be changed individually.
+# positive_control: outcome trait the instrument must move, with the expected
+# sign of the MR estimate per higher expression, and the researcher-supplied
+# summary statistics. A target with no positive control is EXCLUDED (the brief
+# makes the control a hard gate) and the exclusion is logged.
+targets:
+  SLC6A2:
+    # Noradrenaline transporter — atomoxetine.
+    predicted_lower_activity: protective
+    # Choice, see block comment above.
+    window_kb: 100
+    # RESEARCHER: positive-control trait not specified in the brief.
+    positive_control: null
+  ADRB1:
+    # Beta-1 adrenergic receptor — lipophilic beta-blockers.
+    predicted_lower_activity: protective
+    # Choice, see block comment above.
+    window_kb: 100
+    positive_control:
+      # Brief §6, Session 2 gate: the instrument must move resting heart rate.
+      trait: resting_heart_rate
+      # Beta-blockade lowers heart rate, so higher ADRB1 expression should raise it.
+      expected_sign: 1
+      # RESEARCHER: resting heart rate GWAS file under data/raw/
+      file: null
+      # RESEARCHER
+      columns: null
+      # Resting heart rate is quantitative.
+      type: quantitative
+      # RESEARCHER: sample size
+      n: null
+  ADRA1A:
+    # Alpha-1A receptor — prazosin, doxazosin.
+    predicted_lower_activity: protective
+    # Choice, see block comment above.
+    window_kb: 100
+    # RESEARCHER
+    positive_control: null
+  ADRA2A:
+    # Alpha-2A autoreceptor — guanfacine (agonist). Lower activity = loss of restraint.
+    predicted_lower_activity: harmful
+    # Choice, see block comment above.
+    window_kb: 100
+    # RESEARCHER
+    positive_control: null
+  LGMN:
+    # Asparagine endopeptidase (legumain) — no human drug yet.
+    predicted_lower_activity: protective
+    # Choice, see block comment above.
+    window_kb: 100
+    # RESEARCHER
+    positive_control: null
+  SLC18A2:
+    # VMAT2.
+    predicted_lower_activity: harmful
+    # Choice, see block comment above.
+    window_kb: 100
+    # RESEARCHER
+    positive_control: null
+  MAOA:
+    # Monoamine oxidase A — X-linked; may be absent from summary files (checked and reported).
+    predicted_lower_activity: protective
+    # Choice, see block comment above.
+    window_kb: 100
+    # RESEARCHER
+    positive_control: null
+  DBH:
+    # Dopamine beta-hydroxylase — disulfiram, nepicastat. Direction not pre-specified.
+    predicted_lower_activity: exploratory
+    # Choice, see block comment above.
+    window_kb: 100
+    # RESEARCHER
+    positive_control: null
+  CACNA1D:
+    # Cav1.3 — isradipine.
+    predicted_lower_activity: protective
+    # Choice, see block comment above.
+    window_kb: 100
+    # RESEARCHER
+    positive_control: null
+  HCRTR2:
+    # Orexin receptor 2 — suvorexant, lemborexant. Exploratory.
+    predicted_lower_activity: exploratory
+    # Choice, see block comment above.
+    window_kb: 100
+    # RESEARCHER
+    positive_control: null

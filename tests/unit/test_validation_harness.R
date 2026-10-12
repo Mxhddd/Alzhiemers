@@ -51,7 +51,7 @@ test_that("end to end on synthetic data in a temporary sandbox: target -> inputs
   write.csv(exposure, file.path(sandbox, "data/raw/validation/x_exp.csv"), row.names = FALSE)
   write.csv(outcome, file.path(sandbox, "data/raw/validation/x_out.csv"), row.names = FALSE)
   yaml::write_yaml(list(
-    id = "fixture", module = "mr",
+    id = "fixture", module = "mr", kind = "published_estimate",
     published = list(citation = "synthetic", doi = "none", locator = "none", method = "ivw",
                      scale = "log", reported_as = "log", estimate = 0.5, ci_lower = 0.45,
                      ci_upper = 0.55, ci_level = 0.95, transcribed_by = "test", transcribed_on = "2026-01-01"),
@@ -75,4 +75,33 @@ test_that("end to end on synthetic data in a temporary sandbox: target -> inputs
   dir.create(file.path(sandbox, "sim"))
   file.copy(file.path(sandbox, "data/raw/validation/x_exp.csv"), file.path(sandbox, "sim/x_exp.csv"))
   expect_error(lc_read_sumstats(file.path(sandbox, "sim/x_exp.csv"), "test", "GRCh37", sandbox), "simulated")
+})
+
+test_that("the gene-desert null test passes on null data and fails when the outcome is inflated", {
+  source(file.path(lc_test_root, "tests", "validation", "mr_null_gene_desert.R"))
+  settings <- lc_read_yaml(file.path(lc_test_root, "config", "mr_methods.yaml"))
+  run_in <- function(outcome_beta) {
+    sandbox <- withr::local_tempdir(.local_envir = parent.frame())
+    for (d in c("tests/validation/targets", "data/raw/validation", "config")) dir.create(file.path(sandbox, d), recursive = TRUE)
+    n <- 400
+    snps <- paste0("rs", seq_len(n))
+    write.csv(data.frame(SNP = snps), file.path(sandbox, "data/raw/validation/deserts.csv"), row.names = FALSE)
+    write.csv(data.frame(rsid = snps, chr = "1", bp = seq_len(n) * 1e6, ea = "A", oa = "G",
+                         b = outcome_beta(n), s = 0.01, af = 0.3),
+              file.path(sandbox, "data/raw/ad.csv"), row.names = FALSE)
+    yaml::write_yaml(list(genome_build = "GRCh37", outcome = list(file = "data/raw/ad.csv",
+      columns = list(SNP = "rsid", chrom = "chr", pos = "bp", effect_allele = "ea", other_allele = "oa",
+                     beta = "b", se = "s", eaf = "af"))), file.path(sandbox, "config/mr_targets.yaml"))
+    yaml::write_yaml(list(id = "mr_null_gene_desert", module = "mr", kind = "null_test",
+      settings = list(seed = 1, n_sets = 300, variants_per_set = 5, alpha = 0.05, pass_quantile = 0.99),
+      inputs = list(genome_build = "GRCh37", desert_variants = "data/raw/validation/deserts.csv", provided_by = "test")),
+      file.path(sandbox, "tests/validation/targets/mr_null_gene_desert.yaml"))
+    run <- lc_start_run("unit_null", file.path(lc_test_root, "config", "mr_methods.yaml"), seed = NULL,
+                        packages = character(), logs_dir = file.path(sandbox, "logs"))
+    on.exit(lc_finish_run(run, "completed"))
+    validate_mr_null_gene_desert(run, settings, sandbox)
+  }
+  set.seed(11)
+  expect_true(run_in(function(n) rnorm(n, 0, 0.01))$passed)        # true null
+  expect_false(run_in(function(n) rnorm(n, 0.03, 0.01))$passed)    # every variant "associated"
 })

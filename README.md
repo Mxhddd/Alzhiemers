@@ -18,7 +18,7 @@ full scientific brief, ground rules and build order are in
 |---|---|---|
 | 0 | Scaffold and provenance | **built** |
 | 1 | Validation harness + MR validation (LDL–CAD via HMGCR) | **built, gate not yet passed** — waiting for the researcher to transcribe the published target and supply the variant tables (see below) |
-| 2 | Module 1 — drug-target Mendelian randomization (R) | not started |
+| 2 | Module 1 — drug-target Mendelian randomization (R) | **built, cannot run yet** — blocked (correctly) by the validation gate and the unfrozen pre-registration; needs downloads + researcher inputs |
 | 3 | Module 2 — Markov base-rate model (Python) | not started — needs `data/raw/braak_counts.csv` from the researcher |
 | 4 | Module 5 — meta-analysis and triangulation (R) | not started — needs `data/raw/extraction.csv` from the researcher |
 | 5 | Module 4 — ODE dynamical model (Python) | not started |
@@ -67,6 +67,30 @@ environment (CRAN/GitHub R repositories blocked). The estimators are tested
 against hand arithmetic, independent `lm()` fits, allele-recoding invariance,
 CI coverage on simulated data, and Bowden 2016's robustness property. A
 cross-check against TwoSampleMR on identical inputs is pending network access.
+
+## Module 1 pipeline (`make mr`, Session 2)
+
+`src/mr/run_mr.R` refuses to start unless `make validate` passed on the
+current code **and** `prereg/mr.md` is frozen (a draft is in
+`prereg/mr.DRAFT.md`). Then, per target and exposure source:
+
+1. `mr_gene_region()` — Ensembl GRCh37 coordinates via biomaRt, release logged,
+   cached in `data/interim/`.
+2. `mr_read_sumstats()` — column-mapped reading; eQTLGen Z-scores converted to
+   beta/SE (Zhu 2016); build asserted; every removed row logged.
+3. `mr_build_instruments()` — p, MAF, F filters, PLINK-based LD clumping.
+4. **Positive control (hard gate) before the AD outcome is read** — a target
+   with no control, or a failing one, is excluded and logged.
+5. Harmonise → IVW / Egger / weighted median (or Wald ratio) → ABF coloc over
+   the cis window → Steiger → proxy-free sensitivity and FinnGen replication
+   when supplied.
+6. `results/tables/mr_summary.csv` (one row per gene × source × method, with
+   F, Egger intercept, PP4, Steiger, positive-control status, concordance with
+   the prediction), `results/logs/mr_dropped.md`, and
+   `results/figures/mr_forest.{pdf,png}` (pre-registered direction shaded;
+   excluded targets kept as labelled gaps).
+
+Not implemented, reported as such in the output: SuSiE-coloc (needs susieR).
 
 ## The validation harness (`tests/validation/`)
 

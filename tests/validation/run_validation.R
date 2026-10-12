@@ -1,10 +1,11 @@
 # Runs every validation target for one module inside a logged run, writes
-# results/tables/validation_<module>.csv, and records the outcome (with the
+# results/tables/validation_<target>.csv, and records the outcome (with the
 # code fingerprint) via `python -m src.common.validation record`.
 # Usage: Rscript tests/validation/run_validation.R mr
 #
-# A failing target is recorded as failed AND stops with a non-zero exit;
-# nothing is caught and turned into a pass.
+# A failing or erroring target is recorded as FAILED with its message; after
+# all targets run, any failure stops with a non-zero exit. Nothing is ever
+# turned into a pass.
 
 options(warn = 2)  # fail loudly: every warning is an error
 source("src/common/provenance.R")
@@ -40,27 +41,27 @@ record_status <- function(results, log_path) {
 lc_with_run(sprintf("validation_%s", module), config_path, seed = settings$seed,
             packages = c("yaml", "digest"), body = function(run) {
   results <- list()
-  rows <- list()
   for (id in ids) {
     source(file.path(root, "tests", "validation", paste0(id, ".R")))
     fn <- get(paste0("validate_", id))
     lc_log(run, sprintf("validation target: %s", id))
-    out <- withCallingHandlers(fn(run, settings, root), error = function(e) {
-      results[[id]] <<- list(id = id, passed = FALSE, detail = conditionMessage(e))
-      record_status(results, run$log_path)
+    # An error in one target is recorded as that target's FAILURE (with the
+    # message) and the remaining targets still run, so every missing input is
+    # reported at once. The run as a whole still fails at the end.
+    out <- tryCatch(fn(run, settings, root), error = function(e) {
+      list(passed = FALSE, detail = paste("ERROR:", conditionMessage(e)),
+           table = data.frame(target = id, error = conditionMessage(e)))
     })
-    cmp <- out$comparison
-    rows[[id]] <- cmp
-    ok <- isTRUE(cmp$within_published_ci)
-    detail <- sprintf("%s: ours %.4f [%.4f, %.4f] vs published %.4f [%.4f, %.4f] (log scale)",
-                      cmp$method, cmp$our_estimate_log, cmp$our_ci_lower_log, cmp$our_ci_upper_log,
-                      cmp$published_estimate_log, cmp$published_ci_lower_log, cmp$published_ci_upper_log)
-    lc_log(run, sprintf("%s %s - %s", if (ok) "PASS" else "FAIL", id, detail), if (ok) "INFO" else "ERROR")
-    results[[id]] <- list(id = id, passed = ok, detail = detail)
+    if (!is.logical(out$passed) || length(out$passed) != 1 || is.na(out$passed)) {
+      stop(sprintf("validation %s returned no TRUE/FALSE verdict", id))
+    }
+    lc_log(run, sprintf("%s %s - %s", if (out$passed) "PASS" else "FAIL", id, out$detail),
+           if (out$passed) "INFO" else "ERROR")
+    table_path <- file.path(root, "results", "tables", sprintf("validation_%s.csv", id))
+    dir.create(dirname(table_path), recursive = TRUE, showWarnings = FALSE)
+    utils::write.csv(out$table, table_path, row.names = FALSE)
+    lc_record_output(run, table_path)
+    results[[id]] <- list(id = id, passed = out$passed, detail = out$detail)
   }
-  table_path <- file.path(root, "results", "tables", sprintf("validation_%s.csv", module))
-  dir.create(dirname(table_path), recursive = TRUE, showWarnings = FALSE)
-  utils::write.csv(do.call(rbind, rows), table_path, row.names = FALSE)
-  lc_record_output(run, table_path)
   if (!record_status(results, run$log_path)) stop(sprintf("validation of module '%s' FAILED", module))
 })

@@ -1,5 +1,5 @@
 # Validation: LDL cholesterol via HMGCR variants -> coronary artery disease.
-# Called by run_validation.R inside a logged run. Returns a one-row comparison;
+# Called by run_validation.R inside a logged run. Returns list(passed, detail, table);
 # passing means our estimate (same method as the paper) lies inside the
 # published CI. Everything else in the output is reported, not hidden.
 
@@ -25,5 +25,9 @@ validate_mr_ldl_hmgcr_cad <- function(run, settings, root = lc_repo_root()) {
                  target$published$method, paste(est$status, collapse = "; ")))
   }
   cmp <- lc_compare_to_target(row, target, settings$ci_level)
-  list(comparison = cmp, estimates = est)
+  list(passed = isTRUE(cmp$within_published_ci),
+       detail = sprintf("%s: ours %.4f [%.4f, %.4f] vs published %.4f [%.4f, %.4f] (log scale)",
+                        cmp$method, cmp$our_estimate_log, cmp$our_ci_lower_log, cmp$our_ci_upper_log,
+                        cmp$published_estimate_log, cmp$published_ci_lower_log, cmp$published_ci_upper_log),
+       table = cmp)
 }

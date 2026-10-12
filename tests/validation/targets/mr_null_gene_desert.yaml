@@ -1,0 +1,30 @@
+# Null validation for Module 1 (brief §5: "a null test using variants in no
+# gene region"). Variants far from any gene should carry no drug-target
+# signal, so MR "estimates" built on them must be null at the nominal rate.
+#
+# Design: draw `n_sets` random sets of `variants_per_set` gene-desert variants
+# from the AD outcome GWAS; give each set a synthetic exposure (effect sizes
+# drawn uniformly in [0.05, 0.2], SE 0.01 — generated in the test with the
+# seed below, never stored); run IVW. Pass if the fraction of sets with
+# p < alpha does not exceed the `pass_quantile` upper binomial quantile of
+# alpha under the null (i.e. the type-I error is not inflated).
+id: mr_null_gene_desert
+module: mr
+kind: null_test
+
+settings:
+  seed: 20261015        # fixed so the draw is reproducible
+  n_sets: 1000          # enough to estimate a 5% rate to about +/-1.4%
+  variants_per_set: 5   # typical cis-instrument count after clumping
+  alpha: 0.05           # nominal type-I error
+  pass_quantile: 0.99   # fail only if the excess is beyond the 99% binomial quantile
+
+inputs:
+  genome_build: null    # RESEARCHER: must equal config/mr_targets.yaml genome_build
+  # One column, SNP: variants >= 1 Mb from any Ensembl GRCh37 gene and mutually
+  # > 10 Mb apart or LD-pruned (so draws are independent). RESEARCHER: produce
+  # from the Ensembl gene list + LD reference, or approve a script to do it.
+  desert_variants: null
+  provided_by: >-
+    researcher: gene-desert variant list (data/raw/validation/), plus the AD
+    outcome file and column map configured in config/mr_targets.yaml

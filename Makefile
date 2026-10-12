@@ -80,7 +80,11 @@ check-prereg:
 clean-results:
 	find results/figures results/tables results/logs results/validation -type f ! -name .gitkeep -delete
 
-mr:           ; @echo "Module 1 (MR) is not built yet — Session 2." >&2; exit 1
+# Module 1. Refuses to run unless `make validate` passed on the current code
+# and prereg/mr.md is frozen; then draws the forest plot.
+mr:
+	$(RSCRIPT) src/mr/run_mr.R
+	$(PY) -m src.mr.forest_plot --summary results/tables/mr_summary.csv
 baserate:     ; @echo "Module 2 (Markov base-rate) is not built yet — Session 3." >&2; exit 1
 metaanalysis: ; @echo "Module 5 (meta-analysis) is not built yet — Session 4." >&2; exit 1
 dynamics:     ; @echo "Module 4 (ODE dynamics) is not built yet — Session 5." >&2; exit 1

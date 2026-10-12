@@ -4,20 +4,30 @@
 # through lc_analysis_input(), and compares our estimate with the published
 # confidence interval on the log scale.
 
+# Required fields by target kind.
 lc_target_required <- list(
-  published = c("citation", "doi", "locator", "method", "scale", "reported_as",
-                "estimate", "ci_lower", "ci_upper", "ci_level", "transcribed_by", "transcribed_on"),
-  conversion = c("factor", "reason"),
-  inputs = c("genome_build", "exposure", "outcome", "provided_by")
+  published_estimate = list(
+    published = c("citation", "doi", "locator", "method", "scale", "reported_as",
+                  "estimate", "ci_lower", "ci_upper", "ci_level", "transcribed_by", "transcribed_on"),
+    conversion = c("factor", "reason"),
+    inputs = c("genome_build", "exposure", "outcome", "provided_by")),
+  null_test = list(
+    settings = c("seed", "n_sets", "variants_per_set", "alpha", "pass_quantile"),
+    inputs = c("genome_build", "desert_variants", "provided_by"))
 )
 
 lc_load_target <- function(id, root = lc_repo_root()) {
   path <- file.path(root, "tests", "validation", "targets", paste0(id, ".yaml"))
   if (!file.exists(path)) stop(sprintf("validation target %s not found", path))
   t <- lc_read_yaml(path)
+  kind <- t$kind
+  if (is.null(kind) || !kind %in% names(lc_target_required)) {
+    stop(sprintf("target '%s': kind must be one of %s", id, paste(names(lc_target_required), collapse = ", ")))
+  }
+  req <- lc_target_required[[kind]]
   missing <- character()
-  for (section in names(lc_target_required)) {
-    for (field in lc_target_required[[section]]) {
+  for (section in names(req)) {
+    for (field in req[[section]]) {
       v <- t[[section]][[field]]
       if (is.null(v) || (length(v) == 1 && is.na(v)) || identical(v, "")) {
         missing <- c(missing, paste(section, field, sep = "."))
@@ -29,6 +39,7 @@ lc_load_target <- function(id, root = lc_repo_root()) {
                         "(in %s). Claude must not fill these in."),
                  id, paste(missing, collapse = ", "), lc_relpath(path, root)))
   }
+  if (kind != "published_estimate") return(t)
   p <- t$published
   if (!p$reported_as %in% c("ratio", "log")) stop("published.reported_as must be 'ratio' or 'log'")
   if (!(p$ci_lower <= p$estimate && p$estimate <= p$ci_upper)) {

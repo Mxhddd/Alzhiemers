@@ -239,3 +239,14 @@ lc_read_header <- function(log_path) {
   if (is.na(end)) stop(sprintf("%s: unterminated provenance header", log_path))
   yaml::yaml.load(paste(lines[2:(end - 1)], collapse = "\n"))
 }
+
+# Validation gate: delegates to src/common/validation.py (single implementation).
+lc_require_validated <- function(module, root = lc_repo_root()) {
+  out <- suppressWarnings(system2("uv", c("--directory", shQuote(root), "run", "--frozen", "python", "-m",
+                                          "src.common.validation", "check", module),
+                                  stdout = TRUE, stderr = TRUE))
+  if (!is.null(attr(out, "status"))) {
+    stop(paste(c(sprintf("validation gate for '%s' FAILED:", module), out), collapse = "\n"))
+  }
+  invisible(TRUE)
+}

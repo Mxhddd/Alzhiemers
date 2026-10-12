@@ -8,6 +8,7 @@
 # validate` FAILS (it does not skip) and Module 1 is blocked.
 id: mr_ldl_hmgcr_cad
 module: mr
+kind: published_estimate
 description: LDL cholesterol (HMGCR variants) -> coronary artery disease, two-sample MR
 
 published:
