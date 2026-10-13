@@ -16,6 +16,7 @@ draft made before any real data were fitted, not a post-hoc change.
 | Date | Change | Reason |
 |---|---|---|
 | 2026-10-13 | First complete draft: criteria 1 (amyloid gating), 2 (variant comparison) and the incidence falsification test. | — |
+| 2026-10-13 | **Falsification test made uncertainty-aware (§6).** A variant now fails only if the whole 95% interval of its predicted incidence is outside the acceptance region, not just its point estimate. Bands too uncertain to fail are reported as uninformative, and the point-estimate verdict is still reported. The factor-of-2 tolerance and the envelope are unchanged. | In the simulated dry run, the point-estimate rule rejected the *true* model. Stage V is almost never observed before age 70, so the IV → V rate at young ages is estimated with very large error (log-rate SE 1.7), and a noisy point prediction in the youngest band (0.03 vs 0.14 per 1,000 person-years) failed the test. A test that rejects the truth through estimation noise is miscalibrated. Decided on simulated data only, before any real fit. |
 | 2026-10-13 | **Criterion 1 (amyloid gating) dropped.** Variant A is now the age-adjusted LC-first model. Its amyloid hazard ratio is reported as *descriptive, not a test of gating*. The brief's literal variant A is kept only as a sensitivity analysis labelled *confounded with age*. Decided by the researcher (option (c) of `manuscript/notes/module2_identifiability.md`). | The autopsy stage counts carry no per-brain amyloid status, so the population amyloid curve A(t) enters only as a function of age. In simulation, with no amyloid effect at all, the literal variant A reported HR_A = 2.22 (log-scale 95% CI 0.28–1.31) when the LC → cortex step speeds up by 0.1 per decade, and 7.58 at 0.3 per decade. The criterion would have read ageing as gating and could essentially only come out in favour of the hypothesis. |
 
 **Module 2 does not test amyloid gating.** The stage-by-age counts carry no
@@ -123,16 +124,27 @@ the fit repeated.
   * Each fold starts from the full-data MLE plus 4 random starts.
   * Margin: 2 log-likelihood units.
 
-## 6. Falsification test (fixed before any fit)
+## 6. Falsification test (fixed before any real fit)
 
 For each variant, compute the predicted incidence of entering Braak stage
 **V**, per 1,000 person-years. It is evaluated at the midpoint of each CFAS
 age band (65–69, …, 80–84; 85+ is evaluated at age 90). The reference for
 each band is the interval between the lowest and highest of the four
-published rates (men/women × CFAS I/II).
+published rates (men/women × CFAS I/II). The *acceptance region* is that
+interval widened by a factor of 2 on both sides.
 
-**A variant fails if, in any band, its prediction lies more than a factor of
-2 outside that interval** (|log ratio to the nearest end| > ln 2).
+Predictions are computed for 200 parameter draws: posterior draws for the
+primary fits, and Laplace draws N(MLE, inverse observed information) for the
+MLE-only sensitivity fits.
+
+* **A variant fails if, in any band, the whole 95% interval of its predicted
+  incidence lies outside the acceptance region**: the nearer end of the
+  interval is more than a factor of 2 outside the published interval.
+* A band whose 95% interval is wider than the whole acceptance region is
+  reported as *uninformative* (it could not have failed). If every band is
+  uninformative, the verdict is UNINFORMATIVE, not PASS.
+* The point-estimate rule of the first draft is reported alongside: fail if
+  the point prediction is more than a factor of 2 outside.
 
 ## 7. Amyloid hazard ratio (descriptive only)
 

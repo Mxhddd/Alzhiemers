@@ -194,6 +194,17 @@ falsification:
   # different population and era; it still rejects wrong age slopes (the CFAS
   # rates rise 7- to 12-fold from 65-69 to 85+) and order-of-magnitude errors.
   max_abs_log_ratio: 0.6931
+  # Revised 2026-10-13 (simulated dry run, before any real fit): a variant
+  # fails only if the WHOLE 95% interval of its predicted incidence lies more
+  # than the factor above outside the envelope in some band, not merely its
+  # point estimate. In the dry run the point rule rejected the TRUE model:
+  # stage V is almost never seen before age 70, so the IV -> V rate at young
+  # ages is estimated with huge error (log-rate SE 1.7). Bands whose interval
+  # is wider than the whole acceptance region are reported as uninformative;
+  # if all are, the verdict is UNINFORMATIVE, not PASS. The point-estimate
+  # verdict is still reported. Draws per fit: posterior draws (primary) or
+  # Laplace draws N(MLE, inverse information) (sensitivity fits).
+  n_draws: 200
 
 cross_validation:
   # Folds are formed from whole age bands (brief: k-fold by age band). 5 is

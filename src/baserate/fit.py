@@ -83,6 +83,7 @@ class MLEResult:
     hessian_ok: bool
     on_bound: list[str]       # parameters whose estimate sits on the search box
     messages: list[str]
+    cov: np.ndarray | None = None   # inverse observed information (None if the Hessian is not positive definite)
 
     @property
     def aic(self) -> float:
@@ -139,14 +140,22 @@ def initial_values(model: StageModel, rng: np.random.Generator, cfg_mle: dict) -
 
 def fit_mle(model: StageModel, data: list[StageCounts], *, step: float, start_age: float,
             cfg_mle: dict, seed: int, eval_mode: str = "midpoint", n_points: int = 10,
-            extra_starts: list[np.ndarray] | None = None, n_random: int | None = None) -> MLEResult:
+            extra_starts: list[np.ndarray] | None = None, n_random: int | None = None,
+            compiled: tuple | None = None) -> MLEResult:
     """Multi-start L-BFGS-B on exact (JAX) gradients inside the configured
-    box; SEs from the exact Hessian. An optimum on the box edge is reported."""
+    box; SEs from the exact Hessian. An optimum on the box edge is reported.
+    `compiled` = (loglik, value_and_grad, hessian) functions of theta only,
+    already bound to `data` (e.g. from jaxlik.make_loglik_family); default:
+    compile them here."""
     import jax
 
     if cfg_mle["method"] != "l-bfgs-b":
         raise ValueError(f"unknown mle.method {cfg_mle['method']!r}")
-    ll, vg = make_loglik(model, data, step=step, start_age=start_age, eval_mode=eval_mode, n_points=n_points)
+    if compiled is None:
+        ll, vg = make_loglik(model, data, step=step, start_age=start_age, eval_mode=eval_mode, n_points=n_points)
+        hess = jax.jit(jax.hessian(ll))
+    else:
+        ll, vg, hess = compiled
 
     def f(th):
         v, g = vg(th)
@@ -158,7 +167,6 @@ def fit_mle(model: StageModel, data: list[StageCounts], *, step: float, start_ag
     rng = np.random.default_rng(seed)
     box = bounds_for(model, cfg_mle)
     lo_b = np.array([b[0] for b in box]); hi_b = np.array([b[1] for b in box])
-    hess = jax.jit(jax.hessian(ll))
     results, messages = [], []
     starts = list(extra_starts or []) + [initial_values(model, rng, cfg_mle)
                                          for _ in range(cfg_mle["n_starts"] if n_random is None else n_random)]
@@ -190,16 +198,21 @@ def fit_mle(model: StageModel, data: list[StageCounts], *, step: float, start_ag
     if on_bound:
         messages.append(f"WARNING: estimate on the search-box edge for {on_bound}: not an interior optimum")
     H = -np.asarray(hess(best.x), dtype=float)
+    cov = None
     try:
         eig = np.linalg.eigvalsh(H)
         ok = bool(np.all(eig > 0))
-        se = np.sqrt(np.diag(np.linalg.inv(H))) if ok else np.full(len(best.x), np.nan)
+        if ok:
+            cov = np.linalg.inv(H)
+            se = np.sqrt(np.diag(cov))
+        else:
+            se = np.full(len(best.x), np.nan)
     except np.linalg.LinAlgError:
         ok, se = False, np.full(len(best.x), np.nan)
     return MLEResult(model=model.name, param_names=model.param_names, theta=best.x, se=se,
                      loglik=-best.fun, n_params=len(best.x), converged_starts=len(results),
                      n_starts=len(starts), optima_spread=float(max(near) - min(near)), n_at_best=len(near),
-                     hessian_ok=ok, on_bound=on_bound, messages=messages)
+                     hessian_ok=ok, on_bound=on_bound, messages=messages, cov=cov)
 
 
 def fit_bayesian(model: StageModel, data: list[StageCounts], *, step: float, start_age: float,
@@ -274,4 +287,5 @@ def fit_bayesian(model: StageModel, data: list[StageCounts], *, step: float, sta
         "mean_leapfrog_steps": float(np.asarray(extra["num_steps"]).mean()),
         "chain_method": method,
     }
+    diagnostics["draws"] = draws.reshape(-1, draws.shape[-1])        # (chains*draws, P), for predictions
     return idata, summ, diagnostics

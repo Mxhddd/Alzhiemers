@@ -1,28 +1,49 @@
-# Module 5 entry point. Usage: Rscript src/metaanalysis/run_meta.R  (or `make metaanalysis`)
+# Module 5 entry point.
+#   Rscript src/metaanalysis/run_meta.R                      (real extraction; gated)
+#   Rscript src/metaanalysis/run_meta.R --dry-run-simulated  (simulated; no gates)
 #
-# Refuses to start unless the Module 5 validation passed on the current code
-# and prereg/metaanalysis.md is frozen. The anticholinergic positive control
-# is checked FIRST: if the pipeline cannot recover that known association it
-# is broken, and the run stops before any noradrenergic result is produced.
+# Real mode refuses to start unless the Module 5 validation passed on the
+# current code and prereg/metaanalysis.md is frozen. The extraction is
+# data/extracted/meta_extraction.csv (Claude-extracted from published papers,
+# verified=false until a human checks it: every table is then stamped
+# UNVERIFIED). The dry run builds a simulated extraction in memory
+# (sim/meta_sim.R), writes to results/dryrun/ and stamps everything SIMULATED.
+# The anticholinergic positive control is checked FIRST: if the pipeline
+# cannot recover that known association it is broken, and the run stops
+# before any noradrenergic result is produced.
 
 options(warn = 2)
 source("src/common/provenance.R")
 source("src/common/io.R")
 source("src/metaanalysis/meta.R")
 
+dry <- "--dry-run-simulated" %in% commandArgs(trailingOnly = TRUE)
 root <- lc_repo_root()
 cfg_path <- file.path(root, "config", "metaanalysis.yaml")
 cfg <- lc_read_yaml(cfg_path)
-lc_require_validated("metaanalysis", root)
-prereg <- lc_require_preregistration("metaanalysis", root)
+prereg <- NULL
+if (!dry) {
+  lc_require_validated("metaanalysis", root)
+  prereg <- lc_require_preregistration("metaanalysis", root)
+}
 
-lc_with_run("metaanalysis", cfg_path, seed = cfg$seed, packages = c("metafor", "yaml", "digest"),
-            preregistration = prereg, body = function(run) {
-  tables <- file.path(root, "results", "tables")
+lc_with_run(if (dry) "metaanalysis_dryrun" else "metaanalysis", cfg_path, seed = cfg$seed,
+            packages = c("metafor", "yaml", "digest"), preregistration = prereg, body = function(run) {
+  tables <- file.path(root, "results", if (dry) "dryrun/tables" else "tables")
   dir.create(tables, recursive = TRUE, showWarnings = FALSE)
-  write_out <- function(df, name) { p <- file.path(tables, name); utils::write.csv(df, p, row.names = FALSE); lc_record_output(run, p) }
+  write_out <- function(df, name) lc_write_table(run, df, file.path(tables, name))
 
-  x <- ma_load_extraction(lc_analysis_input(file.path(root, cfg$extraction$file), "researcher, hand extraction", root), cfg)
+  if (dry) {
+    lc_mark_simulated(run)
+    source(file.path(root, "sim", "meta_sim.R"))
+    p <- tempfile(fileext = ".csv")
+    utils::write.csv(meta_simulate_extraction(cfg, cfg$seed), p, row.names = FALSE)
+    x <- ma_load_extraction(p, cfg)
+  } else {
+    path <- lc_analysis_input(file.path(root, cfg$extraction$file), "Claude extraction from published papers", root)
+    lc_load_extracted(path, "Claude extraction from published papers", run, root)   # provenance + UNVERIFIED stamp
+    x <- ma_load_extraction(path, cfg)
+  }
   x <- ma_to_log_scale(x, cfg$extraction$log_symmetry_tolerance)
   lc_log(run, sprintf("extraction: %d rows from %d studies", nrow(x), length(unique(x$study_id))))
 
@@ -60,7 +81,7 @@ lc_with_run("metaanalysis", cfg_path, seed = cfg$seed, packages = c("metafor", "
   write_out(x, "meta_extraction_log_scale.csv")
 
   # Triangulation with Module 1 (MR); missing MR results stay as gaps.
-  mr_path <- file.path(tables, "mr_summary.csv")
+  mr_path <- file.path(root, "results", "tables", "mr_summary.csv")
   mr <- if (file.exists(mr_path)) utils::read.csv(mr_path, stringsAsFactors = FALSE) else {
     lc_log(run, "results/tables/mr_summary.csv absent: MR column of the triangulation is empty", "WARNING")
     data.frame(gene = character(), analysis = character(), is_primary = logical(), b = numeric(),

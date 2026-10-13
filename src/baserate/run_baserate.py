@@ -256,18 +256,73 @@ def fit_audited(model, data, *, cfg, step, start, eval_mode, n_points, seed, run
     raise RuntimeError(f"{model.name}: step audit still failing after 3 halvings")
 
 
-def falsification(model, theta, inputs: Inputs, *, threshold: int, open_age: float, step, start, tol):
+def falsification(model, theta, inputs: Inputs, *, threshold: int, open_age: float, step, start, tol,
+                  draws: np.ndarray | None = None, level: float = 0.95):
+    """Pre-registered incidence test (prereg §6, revised 2026-10-13).
+
+    For each CFAS band the published envelope is [min, max] of the four
+    rates; the acceptance region is that envelope widened by the factor
+    e^tol (= 2) on both sides. Predicted incidence is computed at the fitted
+    parameters (point) and for each parameter draw (posterior draws for the
+    primary fit, Laplace draws N(theta_hat, cov) for MLE-only fits).
+      * A band FAILS if the whole `level` interval of the predictions lies
+        outside the acceptance region (distance of its nearest end > tol);
+      * a band is UNINFORMATIVE if its interval is wider than the whole
+        acceptance region (it could not have failed);
+      * verdict: FAIL if any band fails; else UNINFORMATIVE if every band is
+        uninformative; else PASS.
+    The point-estimate rule of the first draft (fail if the point prediction
+    is > tol outside) is reported alongside as `point_rule_verdict`. Without
+    draws (e.g. a non-positive-definite Hessian) the interval collapses to
+    the point and this is recorded."""
     inc = inputs.incidence.copy()
     if inputs.incidence_open_lower is not None:
         inc.loc[inc["band"].str.endswith("open"), "eval_age"] = open_age
-    pred = 1000 * predict_incidence(model, theta, inc["eval_age"].to_numpy(), threshold=threshold, step=step,
-                                    start_age=start)
+    ages = inc["eval_age"].to_numpy()
+
+    def pred(th):
+        return 1000 * predict_incidence(model, th, ages, threshold=threshold, step=step, start_age=start)
+
+    point = pred(np.asarray(theta, float))
+    sims, failed_draws = [], 0
+    for th in ([] if draws is None else draws):
+        try:
+            v = pred(np.asarray(th, float))
+        except (ValueError, ArithmeticError):
+            failed_draws += 1
+            continue
+        if np.all(np.isfinite(v)):
+            sims.append(v)
+        else:
+            failed_draws += 1
+    if sims:
+        q_lo, q_hi = np.quantile(np.array(sims), [(1 - level) / 2, (1 + level) / 2], axis=0)
+    else:
+        q_lo, q_hi = point.copy(), point.copy()
     lo, hi = inc["observed_min"].to_numpy(), inc["observed_max"].to_numpy()
-    dist = np.where(pred > hi, np.log(pred / hi), np.where(pred < lo, np.log(lo / pred), 0.0))
-    inc["predicted_per_1000py"] = pred
-    inc["log_distance_outside_envelope"] = dist
-    verdict = "PASS" if np.all(dist <= tol) else "FAIL"
+
+    def outside(a_lo, a_hi):
+        return np.where(a_lo > hi, np.log(a_lo / hi), np.where(a_hi < lo, np.log(lo / a_hi), 0.0))
+
+    d_point, d_int = outside(point, point), outside(q_lo, q_hi)
+    region = np.log(hi * np.exp(tol)) - np.log(lo / np.exp(tol))
+    uninformative = (np.log(q_hi) - np.log(q_lo)) > region
+    inc["predicted_per_1000py"] = point
+    inc["pred_lower"], inc["pred_upper"] = q_lo, q_hi
+    inc["interval_from"] = f"{len(sims)} parameter draws" if sims else "point estimate only (no draws)"
+    inc["failed_draws"] = failed_draws
+    inc["log_distance_outside_envelope"] = d_point
+    inc["interval_log_distance_outside_envelope"] = d_int
+    inc["band_uninformative"] = uninformative
+    inc["point_rule_verdict"] = "PASS" if np.all(d_point <= tol) else "FAIL"
+    verdict = ("FAIL" if np.any(d_int > tol) else "UNINFORMATIVE" if np.all(uninformative) else "PASS")
     return inc, verdict
+
+
+def laplace_draws(fit_theta, cov, n: int, seed: int) -> np.ndarray | None:
+    if cov is None:
+        return None
+    return np.random.default_rng(seed).multivariate_normal(np.asarray(fit_theta, float), np.asarray(cov, float), size=n)
 
 
 def cv_verdict_3way(cv_df: pd.DataFrame, margin: float, a_name: str) -> str:
@@ -429,6 +484,7 @@ def main(argv=None) -> int:
             replace(primary, name="literal_A_confounded_with_age", refit=(literal,), variants=(literal,)),
         ]
         tol = cfg.get("falsification.max_abs_log_ratio")
+        n_draws = cfg.get("falsification.n_draws")
         g_exp = (cfg.get("gamma_check.expected_log_hr"), cfg.get("gamma_check.expected_log_hr_ci_lower"),
                  cfg.get("gamma_check.expected_log_hr_ci_upper"))
         run.info(f"falsification tolerance |log ratio| <= {tol}; amyloid HR is reported as '{DESCRIPTIVE}' "
@@ -477,15 +533,19 @@ def main(argv=None) -> int:
                         "ci_upper": summ.loc[p.replace("[", "_").replace("]", ""), hi_col],
                         "r_hat": summ.loc[p.replace("[", "_").replace("]", ""), "r_hat"],
                         "ess_bulk": summ.loc[p.replace("[", "_").replace("]", ""), "ess_bulk"]} for p in m.param_names}
+            all_draws = diag.pop("draws")
+            sel = all_draws[np.linspace(0, len(all_draws) - 1, min(n_draws, len(all_draws))).astype(int)]
             tab, verdict = falsification(m, fit.theta, inputs, threshold=stages.index(primary.threshold),
-                                         open_age=primary.open_age, step=step, start=start, tol=tol)
-            (run.info if verdict == "PASS" else run.warning)(f"falsification {name} (primary): {verdict}")
+                                         open_age=primary.open_age, step=step, start=start, tol=tol, draws=sel)
+            (run.info if verdict == "PASS" else run.warning)(
+                f"falsification {name} (primary): {verdict} (point-estimate rule: {tab['point_rule_verdict'].iloc[0]})")
             return {"fit": _fit_dict(fit), "step": step, "audit_max_dp": dp, "audit_dll": dll, "bound": bound,
                     "posterior": post, "nuts": {**diag, "posterior_clean": clean},
                     "falsification": tab.to_dict("records"), "verdict": verdict}
 
         def cv_stage(name):
-            r = compare_models([models[name]], inputs.data, k=cfg.get("cross_validation.k"), step=step0,
+            # the step the primary fit's audit settled on (prereg §4), not the default
+            r = compare_models([models[name]], inputs.data, k=cfg.get("cross_validation.k"), step=prim[name]["step"],
                                start_age=start, cfg_mle=cfg.get("mle"), seed=seed, eval_mode=primary.eval_mode,
                                n_points=npts, warm_starts={name: np.array(prim[name]["fit"]["theta"])},
                                n_random=cfg.get("cross_validation.n_random_starts"))[0]
@@ -504,9 +564,14 @@ def main(argv=None) -> int:
                 fd = _fit_dict(fit)
             else:
                 fd, step = prim[name]["fit"], prim[name]["step"]
+            if name in sc.refit:
+                draws = laplace_draws(fd["theta"], fd["cov"], n_draws, seed)
+            else:
+                draws = laplace_draws(prim[name]["fit"]["theta"], prim[name]["fit"]["cov"], n_draws, seed)
             tab, verdict = falsification(m, np.array(fd["theta"]), inputs, threshold=stages.index(sc.threshold),
-                                         open_age=sc.open_age, step=step, start=start, tol=tol)
-            run.info(f"sensitivity {sc.name} / {name}: falsification {verdict}")
+                                         open_age=sc.open_age, step=step, start=start, tol=tol, draws=draws)
+            run.info(f"sensitivity {sc.name} / {name}: falsification {verdict} "
+                     f"(point-estimate rule: {tab['point_rule_verdict'].iloc[0]})")
             return {"scenario": sc.name, "model": name, "refitted": name in sc.refit, "fit": fd, "step": step,
                     "falsification": tab.to_dict("records"), "verdict": verdict}
 
@@ -612,7 +677,8 @@ def main(argv=None) -> int:
 
 
 def _fit_dict(fit) -> dict:
-    return {"param_names": fit.param_names, "theta": fit.theta, "se": fit.se, "loglik": fit.loglik, "aic": fit.aic,
+    return {"param_names": fit.param_names, "theta": fit.theta, "se": fit.se, "cov": fit.cov,
+            "loglik": fit.loglik, "aic": fit.aic,
             "hessian_ok": fit.hessian_ok, "on_bound": fit.on_bound, "n_at_best": fit.n_at_best,
             "converged_starts": fit.converged_starts, "n_starts": fit.n_starts, "messages": fit.messages}
 
@@ -627,8 +693,11 @@ def _figures(prim, sens, prev, models, stages, primary, tol, figures, run, a_nam
               label="published range (sex x CFAS wave)")
     ax.vlines(env["eval_age"], env["observed_min"] / np.exp(tol), env["observed_max"] * np.exp(tol),
               color=INK["muted"], lw=1, label="pre-set tolerance (x2)")
-    for (name, g), c in zip(fal.groupby("model", sort=False), cols):
-        ax.plot(g["eval_age"], g["predicted_per_1000py"], "-o", ms=3, color=c, label=f"{name}: {g['verdict'].iloc[0]}")
+    for j, ((name, g), c) in enumerate(zip(fal.groupby("model", sort=False), cols)):
+        x = g["eval_age"] + 0.6 * (j - 1)                     # small offsets so the intervals do not overlap
+        ax.errorbar(x, g["predicted_per_1000py"], yerr=[g["predicted_per_1000py"] - g["pred_lower"],
+                                                        g["pred_upper"] - g["predicted_per_1000py"]],
+                    fmt="-o", ms=3, lw=1, capsize=2, color=c, label=f"{name}: {g['verdict'].iloc[0]} (95% interval)")
     ax.set_yscale("log")
     ax.set_xlabel("Age (years)")
     ax.set_ylabel(f"Incidence of Braak {primary.threshold}+ / dementia per 1,000 PY")

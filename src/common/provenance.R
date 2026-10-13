@@ -126,6 +126,8 @@ lc_start_run <- function(module, config_path, seed, packages, preregistration = 
   run$drops <- data.frame(stage = character(), item = character(), reason = character(),
                           stringsAsFactors = FALSE)
   run$outputs <- list()
+  run$unverified <- character()
+  run$simulated <- FALSE
   run$closed <- FALSE
   lc_log(run, paste("log:", log_path))
   if (isTRUE(git$dirty)) {
@@ -160,6 +162,68 @@ lc_record_output <- function(run, path) {
 }
 
 lc_empty_map <- function() structure(list(), names = character())  # YAML {} like Python
+
+# Dry run on simulated data: every table this run writes is stamped SIMULATED.
+lc_mark_simulated <- function(run) {
+  run$simulated <- TRUE
+  lc_log(run, "SIMULATED DATA: this run's outputs are a dry run, not results", "WARNING")
+}
+
+# An input contains extracted values not yet verified by a human: every table
+# written afterwards carries a leading UNVERIFIED_INPUTS column and the footer
+# lists the inputs (same convention as src/common/runlog.py).
+lc_mark_unverified <- function(run, description) {
+  run$unverified <- c(run$unverified, description)
+  lc_log(run, paste("UNVERIFIED INPUT:", description), "WARNING")
+}
+
+lc_write_table <- function(run, df, path) {
+  dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
+  out <- df
+  if (isTRUE(run$simulated)) out <- cbind(SIMULATED_DATA = "dry run on simulated data - not a result", out)
+  if (length(run$unverified)) {
+    out <- cbind(UNVERIFIED_INPUTS = "built on extracted values not yet verified against the source PDFs", out)
+  }
+  utils::write.csv(out, path, row.names = FALSE)
+  lc_record_output(run, path)
+  invisible(path)
+}
+
+# R counterpart of src/common/extracted.py::load_extracted. Every row must say
+# where it came from (source_id + locator, or source) and carry verified
+# true/false and machine_rechecked true/false/discrepancy. Refuses empty files
+# and blank cells; marks the run unverified when any row is unverified.
+lc_load_extracted <- function(path, provided_by, run = NULL, root = lc_repo_root()) {
+  path <- lc_analysis_input(path, provided_by, root)
+  x <- utils::read.csv(path, stringsAsFactors = FALSE, colClasses = "character", na.strings = character(0),
+                       strip.white = TRUE)
+  if (!nrow(x)) stop(sprintf("%s: no rows (values not yet extracted)", path))
+  if (!"verified" %in% names(x)) stop(sprintf("%s: needs a 'verified' column (true/false per row)", path))
+  if (!any(c("source_id", "source") %in% names(x))) stop(sprintf("%s: needs a 'source_id' or 'source' column", path))
+  if ("source_id" %in% names(x) && !"locator" %in% names(x)) {
+    stop(sprintf("%s: rows citing a source_id need a 'locator' column", path))
+  }
+  v <- tolower(x$verified)
+  if (any(!v %in% c("true", "false"))) stop(sprintf("%s: 'verified' must be true or false (lines %s)", path,
+                                                    paste(which(!v %in% c("true", "false")) + 1, collapse = ", ")))
+  if ("machine_rechecked" %in% names(x)) {
+    m <- tolower(x$machine_rechecked)
+    if (any(!m %in% c("true", "false", "discrepancy"))) {
+      stop(sprintf("%s: 'machine_rechecked' must be true, false or discrepancy", path))
+    }
+    if (!is.null(run) && any(m == "discrepancy")) {
+      lc_log(run, sprintf("%s: %d row(s) flagged 'discrepancy' by the machine recheck (see the recheck log)",
+                          basename(path), sum(m == "discrepancy")), "WARNING")
+    }
+  }
+  blank <- which(x == "", arr.ind = TRUE)
+  if (nrow(blank)) stop(sprintf("%s: empty cells on lines %s", path, paste(unique(blank[, 1] + 1), collapse = ", ")))
+  x$verified <- v == "true"
+  if (!is.null(run) && any(!x$verified)) {
+    lc_mark_unverified(run, sprintf("%s: %d of %d values unverified", basename(path), sum(!x$verified), nrow(x)))
+  }
+  x
+}
 
 lc_drop_counts <- function(run) {
   out <- lc_empty_map()
@@ -197,6 +261,8 @@ lc_finish_run <- function(run, status, error = NULL) {
     status = status,
     error = error,
     n_dropped = nrow(run$drops),
+    unverified_inputs = if (length(run$unverified)) as.list(run$unverified) else list(),
+    simulated = isTRUE(run$simulated),
     dropped_by_stage_and_reason = lc_drop_counts(run),
     outputs_sha256 = if (length(run$outputs)) run$outputs else lc_empty_map()
   )

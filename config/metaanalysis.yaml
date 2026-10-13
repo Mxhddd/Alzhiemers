@@ -6,8 +6,9 @@
 seed: 20261017
 
 extraction:
-  # Hand-extracted by the researcher.
-  file: data/raw/extraction.csv
+  # Extracted by Claude from published open-access papers (sources, locators,
+  # verbatim snippets per row; verified=false until a human checks each row).
+  file: data/extracted/meta_extraction.csv
   # Transcribed CIs are checked for symmetry on the log scale: the estimate
   # must sit within this fraction of the half-width from the CI midpoint.
   # 0.15 tolerates two-decimal rounding; larger asymmetry suggests a

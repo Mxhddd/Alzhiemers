@@ -1,12 +1,19 @@
 # Module 5 — meta-analysis and triangulation (metafor).
 #
-# The extraction file is the researcher's. load_extraction() validates it
-# hard and stops on any gap; nothing is imputed, nothing silently dropped.
+# The extraction (data/extracted/meta_extraction.csv) is built from published
+# papers by Claude under the sourcing rules: every row names its source
+# (source_id -> data/extracted/SOURCES.md), the exact locator (table/row), the
+# quantity, a verbatim snippet, verified (true/false; only a human sets true)
+# and machine_rechecked (true/false/discrepancy). load_extraction() validates
+# it hard and stops on any gap; nothing is imputed, nothing silently dropped.
 
 .ma_required <- c("study_id", "drug_class", "drug", "comparator_type", "comparator", "contrast",
                   "outcome", "effect_measure", "estimate", "ci_lower", "ci_upper", "ci_level",
-                  "covariates", "brain_penetrance", paste0("robins_d", 1:7))
-.robins_levels <- c("low", "moderate", "serious", "critical", "no_information")
+                  "covariates", "brain_penetrance", paste0("robins_d", 1:7),
+                  "source_id", "locator", "quantity", "verbatim", "verified", "machine_rechecked")
+# not_assessed: risk of bias not yet rated (stated in the pre-registration;
+# the risk-of-bias sensitivity analysis cannot run until ratings exist).
+.robins_levels <- c("low", "moderate", "serious", "critical", "no_information", "not_assessed")
 
 # Every random-effects fit goes through here so the estimator, the HKSJ
 # choice and the convergence controls are the configured ones.
@@ -48,6 +55,8 @@ ma_load_extraction <- function(path, cfg) {
     chk(x$brain_penetrance %in% c("high", "low", "not_applicable"), "brain_penetrance must be high, low or not_applicable")
     chk(x$drug_class %in% names(cfg$drug_classes), "drug_class not listed in config/metaanalysis.yaml drug_classes")
     for (d in paste0("robins_d", 1:7)) chk(x[[d]] %in% .robins_levels, sprintf("%s must be one of %s", d, paste(.robins_levels, collapse = "/")))
+    chk(tolower(x$verified) %in% c("true", "false"), "verified must be true or false")
+    chk(tolower(x$machine_rechecked) %in% c("true", "false", "discrepancy"), "machine_rechecked must be true, false or discrepancy")
   }
   if (length(problems)) stop(paste(c(sprintf("%s failed validation:", path), problems), collapse = "\n  "))
   x
@@ -97,7 +106,10 @@ ma_subgroup <- function(x, by, cfg) {
   out <- do.call(rbind, parts)
   test <- NA_real_
   if (length(unique(x[[by]])) > 1 && nrow(x) >= 3) {
-    mr <- ma_rma(x$yi, x$sei, cfg, mods = ~ factor(x[[by]]))
+    # An explicit moderator matrix (metafor adds the intercept): a formula
+    # built from local variables is not evaluated in this function's scope.
+    mods <- stats::model.matrix(~ factor(g), data.frame(g = x[[by]]))[, -1, drop = FALSE]
+    mr <- ma_rma(x$yi, x$sei, cfg, mods = mods)
     test <- mr$QMp
   }
   out$subgroup_difference_pval <- test

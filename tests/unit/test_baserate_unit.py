@@ -279,3 +279,21 @@ def test_checkpoints_round_trip_and_ignore_a_different_key(tmp_path):
     assert not list(tmp_path.glob("*.tmp"))
     assert Checkpoints(tmp_path, "key2", run).get("primary/A") is None      # stale: never reused
     assert any("different code/config" in m for m in run.msgs)
+
+
+def test_compiled_likelihood_family_matches_make_loglik():
+    from src.baserate.jaxlik import make_loglik, make_loglik_family
+
+    am = piecewise_constant([(0, 40, 0.0), (40, 60, 0.2), (60, 200, 0.6)])
+    m = AGatedAge(SPEC, am, 50, 10)
+    data = [StageCounts(lo, lo + 10, "x", np.array([30, 10, 5, 2])) for lo in range(30, 100, 10)]
+    counts = np.array([g.counts for g in data], dtype=float)
+    ll_f, vg_f, h_f = make_loglik_family(m, data, step=0.5, start_age=0)
+    th = np.array([-3.0, 0.2, -3.5, 0.1, 0.3, -3.0, 0.4])
+    full, _ = make_loglik(m, data, step=0.5, start_age=0)
+    assert float(ll_f(th, counts, np.ones(len(data)))) == pytest.approx(float(full(th)), rel=1e-10)
+    keep = np.array([1, 0, 1, 1, 0, 1, 1], dtype=float)                 # a CV-style training mask
+    sub, _ = make_loglik(m, [g for g, k in zip(data, keep) if k], step=0.5, start_age=0)
+    assert float(ll_f(th, counts, keep)) == pytest.approx(float(sub(th)), abs=1e-3)   # grid knots differ only
+    v, g = vg_f(th, counts, keep)
+    assert np.all(np.isfinite(np.asarray(g))) and np.asarray(h_f(th, counts, keep)).shape == (7, 7)

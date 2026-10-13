@@ -95,3 +95,66 @@ def make_loglik(model: StageModel, data: list[StageCounts], *, step: float, star
         return jnp.where(jnp.isfinite(ll), ll, -jnp.inf)
 
     return jax.jit(loglik), jax.jit(jax.value_and_grad(loglik))
+
+
+def make_loglik_family(model: StageModel, template: list[StageCounts], *, step: float, start_age: float,
+                       eval_mode: str = "midpoint", n_points: int = 10):
+    """Like make_loglik, but compiled ONCE for a fixed set of age bands, with
+    the counts (G, K) and a per-band 0/1 mask (G,) as arguments, so repeated
+    fits (simulation replicates, cross-validation folds) reuse one compiled
+    likelihood. Returns jitted (loglik, value_and_grad, hessian), each a
+    function of (theta, counts, mask). With mask = 1 everywhere it equals
+    make_loglik on the same bands (a unit test checks this); held-out bands
+    still sit on the integration grid as knots, which changes nothing beyond
+    the audited step error."""
+    jax, jnp, expm = _jax()
+    from jax.scipy.special import gammaln as jgammaln
+
+    pts = [g.eval_points(eval_mode, n_points) for g in template]
+    ages = np.concatenate([a for a, _ in pts])
+    W = np.zeros((len(template), len(ages)))
+    i = 0
+    for gidx, (a, w) in enumerate(pts):
+        W[gidx, i:i + len(a)] = w
+        i += len(a)
+    grid = integration_grid(ages, step=step, start_age=start_age, breakpoints=model.breakpoints)
+    n = model.n_hidden
+    edges = model.edges
+    ei = np.array([e.i for e in edges]); ej = np.array([e.j for e in edges])
+    kind = np.array([{"loglinear": 0, "gated": 1, "const": 2, "gated_loglinear": 3}[e.kind] for e in edges])
+    p0 = jnp.asarray([e.p0 for e in edges]); p1 = jnp.asarray([max(e.p1, 0) for e in edges])
+    p2 = jnp.asarray([max(e.p2, 0) for e in edges])
+    u_j = jnp.asarray([model.u(t) for t in grid.t_mid])
+    A_j = jnp.asarray([model.amyloid(t) for t in grid.t_mid] if model.amyloid is not None
+                      else np.zeros(len(grid.t_mid)))
+    h_j = jnp.asarray(grid.h)
+    M = jnp.asarray(aggregation_matrix(model))
+    rec = jnp.asarray(grid.record_after)
+    init = jnp.asarray(model.initial())
+    W_j, kind_j = jnp.asarray(W), jnp.asarray(kind)
+
+    def rates(theta, uk, ak):
+        a, b, c = theta[p0], theta[p1], theta[p2]
+        loglin = jnp.exp(a + b * uk)
+        gated = jnp.exp(a) * (1.0 + (jnp.exp(b) - 1.0) * ak)
+        gated_ll = loglin * (1.0 + (jnp.exp(c) - 1.0) * ak)
+        return jnp.where(kind_j == 0, loglin, jnp.where(kind_j == 1, gated,
+                                                        jnp.where(kind_j == 3, gated_ll, jnp.exp(a))))
+
+    def loglik(theta, counts, mask):
+        def body(p, xs):
+            uk, ak, hk = xs
+            Q = jnp.zeros((n, n)).at[ei, ej].add(rates(theta, uk, ak))
+            Q = Q - jnp.diag(Q.sum(axis=1))
+            p = p @ expm(Q * hk, max_squarings=MAX_SQUARINGS)
+            return p, p
+        _, traj = jax.lax.scan(body, init, (u_j, A_j, h_j))
+        traj = jnp.vstack([init[None, :], traj])
+        P = W_j @ (traj[rec] @ M)
+        per_group = jnp.sum(jnp.where(counts > 0, counts * jnp.log(jnp.maximum(P, LOG_FLOOR)), 0.0), axis=1)
+        const = jgammaln(counts.sum(axis=1) + 1) - jnp.sum(jgammaln(counts + 1), axis=1)
+        ll = jnp.sum(mask * (per_group + const))
+        return jnp.where(jnp.isfinite(ll), ll, -jnp.inf)
+
+    return (jax.jit(loglik), jax.jit(jax.value_and_grad(loglik)),
+            jax.jit(jax.hessian(loglik)))

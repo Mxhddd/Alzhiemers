@@ -8,7 +8,10 @@ label, never omitted. The two estimates are on different scales (drug use vs
 per-SD expression), so only their signs and intervals are comparable — the
 caption says so.
 
-Usage: python -m src.metaanalysis.plots
+Usage: python -m src.metaanalysis.plots [--dry-run-simulated]
+
+Tables carrying the SIMULATED_DATA / UNVERIFIED_INPUTS stamp columns (written
+by run_meta.R) make the figures carry the matching banners.
 """
 
 from __future__ import annotations
@@ -19,7 +22,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from src.common.paths import CONFIG_DIR, TABLES_DIR
+from src.common.paths import CONFIG_DIR, FIGURES_DIR, RESULTS_DIR, TABLES_DIR
 from src.common.plotting import DIVERGING, INK, apply_theme, save_figure, series_colors
 from src.common.runlog import start_run
 
@@ -91,14 +94,28 @@ def forest_figure(pooled: pd.DataFrame):
     return fig
 
 
-def main() -> int:
-    with start_run(module="metaanalysis_plots", config_path=CONFIG_DIR / "metaanalysis.yaml", seed=None,
-                   packages=["pandas", "matplotlib"]) as run:
+def _read_stamped(path, run) -> pd.DataFrame:
+    df = pd.read_csv(path)
+    if "SIMULATED_DATA" in df.columns and not run.simulated:
+        run.mark_simulated()
+    if "UNVERIFIED_INPUTS" in df.columns:
+        run.mark_unverified(f"{path.name} is built on unverified extracted values")
+    return df.drop(columns=[c for c in ("SIMULATED_DATA", "UNVERIFIED_INPUTS") if c in df.columns])
+
+
+def main(argv=None) -> int:
+    dry = "--dry-run-simulated" in (sys.argv[1:] if argv is None else argv)
+    tables = RESULTS_DIR / "dryrun" / "tables" if dry else TABLES_DIR
+    figures = RESULTS_DIR / "dryrun" / "figures" if dry else FIGURES_DIR
+    with start_run(module="metaanalysis_plots_dryrun" if dry else "metaanalysis_plots",
+                   config_path=CONFIG_DIR / "metaanalysis.yaml", seed=None, packages=["pandas", "matplotlib"]) as run:
         for name in ("triangulation.csv", "meta_pooled_by_class.csv"):
-            if not (TABLES_DIR / name).is_file():
-                raise FileNotFoundError(f"{TABLES_DIR / name} missing: run src/metaanalysis/run_meta.R first")
-        save_figure(triangulation_figure(pd.read_csv(TABLES_DIR / "triangulation.csv")), "triangulation", run)
-        save_figure(forest_figure(pd.read_csv(TABLES_DIR / "meta_pooled_by_class.csv")), "meta_forest", run)
+            if not (tables / name).is_file():
+                raise FileNotFoundError(f"{tables / name} missing: run src/metaanalysis/run_meta.R first")
+        save_figure(triangulation_figure(_read_stamped(tables / "triangulation.csv", run)), "triangulation", run,
+                    figures_dir=figures)
+        save_figure(forest_figure(_read_stamped(tables / "meta_pooled_by_class.csv", run)), "meta_forest", run,
+                    figures_dir=figures)
     return 0
 
 

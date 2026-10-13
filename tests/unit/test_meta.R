@@ -9,6 +9,8 @@ row <- function(...) {
                outcome = "all-cause dementia", effect_measure = "HR", estimate = "0.80", ci_lower = "0.64",
                ci_upper = "1.00", ci_level = "0.95", covariates = "age;sex", brain_penetrance = "high")
   for (d in paste0("robins_d", 1:7)) base[[d]] <- "moderate"
+  base <- c(base, list(source_id = "fixture", locator = "Table 1", quantity = "adjusted HR (fixture)",
+                       verbatim = "0.80 (0.64-1.00)", verified = "false", machine_rechecked = "false"))
   modifyList(base, list(...))
 }
 write_extraction <- function(rows) {
@@ -26,6 +28,9 @@ test_that("a complete extraction loads; any gap or bad label stops with the line
   expect_error(ma_load_extraction(write_extraction(list(row(estimate = "1.20"))), cfg), "outside its own CI")
   expect_error(ma_load_extraction(write_extraction(list(row(robins_d3 = "high"))), cfg), "robins_d3")
   expect_error(ma_load_extraction(write_extraction(list(row(), row())), cfg), "duplicated")
+  expect_error(ma_load_extraction(write_extraction(list(row(verified = "yes"))), cfg), "verified must be")
+  expect_error(ma_load_extraction(write_extraction(list(row(machine_rechecked = "maybe"))), cfg), "machine_rechecked")
+  expect_equal(nrow(ma_load_extraction(write_extraction(list(row(robins_d1 = "not_assessed"))), cfg)), 1)
 })
 
 test_that("SE is backed out of the CI on the log scale, and asymmetric CIs are refused", {
@@ -86,4 +91,16 @@ test_that("triangulation puts drug use, MR and prediction on one 'lower activity
   expect_identical(a2$mr_vs_prediction, "missing")
   expect_equal(nrow(tri), length(targets))      # every target present, gaps included
   expect_true(is.na(tri$obs_est[tri$target == "LGMN"]))
+})
+
+test_that("subgroup pooling runs the between-subgroup test (and matches a by-hand meta-regression)", {
+  x <- data.frame(study_id = paste0("S", 1:6), yi = c(0.1, 0.2, 0.15, -0.3, -0.2, -0.25),
+                  sei = c(0.1, 0.12, 0.15, 0.1, 0.12, 0.15), g = rep(c("a", "b"), each = 3),
+                  ci_lower = 1, ci_upper = 2)
+  out <- ma_subgroup(x, "g", cfg)
+  expect_equal(nrow(out), 2)
+  ref <- metafor::rma(yi = x$yi, sei = x$sei, mods = ~ g, data = x, method = cfg$pooling$method,
+                      test = if (isTRUE(cfg$pooling$knapp_hartung)) "knha" else "z", control = cfg$pooling$rma_control)
+  expect_equal(out$subgroup_difference_pval[1], ref$QMp, tolerance = 1e-10)
+  expect_lt(out$subgroup_difference_pval[1], 0.05)
 })
