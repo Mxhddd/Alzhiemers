@@ -1,10 +1,21 @@
 # Module 2 — expected value of the amyloid effect γ (stated before any fit)
 
-> **Status: derived by Claude. NOT independently checked.** Written and
-> committed before Module 2 has been fitted to any real data (the fit is
-> blocked until `prereg/baserate.md` is frozen). The result depends heavily
-> on an untested **proxy assumption** (§3, A1); treat any comparison between
-> this value and the fit as weak evidence either way.
+> **Status: derived by Claude; MACHINE-CHECKED 2026-10-13, NOT human-checked.**
+> `checks/module2_gamma.py` checks the algebra symbolically (including the
+> age-adjusted form), the numbers, and claim A3 numerically. For A3, an
+> individual-level model with HR 2.43 (5.0) is fitted by the population form
+> as HR 2.13 (3.26): attenuated towards 1, as stated. 9/9 checks pass.
+>
+> **Role since the 2026-10-13 revision: descriptive reference only.** Module 2
+> no longer tests amyloid gating (prereg/baserate.md change log). The fitted
+> HR_A comes from the *age-adjusted* variant A,
+> μ(t) = m(t)(1 + (HR_A − 1)A(t)) with m(t) = exp(α + β(t − 50)/10). The
+> mapping HR_A = amyloid-positive / amyloid-negative rate ratio at the same
+> age is unchanged (§1 with μ0 replaced by m(t)). §5's comparison is
+> reported only as a description, never as a verdict.
+>
+> The result still depends heavily on an untested **proxy assumption** (§3,
+> A1).
 
 ## 1. What γ is in the model
 

@@ -49,6 +49,7 @@ import pandas as pd
 
 from src.baserate.data import StageCounts, jansen_bands, load_amyloid_bands, load_braak_counts, load_incidence
 from src.baserate.fit import fit_bayesian, fit_mle, group_probabilities
+from src.baserate.jaxlik import make_incidence_batch
 from src.baserate.model import AGated, AGatedAge, BIndependent, ChainSpec, CMultiHit, StepFunction
 from src.baserate.predict import compare_models, predict_incidence, stage_prevalence_table
 from src.baserate.solve import error_bound, stage_probabilities_ode
@@ -285,16 +286,12 @@ def falsification(model, theta, inputs: Inputs, *, threshold: int, open_age: flo
 
     point = pred(np.asarray(theta, float))
     sims, failed_draws = [], 0
-    for th in ([] if draws is None else draws):
-        try:
-            v = pred(np.asarray(th, float))
-        except (ValueError, ArithmeticError):
-            failed_draws += 1
-            continue
-        if np.all(np.isfinite(v)):
-            sims.append(v)
-        else:
-            failed_draws += 1
+    if draws is not None and len(draws):
+        # compiled + vectorised over draws (equal to `pred` to 1e-10; unit-tested)
+        batch = make_incidence_batch(model, ages, threshold=threshold, step=step, start_age=start)
+        V = 1000 * np.asarray(batch(np.asarray(draws, float)))
+        ok = np.all(np.isfinite(V) & (V >= 0), axis=1)
+        sims, failed_draws = list(V[ok]), int((~ok).sum())
     if sims:
         q_lo, q_hi = np.quantile(np.array(sims), [(1 - level) / 2, (1 + level) / 2], axis=0)
     else:

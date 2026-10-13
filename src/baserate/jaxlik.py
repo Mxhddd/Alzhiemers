@@ -158,3 +158,53 @@ def make_loglik_family(model: StageModel, template: list[StageCounts], *, step: 
 
     return (jax.jit(loglik), jax.jit(jax.value_and_grad(loglik)),
             jax.jit(jax.hessian(loglik)))
+
+
+def make_incidence_batch(model: StageModel, ages, *, threshold: int, step: float, start_age: float):
+    """Compiled, vectorised version of predict.predict_incidence: returns a
+    jitted function mapping a (D, P) array of parameter draws to the (D, E)
+    hazards of first entering any stage >= `threshold` at `ages` (flux into
+    the set / probability outside it). Same edges, same integration grid
+    (breakpoints respected), same evaluation of Q at the exact ages as the
+    numpy reference; a unit test requires agreement to 1e-10."""
+    jax, jnp, expm = _jax()
+    ages = np.asarray(ages, dtype=float)
+    grid = integration_grid(ages, step=step, start_age=start_age, breakpoints=model.breakpoints)
+    n = model.n_hidden
+    edges = model.edges
+    ei = np.array([e.i for e in edges]); ej = np.array([e.j for e in edges])
+    kind_j = jnp.asarray([{"loglinear": 0, "gated": 1, "const": 2, "gated_loglinear": 3}[e.kind] for e in edges])
+    p0 = jnp.asarray([e.p0 for e in edges]); p1 = jnp.asarray([max(e.p1, 0) for e in edges])
+    p2 = jnp.asarray([max(e.p2, 0) for e in edges])
+
+    def amy(ts):
+        return np.array([model.amyloid(t) for t in ts]) if model.amyloid is not None else np.zeros(len(ts))
+
+    u_j, A_j, h_j = jnp.asarray([model.u(t) for t in grid.t_mid]), jnp.asarray(amy(grid.t_mid)), jnp.asarray(grid.h)
+    ue, Ae = jnp.asarray([model.u(t) for t in ages]), jnp.asarray(amy(ages))
+    rec = jnp.asarray(grid.record_after)
+    init = jnp.asarray(model.initial())
+    below = jnp.asarray((model.observed_of_hidden < threshold).astype(float))
+
+    def gen(theta, uk, ak):
+        a, b, c = theta[p0], theta[p1], theta[p2]
+        loglin = jnp.exp(a + b * uk)
+        r = jnp.where(kind_j == 0, loglin, jnp.where(kind_j == 1, jnp.exp(a) * (1.0 + (jnp.exp(b) - 1.0) * ak),
+                                                     jnp.where(kind_j == 3, loglin * (1.0 + (jnp.exp(c) - 1.0) * ak),
+                                                               jnp.exp(a))))
+        Q = jnp.zeros((n, n)).at[ei, ej].add(r)
+        return Q - jnp.diag(Q.sum(axis=1))
+
+    def one(theta):
+        def body(p, xs):
+            uk, ak, hk = xs
+            p = p @ expm(gen(theta, uk, ak) * hk, max_squarings=MAX_SQUARINGS)
+            return p, p
+        _, traj = jax.lax.scan(body, init, (u_j, A_j, h_j))
+        traj = jnp.vstack([init[None, :], traj])
+        P = traj[rec]                                                       # (E, n) hidden probabilities
+        Qe = jax.vmap(lambda uk, ak: gen(theta, uk, ak))(ue, Ae)            # (E, n, n) generator at each age
+        flux = jnp.einsum("en,enm,m->e", P * below, Qe, 1.0 - below)
+        return flux / jnp.sum(P * below, axis=1)
+
+    return jax.jit(jax.vmap(one))

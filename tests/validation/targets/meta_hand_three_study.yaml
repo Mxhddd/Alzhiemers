@@ -1,19 +1,22 @@
-# Module 5 validation (brief §5): a hand-computable three-study example. The
-# researcher supplies the inputs AND the arithmetic; the pipeline must agree.
+# Module 5 validation (brief §5): a hand-computable three-study example.
+# Inputs are TEST SETTINGS (exact rationals), not published values. The
+# arithmetic is Claude's, done in exact rational arithmetic and machine-checked
+# (manuscript/derivations/module5_hand_three_study.md); it has NOT been
+# checked by a human. The pipeline must agree to 1e-9.
 id: meta_hand_three_study
 module: metaanalysis
 kind: hand_arithmetic
 
 inputs:
-  yi: null              # RESEARCHER: three log effect sizes
-  vi: null              # RESEARCHER: their three sampling variances
-  provided_by: researcher, hand-worked example
+  yi: [0.2, 0.5, -0.1]          # three log effect sizes (1/5, 1/2, -1/10)
+  vi: [0.04, 0.0625, 0.01]      # their sampling variances (1/25, 1/16, 1/100)
+  provided_by: Claude, exact-arithmetic example (machine-checked, not human-checked)
 
 expected:
-  fe_estimate: null     # RESEARCHER: inverse-variance fixed-effect estimate
-  fe_se: null           # RESEARCHER
-  q: null               # RESEARCHER: Cochran's Q
-  tau2_dl: null         # RESEARCHER: DerSimonian–Laird tau^2
-  re_dl_estimate: null  # RESEARCHER: DL random-effects estimate
-  re_dl_se: null        # RESEARCHER
-  tolerance: null       # RESEARCHER: absolute tolerance matching the hand rounding
+  fe_estimate: 0.0212765957446809     # 1/47
+  fe_se: 0.0842151921066519           # 1/sqrt(141)
+  q: 5.93617021276596                 # 279/47
+  tau2_dl: 0.0616666666666667         # 37/600
+  re_dl_estimate: 0.144417124674573   # 1997/13828
+  re_dl_se: 0.177211270550306         # sqrt(1351088939)/207420
+  tolerance: 1.0e-9                   # expected values are exact; this only absorbs floating point

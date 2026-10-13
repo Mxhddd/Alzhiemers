@@ -28,7 +28,7 @@ RSCRIPT := Rscript
 BUILT_MODULES := mr baserate metaanalysis dynamics mediation network
 
 .PHONY: help todo setup test test-py test-r test-slow validate validate-mr validate-baserate validate-metaanalysis validate-dynamics validate-mediation validate-network check-validated provenance-check all lock \
-        freeze-prereg check-prereg clean-results \
+        freeze-prereg check-prereg clean-results check-derivations \
         mr baserate baserate-dryrun baserate-power mediation dynamics metaanalysis network
 
 help:
@@ -114,6 +114,10 @@ mr:
 # (the Braak 2011 stage table is still empty: needs the paper's full text).
 baserate:
 	$(PY) -m src.baserate.run_baserate
+# Machine checks of Claude's derivations (manuscript/derivations/checks/):
+# symbolic/exact/numerical re-derivations. Machine-checked is NOT human-checked.
+check-derivations:
+	@for f in manuscript/derivations/checks/*.py; do echo "== $$f"; $(PY) $$f || exit 1; done
 # Module 2 end to end on SIMULATED counts (no gates; writes results/dryrun/).
 # Full pre-registered settings: about 1.5-2 h on 4 CPU cores.
 baserate-dryrun:

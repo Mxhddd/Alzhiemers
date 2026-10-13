@@ -20,13 +20,20 @@ A (age-adjusted), B and C are fitted, 5-fold CV by whole age band (bands
 dealt round-robin), summed held-out log-likelihood, margin 2, three-way
 verdict (src.baserate.run_baserate.cv_verdict_3way).
 
-Simplifications (stated, not hidden): full-data fits start from each
-model's pseudo-true value for that truth (its best fit to the EXPECTED
-counts, found once with 6 random starts), and each fold starts from the
-full-data fit, with no further random starts (the analysis itself uses 20
-and 4). One likelihood compiled per model with counts and fold masks as
-arguments (src.baserate.jaxlik.make_loglik_family); held-out bands stay on
-the integration grid.
+Simplifications (stated, not hidden):
+  * full-data fits start from each model's pseudo-true value for that truth
+    (its best fit to the EXPECTED counts, found once with fit_mle: the true
+    model from the truth, wrong models from 3 random starts, each verified
+    by the Newton decrement);
+  * each fold starts from the full-data fit, with no further random starts
+    (the analysis itself uses 20 and 4);
+  * replicate fits are plain L-BFGS-B on exact gradients without the
+    Newton/Hessian verification (too costly for ~2,000 fits). Instead the
+    largest projected gradient is recorded per replicate and replicates
+    above 1e-2 are flagged;
+  * one likelihood is compiled per model with counts and fold masks as
+    arguments (src.baserate.jaxlik.make_loglik_family); held-out bands stay
+    on the integration grid.
 
 Checkpointing: each finished replicate is appended to
 results/dryrun/power/baserate_power_reps.csv and pseudo-true values are
@@ -47,7 +54,9 @@ import pandas as pd
 
 from sim.baserate_sim import simulate_counts
 from src.baserate.data import StageCounts
-from src.baserate.fit import fit_mle
+from scipy.optimize import minimize
+
+from src.baserate.fit import bounds_for, fit_mle
 from src.baserate.jaxlik import make_loglik_family
 from src.baserate.model import AGatedAge, BIndependent, ChainSpec, CMultiHit
 from src.baserate.predict import age_band_folds
@@ -110,16 +119,24 @@ def main(argv=None) -> int:
         run.mark_simulated()
         fam = {n: make_loglik_family(m, template, step=step, start_age=start) for n, m in models.items()}
 
-        def robust_fit(m, mname, counts, mask, start_theta, seed):
-            """One warm start; if it does not reach a verified optimum, add 2
-            random starts (logged). Never silently accepts a non-converged fit."""
-            try:
-                return fit_mle(m, [], step=step, start_age=start, cfg_mle=mle, seed=seed, n_random=0,
-                               extra_starts=[start_theta], compiled=bound(mname, counts, mask))
-            except RuntimeError:
-                run.warning(f"{mname}: warm start did not converge; retrying with 2 extra random starts")
-                return fit_mle(m, [], step=step, start_age=start, cfg_mle=mle, seed=seed, n_random=2,
-                               extra_starts=[start_theta], compiled=bound(mname, counts, mask))
+        def light_fit(m, mname, counts, mask, x0):
+            """Warm-started L-BFGS-B; returns (theta, loglik, max projected gradient)."""
+            vg = fam[mname][1]
+            box = bounds_for(m, mle)
+            lo = np.array([b[0] for b in box]); hi = np.array([b[1] for b in box])
+
+            def f(th):
+                v, g = vg(th, counts, mask)
+                v, g = float(v), np.asarray(g, dtype=float)
+                if not np.isfinite(v) or not np.all(np.isfinite(g)):
+                    return 1e300, np.zeros_like(th)
+                return -v, -g
+
+            r = minimize(f, np.clip(np.asarray(x0, float), lo, hi), jac=True, method="L-BFGS-B", bounds=box,
+                         options={"maxiter": 3000, "ftol": 1e-15, "gtol": 1e-9})
+            g = r.jac
+            free = ~(((r.x <= lo + 1e-10) & (g > 0)) | ((r.x >= hi - 1e-10) & (g < 0)))
+            return r.x, -r.fun, float(np.max(np.abs(g[free]))) if free.any() else 0.0
 
         def bound(name, counts, mask):
             ll, vg, h = fam[name]
@@ -155,8 +172,8 @@ def main(argv=None) -> int:
                 pseudo[tname] = {}
                 for mname, m in models.items():
                     ws = [th] if m is tm else None
-                    f = fit_mle(m, [], step=step, start_age=start, cfg_mle=mle, seed=7, n_random=6,
-                                extra_starts=ws, compiled=bound(mname, expected, ones))
+                    f = fit_mle(m, [], step=step, start_age=start, cfg_mle=mle, seed=7,
+                                n_random=0 if m is tm else 3, extra_starts=ws, compiled=bound(mname, expected, ones))
                     pseudo[tname][mname] = f.theta.tolist()
                     run.info(f"pseudo-true {mname} under '{tname}': expected-count logLik {f.loglik:.2f}")
                 pt_json.write_text(json.dumps(pseudo, indent=1))
@@ -173,15 +190,20 @@ def main(argv=None) -> int:
                                        seed=100_000 + 1_000 * ti + r)
                 counts = np.array([g.counts for g in data], dtype=float)
                 row = {"truth": tname, "rep": r}
+                worst = 0.0
                 for mname, m in models.items():
-                    full = robust_fit(m, mname, counts, ones, np.array(pseudo[tname][mname]), r)
+                    th_full, ll_full, pg = light_fit(m, mname, counts, ones, pseudo[tname][mname])
+                    worst = max(worst, pg)
                     held = 0.0
                     for f in range(k):
                         train = (folds != f).astype(float)
-                        fit = robust_fit(m, mname, counts, train, full.theta, r)
-                        held += float(fam[mname][0](fit.theta, counts, 1.0 - train))
-                    row[f"full_{mname}"] = full.loglik
+                        th_f, _, pg = light_fit(m, mname, counts, train, th_full)
+                        worst = max(worst, pg)
+                        held += float(fam[mname][0](th_f, counts, 1.0 - train))
+                    row[f"full_{mname}"] = ll_full
                     row[f"cv_{mname}"] = held
+                row["max_projected_gradient"] = worst
+                row["flag_unconverged"] = worst > 1e-2
                 cv_df = pd.DataFrame({"model": list(models), "cv_heldout_loglik": [row[f"cv_{n}"] for n in models]})
                 row["verdict"] = cv_verdict_3way(cv_df, margin, "A_gated_age").split(" (")[0]
                 row["cv_best"] = cv_df.sort_values("cv_heldout_loglik").iloc[-1]["model"]

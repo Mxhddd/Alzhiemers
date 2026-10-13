@@ -1,12 +1,16 @@
 # Module 2 — step size for the piecewise matrix exponential
 
-> **Status: derived by Claude. NOT independently checked.** The researcher
-> has not yet verified this derivation. The algebra in §2–3 was checked
-> numerically (script reproduced in §6), which catches algebra slips but is
-> not a substitute for a hand check. Results that depend on it: the choice
-> `solver.step_years` in `config/baserate.yaml`. Check 2–3 of the
-> a-posteriori audit in §5 do **not** depend on this derivation, so a mistake here can cost
-> run time but cannot silently corrupt a reported fit.
+> **Status: derived by Claude; MACHINE-CHECKED 2026-10-13, NOT human-checked.**
+> `checks/module2_step_size.py` re-derives each step by a different route:
+> the Magnus integrals symbolically, the local error (★) from the exact
+> Dyson series in rational arithmetic (with a negative control), the
+> commutator closed form symbolically, and the envelope arithmetic. It also
+> confirms numerically that the true global error stays below h²Φ(θ): at the
+> dry-run parameters it is about 100× smaller. 10/10 checks pass. Results
+> that depend on it: the choice `solver.step_years` in `config/baserate.yaml`.
+> Checks 2–3 of the a-posteriori audit in §5 do **not** depend on this
+> derivation, so a mistake here can cost run time but cannot silently
+> corrupt a reported fit.
 
 ## 1. Setting
 

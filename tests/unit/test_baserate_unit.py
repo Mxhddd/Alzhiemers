@@ -297,3 +297,21 @@ def test_compiled_likelihood_family_matches_make_loglik():
     assert float(ll_f(th, counts, keep)) == pytest.approx(float(sub(th)), abs=1e-3)   # grid knots differ only
     v, g = vg_f(th, counts, keep)
     assert np.all(np.isfinite(np.asarray(g))) and np.asarray(h_f(th, counts, keep)).shape == (7, 7)
+
+
+@pytest.mark.parametrize("which", ["A_age", "B", "C"])
+def test_batched_jax_incidence_matches_predict_incidence(which):
+    from src.baserate.jaxlik import make_incidence_batch
+    from src.baserate.predict import predict_incidence
+
+    am = piecewise_constant([(0, 40, 0.0), (40, 60, 0.2), (60, 200, 0.6)])
+    m = {"A_age": AGatedAge(SPEC, am, 50, 10), "B": BIndependent(SPEC, 50, 10), "C": CMultiHit(SPEC, 2, 50, 10)}[which]
+    rng = np.random.default_rng(3)
+    draws = rng.uniform(-4, -2, (4, len(m.param_names)))
+    for i, n in enumerate(m.param_names):
+        if n.startswith("beta") or n == "b_nu":
+            draws[:, i] = rng.uniform(-0.3, 0.6, 4)
+    ages = np.array([60.0, 67.5, 85.0])
+    got = np.asarray(make_incidence_batch(m, ages, threshold=3, step=0.5, start_age=0)(draws))
+    want = np.array([predict_incidence(m, d, ages, threshold=3, step=0.5, start_age=0) for d in draws])
+    np.testing.assert_allclose(got, want, rtol=1e-10, atol=1e-14)
