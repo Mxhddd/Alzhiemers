@@ -1,0 +1,121 @@
+at8_stage,amyloid_phase,measure,value,source_id,locator,quantity,verified,machine_rechecked
+column total,Phase 0,n,1301,braak2011,"Table 2, column header",Number of brains in amyloid Phase 0 (all AT8 stages),false,false
+column total,Phase 0,pct,55.8,braak2011,"Table 2, column header","Percent of all 2,332 of brains in amyloid Phase 0 (all AT8 stages)",false,false
+column total,Phase 1,n,350,braak2011,"Table 2, column header",Number of brains in amyloid Phase 1 (all AT8 stages),false,false
+column total,Phase 1,pct,15.0,braak2011,"Table 2, column header","Percent of all 2,332 of brains in amyloid Phase 1 (all AT8 stages)",false,false
+column total,Phase 2,n,418,braak2011,"Table 2, column header",Number of brains in amyloid Phase 2 (all AT8 stages),false,false
+column total,Phase 2,pct,17.9,braak2011,"Table 2, column header","Percent of all 2,332 of brains in amyloid Phase 2 (all AT8 stages)",false,false
+column total,Phase 3,n,177,braak2011,"Table 2, column header",Number of brains in amyloid Phase 3 (all AT8 stages),false,false
+column total,Phase 3,pct,7.6,braak2011,"Table 2, column header","Percent of all 2,332 of brains in amyloid Phase 3 (all AT8 stages)",false,false
+column total,Phase 4,n,86,braak2011,"Table 2, column header",Number of brains in amyloid Phase 4 (all AT8 stages),false,false
+column total,Phase 4,pct,3.7,braak2011,"Table 2, column header","Percent of all 2,332 of brains in amyloid Phase 4 (all AT8 stages)",false,false
+column total,Total,n,2332,braak2011,"Table 2, column header",Number of brains in amyloid Total (all AT8 stages),false,false
+column total,Total,pct,100,braak2011,"Table 2, column header","Percent of all 2,332 of brains in amyloid Total (all AT8 stages)",false,false
+0,Phase 0,n,10,braak2011,Table 2,Number of brains with AT8 stage 0 and amyloid Phase 0,false,false
+0,Phase 0,pct,100,braak2011,Table 2,Row percent of brains with AT8 stage 0 and amyloid Phase 0,false,false
+0,Phase 1,n,0,braak2011,Table 2,Number of brains with AT8 stage 0 and amyloid Phase 1,false,false
+0,Phase 1,pct,0.0,braak2011,Table 2,Row percent of brains with AT8 stage 0 and amyloid Phase 1,false,false
+0,Phase 2,n,0,braak2011,Table 2,Number of brains with AT8 stage 0 and amyloid Phase 2,false,false
+0,Phase 2,pct,0.0,braak2011,Table 2,Row percent of brains with AT8 stage 0 and amyloid Phase 2,false,false
+0,Phase 3,n,0,braak2011,Table 2,Number of brains with AT8 stage 0 and amyloid Phase 3,false,false
+0,Phase 3,pct,0.0,braak2011,Table 2,Row percent of brains with AT8 stage 0 and amyloid Phase 3,false,false
+0,Phase 4,n,0,braak2011,Table 2,Number of brains with AT8 stage 0 and amyloid Phase 4,false,false
+0,Phase 4,pct,0.0,braak2011,Table 2,Row percent of brains with AT8 stage 0 and amyloid Phase 4,false,false
+0,Total,n,10,braak2011,Table 2,Number of brains with AT8 stage 0 and amyloid Total,false,false
+0,Total,pct,100,braak2011,Table 2,Row percent of brains with AT8 stage 0 and amyloid Total,false,false
+a-c,Phase 0,n,57,braak2011,Table 2,Number of brains with AT8 stage a-c and amyloid Phase 0,false,false
+a-c,Phase 0,pct,98.3,braak2011,Table 2,Row percent of brains with AT8 stage a-c and amyloid Phase 0,false,false
+a-c,Phase 1,n,0,braak2011,Table 2,Number of brains with AT8 stage a-c and amyloid Phase 1,false,false
+a-c,Phase 1,pct,0.0,braak2011,Table 2,Row percent of brains with AT8 stage a-c and amyloid Phase 1,false,false
+a-c,Phase 2,n,0,braak2011,Table 2,Number of brains with AT8 stage a-c and amyloid Phase 2,false,false
+a-c,Phase 2,pct,0.0,braak2011,Table 2,Row percent of brains with AT8 stage a-c and amyloid Phase 2,false,false
+a-c,Phase 3,n,0,braak2011,Table 2,Number of brains with AT8 stage a-c and amyloid Phase 3,false,false
+a-c,Phase 3,pct,0.0,braak2011,Table 2,Row percent of brains with AT8 stage a-c and amyloid Phase 3,false,false
+a-c,Phase 4,n,1,braak2011,Table 2,Number of brains with AT8 stage a-c and amyloid Phase 4,false,false
+a-c,Phase 4,pct,1.7,braak2011,Table 2,Row percent of brains with AT8 stage a-c and amyloid Phase 4,false,false
+a-c,Total,n,58,braak2011,Table 2,Number of brains with AT8 stage a-c and amyloid Total,false,false
+a-c,Total,pct,100,braak2011,Table 2,Row percent of brains with AT8 stage a-c and amyloid Total,false,false
+1a-1b,Phase 0,n,252,braak2011,Table 2,Number of brains with AT8 stage 1a-1b and amyloid Phase 0,false,false
+1a-1b,Phase 0,pct,92.0,braak2011,Table 2,Row percent of brains with AT8 stage 1a-1b and amyloid Phase 0,false,false
+1a-1b,Phase 1,n,14,braak2011,Table 2,Number of brains with AT8 stage 1a-1b and amyloid Phase 1,false,false
+1a-1b,Phase 1,pct,5.1,braak2011,Table 2,Row percent of brains with AT8 stage 1a-1b and amyloid Phase 1,false,false
+1a-1b,Phase 2,n,8,braak2011,Table 2,Number of brains with AT8 stage 1a-1b and amyloid Phase 2,false,false
+1a-1b,Phase 2,pct,2.9,braak2011,Table 2,Row percent of brains with AT8 stage 1a-1b and amyloid Phase 2,false,false
+1a-1b,Phase 3,n,0,braak2011,Table 2,Number of brains with AT8 stage 1a-1b and amyloid Phase 3,false,false
+1a-1b,Phase 3,pct,0.0,braak2011,Table 2,Row percent of brains with AT8 stage 1a-1b and amyloid Phase 3,false,false
+1a-1b,Phase 4,n,0,braak2011,Table 2,Number of brains with AT8 stage 1a-1b and amyloid Phase 4,false,false
+1a-1b,Phase 4,pct,0.0,braak2011,Table 2,Row percent of brains with AT8 stage 1a-1b and amyloid Phase 4,false,false
+1a-1b,Total,n,274,braak2011,Table 2,Number of brains with AT8 stage 1a-1b and amyloid Total,false,false
+1a-1b,Total,pct,100,braak2011,Table 2,Row percent of brains with AT8 stage 1a-1b and amyloid Total,false,false
+I,Phase 0,n,448,braak2011,Table 2,Number of brains with AT8 stage I and amyloid Phase 0,false,false
+I,Phase 0,pct,76.1,braak2011,Table 2,Row percent of brains with AT8 stage I and amyloid Phase 0,false,false
+I,Phase 1,n,89,braak2011,Table 2,Number of brains with AT8 stage I and amyloid Phase 1,false,false
+I,Phase 1,pct,15.1,braak2011,Table 2,Row percent of brains with AT8 stage I and amyloid Phase 1,false,false
+I,Phase 2,n,48,braak2011,Table 2,Number of brains with AT8 stage I and amyloid Phase 2,false,false
+I,Phase 2,pct,8.1,braak2011,Table 2,Row percent of brains with AT8 stage I and amyloid Phase 2,false,false
+I,Phase 3,n,4,braak2011,Table 2,Number of brains with AT8 stage I and amyloid Phase 3,false,false
+I,Phase 3,pct,0.7,braak2011,Table 2,Row percent of brains with AT8 stage I and amyloid Phase 3,false,false
+I,Phase 4,n,0,braak2011,Table 2,Number of brains with AT8 stage I and amyloid Phase 4,false,false
+I,Phase 4,pct,0.0,braak2011,Table 2,Row percent of brains with AT8 stage I and amyloid Phase 4,false,false
+I,Total,n,589,braak2011,Table 2,Number of brains with AT8 stage I and amyloid Total,false,false
+I,Total,pct,100,braak2011,Table 2,Row percent of brains with AT8 stage I and amyloid Total,false,false
+II,Phase 0,n,275,braak2011,Table 2,Number of brains with AT8 stage II and amyloid Phase 0,false,false
+II,Phase 0,pct,55.3,braak2011,Table 2,Row percent of brains with AT8 stage II and amyloid Phase 0,false,false
+II,Phase 1,n,112,braak2011,Table 2,Number of brains with AT8 stage II and amyloid Phase 1,false,false
+II,Phase 1,pct,22.5,braak2011,Table 2,Row percent of brains with AT8 stage II and amyloid Phase 1,false,false
+II,Phase 2,n,98,braak2011,Table 2,Number of brains with AT8 stage II and amyloid Phase 2,false,false
+II,Phase 2,pct,19.7,braak2011,Table 2,Row percent of brains with AT8 stage II and amyloid Phase 2,false,false
+II,Phase 3,n,10,braak2011,Table 2,Number of brains with AT8 stage II and amyloid Phase 3,false,false
+II,Phase 3,pct,2.0,braak2011,Table 2,Row percent of brains with AT8 stage II and amyloid Phase 3,false,false
+II,Phase 4,n,2,braak2011,Table 2,Number of brains with AT8 stage II and amyloid Phase 4,false,false
+II,Phase 4,pct,0.4,braak2011,Table 2,Row percent of brains with AT8 stage II and amyloid Phase 4,false,false
+II,Total,n,497,braak2011,Table 2,Number of brains with AT8 stage II and amyloid Total,false,false
+II,Total,pct,100,braak2011,Table 2,Row percent of brains with AT8 stage II and amyloid Total,false,false
+III,Phase 0,n,203,braak2011,Table 2,Number of brains with AT8 stage III and amyloid Phase 0,false,false
+III,Phase 0,pct,41.3,braak2011,Table 2,Row percent of brains with AT8 stage III and amyloid Phase 0,false,false
+III,Phase 1,n,96,braak2011,Table 2,Number of brains with AT8 stage III and amyloid Phase 1,false,false
+III,Phase 1,pct,19.6,braak2011,Table 2,Row percent of brains with AT8 stage III and amyloid Phase 1,false,false
+III,Phase 2,n,156,braak2011,Table 2,Number of brains with AT8 stage III and amyloid Phase 2,false,false
+III,Phase 2,pct,31.8,braak2011,Table 2,Row percent of brains with AT8 stage III and amyloid Phase 2,false,false
+III,Phase 3,n,25,braak2011,Table 2,Number of brains with AT8 stage III and amyloid Phase 3,false,false
+III,Phase 3,pct,5.1,braak2011,Table 2,Row percent of brains with AT8 stage III and amyloid Phase 3,false,false
+III,Phase 4,n,11,braak2011,Table 2,Number of brains with AT8 stage III and amyloid Phase 4,false,false
+III,Phase 4,pct,2.2,braak2011,Table 2,Row percent of brains with AT8 stage III and amyloid Phase 4,false,false
+III,Total,n,491,braak2011,Table 2,Number of brains with AT8 stage III and amyloid Total,false,false
+III,Total,pct,100,braak2011,Table 2,Row percent of brains with AT8 stage III and amyloid Total,false,false
+IV,Phase 0,n,49,braak2011,Table 2,Number of brains with AT8 stage IV and amyloid Phase 0,false,false
+IV,Phase 0,pct,25.7,braak2011,Table 2,Row percent of brains with AT8 stage IV and amyloid Phase 0,false,false
+IV,Phase 1,n,28,braak2011,Table 2,Number of brains with AT8 stage IV and amyloid Phase 1,false,false
+IV,Phase 1,pct,14.7,braak2011,Table 2,Row percent of brains with AT8 stage IV and amyloid Phase 1,false,false
+IV,Phase 2,n,69,braak2011,Table 2,Number of brains with AT8 stage IV and amyloid Phase 2,false,false
+IV,Phase 2,pct,36.1,braak2011,Table 2,Row percent of brains with AT8 stage IV and amyloid Phase 2,false,false
+IV,Phase 3,n,33,braak2011,Table 2,Number of brains with AT8 stage IV and amyloid Phase 3,false,false
+IV,Phase 3,pct,17.3,braak2011,Table 2,Row percent of brains with AT8 stage IV and amyloid Phase 3,false,false
+IV,Phase 4,n,12,braak2011,Table 2,Number of brains with AT8 stage IV and amyloid Phase 4,false,false
+IV,Phase 4,pct,6.3,braak2011,Table 2,Row percent of brains with AT8 stage IV and amyloid Phase 4,false,false
+IV,Total,n,191,braak2011,Table 2,Number of brains with AT8 stage IV and amyloid Total,false,false
+IV,Total,pct,100,braak2011,Table 2,Row percent of brains with AT8 stage IV and amyloid Total,false,false
+V,Phase 0,n,7,braak2011,Table 2,Number of brains with AT8 stage V and amyloid Phase 0,false,false
+V,Phase 0,pct,5.1,braak2011,Table 2,Row percent of brains with AT8 stage V and amyloid Phase 0,false,false
+V,Phase 1,n,9,braak2011,Table 2,Number of brains with AT8 stage V and amyloid Phase 1,false,false
+V,Phase 1,pct,6.5,braak2011,Table 2,Row percent of brains with AT8 stage V and amyloid Phase 1,false,false
+V,Phase 2,n,30,braak2011,Table 2,Number of brains with AT8 stage V and amyloid Phase 2,false,false
+V,Phase 2,pct,21.7,braak2011,Table 2,Row percent of brains with AT8 stage V and amyloid Phase 2,false,false
+V,Phase 3,n,64,braak2011,Table 2,Number of brains with AT8 stage V and amyloid Phase 3,false,false
+V,Phase 3,pct,46.4,braak2011,Table 2,Row percent of brains with AT8 stage V and amyloid Phase 3,false,false
+V,Phase 4,n,28,braak2011,Table 2,Number of brains with AT8 stage V and amyloid Phase 4,false,false
+V,Phase 4,pct,20.3,braak2011,Table 2,Row percent of brains with AT8 stage V and amyloid Phase 4,false,false
+V,Total,n,138,braak2011,Table 2,Number of brains with AT8 stage V and amyloid Total,false,false
+V,Total,pct,100,braak2011,Table 2,Row percent of brains with AT8 stage V and amyloid Total,false,false
+VI,Phase 0,n,0,braak2011,Table 2,Number of brains with AT8 stage VI and amyloid Phase 0,false,false
+VI,Phase 0,pct,0.0,braak2011,Table 2,Row percent of brains with AT8 stage VI and amyloid Phase 0,false,false
+VI,Phase 1,n,2,braak2011,Table 2,Number of brains with AT8 stage VI and amyloid Phase 1,false,false
+VI,Phase 1,pct,2.4,braak2011,Table 2,Row percent of brains with AT8 stage VI and amyloid Phase 1,false,false
+VI,Phase 2,n,9,braak2011,Table 2,Number of brains with AT8 stage VI and amyloid Phase 2,false,false
+VI,Phase 2,pct,10.7,braak2011,Table 2,Row percent of brains with AT8 stage VI and amyloid Phase 2,false,false
+VI,Phase 3,n,41,braak2011,Table 2,Number of brains with AT8 stage VI and amyloid Phase 3,false,false
+VI,Phase 3,pct,48.8,braak2011,Table 2,Row percent of brains with AT8 stage VI and amyloid Phase 3,false,false
+VI,Phase 4,n,32,braak2011,Table 2,Number of brains with AT8 stage VI and amyloid Phase 4,false,false
+VI,Phase 4,pct,38.1,braak2011,Table 2,Row percent of brains with AT8 stage VI and amyloid Phase 4,false,false
+VI,Total,n,84,braak2011,Table 2,Number of brains with AT8 stage VI and amyloid Total,false,false
+VI,Total,pct,100,braak2011,Table 2,Row percent of brains with AT8 stage VI and amyloid Total,false,false

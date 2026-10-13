@@ -1,0 +1,52 @@
+task,quantity,locator,unit
+text_0,Cases devoid of AD-related intraneuronal tau (no changes),"Results, Absence of Intraneuronal Lesions",cases
+text_1,No-change cases younger than 10 years,"Results, Absence of Intraneuronal Lesions",cases
+text_2,No-change cases younger than 20 years,"Results, Absence of Intraneuronal Lesions",cases
+text_3,Age of the younger of the two eldest no-change cases,"Results, Absence of Intraneuronal Lesions",years
+text_4,Age of the eldest no-change case,"Results, Absence of Intraneuronal Lesions",years
+text_5,Pretangle stage a cases,"Results, Pretangle Stage a",cases
+text_6,Pretangle stage b cases,"Results, Pretangle Stage b",cases
+text_7,Pretangle stage c cases,"Results, Pretangle Stage c",cases
+text_8,Pretangle stages a-c cases (no cortical AT8-ir projection neurons),"Results, Pretangle Stage c",cases
+text_9,Pretangle stage 1a cases,"Results, Pretangle Stages 1a and 1b",cases
+text_10,Pretangle stage 1b cases,"Results, Pretangle Stages 1a and 1b",cases
+text_11,Pretangle stages 1a and 1b cases,"Results, Pretangle Stages 1a and 1b",cases
+text_12,NFT stage I cases,"Results, Neurofibrillary Stages I to VI",cases
+text_13,NFT stage II cases,"Results, Neurofibrillary Stages I to VI",cases
+text_14,NFT stage III cases,"Results, Neurofibrillary Stages I to VI",cases
+text_15,NFT stage IV cases,"Results, Neurofibrillary Stages I to VI",cases
+text_16,NFT stage V cases,"Results, Neurofibrillary Stages I to VI",cases
+text_17,NFT stage VI cases,"Results, Neurofibrillary Stages I to VI",cases
+text_18,NFT stages V and VI cases,"Results, Neurofibrillary Stages I to VI",cases
+text_19,Cases with beta-amyloid plaques,"Results, Extracellular beta-Amyloid Protein Aggregation",cases
+text_20,Percent males among ages 1 to 80 years,"Results, Statistical Analyses",percent
+text_21,Percent females among ages older than 80 years,"Results, Statistical Analyses",percent
+text_22,"Younger-age cases with abnormal tau only in LC projection neurons (stage 'a'), as stated in the Discussion","Discussion, paragraph 3",cases
+text_23,Cases with abnormal tau in pretangle or early NFT stages without beta-amyloid plaques (numerator),"Discussion, conclusion paragraph",cases
+text_24,Figure 1 title: all cases,Figure 1 (panel titles),cases
+text_25,Figure 1 panel: cases devoid of changes,Figure 1 (panel titles),cases
+text_26,Figure 1 panel: stages a-c,Figure 1 (panel titles),cases
+text_27,Figure 1 panel: stages 1a-1b,Figure 1 (panel titles),cases
+text_28,Figure 1 panel: stages I-II,Figure 1 (panel titles),cases
+text_29,Figure 1 panel: stages III-IV,Figure 1 (panel titles),cases
+text_30,Figure 1 panel: stages V-VI,Figure 1 (panel titles),cases
+text_31,"Figure 2A, n printed above the 1-10 y bar",Figure 2 (numbers above bars),cases
+text_32,"Figure 2A, n printed above the 11-20 y bar",Figure 2 (numbers above bars),cases
+text_33,"Figure 2A, n printed above the 21-30 y bar",Figure 2 (numbers above bars),cases
+text_34,"Figure 2A, n printed above the 31-40 y bar",Figure 2 (numbers above bars),cases
+text_35,"Figure 2A, n printed above the 41-50 y bar",Figure 2 (numbers above bars),cases
+text_36,"Figure 2A, n printed above the 51-60 y bar",Figure 2 (numbers above bars),cases
+text_37,"Figure 2A, n printed above the 61-70 y bar",Figure 2 (numbers above bars),cases
+text_38,"Figure 2A, n printed above the 71-80 y bar",Figure 2 (numbers above bars),cases
+text_39,"Figure 2A, n printed above the 81-90 y bar",Figure 2 (numbers above bars),cases
+text_40,"Figure 2A, n printed above the 91-100 y bar",Figure 2 (numbers above bars),cases
+text_41,"Figure 2B, n printed above the 1-10 y bar",Figure 2 (numbers above bars),cases
+text_42,"Figure 2B, n printed above the 11-20 y bar",Figure 2 (numbers above bars),cases
+text_43,"Figure 2B, n printed above the 21-30 y bar",Figure 2 (numbers above bars),cases
+text_44,"Figure 2B, n printed above the 31-40 y bar",Figure 2 (numbers above bars),cases
+text_45,"Figure 2B, n printed above the 41-50 y bar",Figure 2 (numbers above bars),cases
+text_46,"Figure 2B, n printed above the 51-60 y bar",Figure 2 (numbers above bars),cases
+text_47,"Figure 2B, n printed above the 61-70 y bar",Figure 2 (numbers above bars),cases
+text_48,"Figure 2B, n printed above the 71-80 y bar",Figure 2 (numbers above bars),cases
+text_49,"Figure 2B, n printed above the 81-90 y bar",Figure 2 (numbers above bars),cases
+text_50,"Figure 2B, n printed above the 91-100 y bar",Figure 2 (numbers above bars),cases

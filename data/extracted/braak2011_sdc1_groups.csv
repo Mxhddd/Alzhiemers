@@ -1,0 +1,145 @@
+age_label_printed,age_lower,age_upper,column,measure,value,source_id,locator,quantity,verified,machine_rechecked
+00-10,1,10,No changes,pct,75.0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'No changes', age category 00-10",false,false
+00-10,1,10,a-c,n,2,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'a-c', age category 00-10",false,false
+00-10,1,10,a-c,pct,25.0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'a-c', age category 00-10",false,false
+00-10,1,10,1a-1b,n,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group '1a-1b', age category 00-10",false,false
+00-10,1,10,1a-1b,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group '1a-1b', age category 00-10",false,false
+00-10,1,10,I-II,n,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'I-II', age category 00-10",false,false
+00-10,1,10,I-II,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'I-II', age category 00-10",false,false
+00-10,1,10,III-IV,n,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'III-IV', age category 00-10",false,false
+00-10,1,10,III-IV,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'III-IV', age category 00-10",false,false
+00-10,1,10,V-VI,n,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'V-VI', age category 00-10",false,false
+00-10,1,10,V-VI,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'V-VI', age category 00-10",false,false
+00-10,1,10,Total,n,8,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains, age category 00-10",false,false
+11-20,11,20,No changes,pct,8.3,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'No changes', age category 11-20",false,false
+11-20,11,20,a-c,n,16,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'a-c', age category 11-20",false,false
+11-20,11,20,a-c,pct,66.7,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'a-c', age category 11-20",false,false
+11-20,11,20,1a-1b,n,4,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group '1a-1b', age category 11-20",false,false
+11-20,11,20,1a-1b,pct,16.7,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group '1a-1b', age category 11-20",false,false
+11-20,11,20,I-II,n,2,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'I-II', age category 11-20",false,false
+11-20,11,20,I-II,pct,8.3,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'I-II', age category 11-20",false,false
+11-20,11,20,III-IV,n,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'III-IV', age category 11-20",false,false
+11-20,11,20,III-IV,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'III-IV', age category 11-20",false,false
+11-20,11,20,V-VI,n,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'V-VI', age category 11-20",false,false
+11-20,11,20,V-VI,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'V-VI', age category 11-20",false,false
+11-20,11,20,Total,n,24,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains, age category 11-20",false,false
+21-30,21,30,No changes,pct,3.3,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'No changes', age category 21-30",false,false
+21-30,21,30,a-c,n,21,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'a-c', age category 21-30",false,false
+21-30,21,30,a-c,pct,34.3,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'a-c', age category 21-30",false,false
+21-30,21,30,1a-1b,n,23,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group '1a-1b', age category 21-30",false,false
+21-30,21,30,1a-1b,pct,37.7,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group '1a-1b', age category 21-30",false,false
+21-30,21,30,I-II,n,15,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'I-II', age category 21-30",false,false
+21-30,21,30,I-II,pct,24.6,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'I-II', age category 21-30",false,false
+21-30,21,30,III-IV,n,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'III-IV', age category 21-30",false,false
+21-30,21,30,III-IV,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'III-IV', age category 21-30",false,false
+21-30,21,30,V-VI,n,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'V-VI', age category 21-30",false,false
+21-30,21,30,V-VI,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'V-VI', age category 21-30",false,false
+21-30,21,30,Total,n,61,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains, age category 21-30",false,false
+31-40,31,40,No changes,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'No changes', age category 31-40",false,false
+31-40,31,40,a-c,n,11,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'a-c', age category 31-40",false,false
+31-40,31,40,a-c,pct,11.0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'a-c', age category 31-40",false,false
+31-40,31,40,1a-1b,n,51,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group '1a-1b', age category 31-40",false,false
+31-40,31,40,1a-1b,pct,51.0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group '1a-1b', age category 31-40",false,false
+31-40,31,40,I-II,n,34,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'I-II', age category 31-40",false,false
+31-40,31,40,I-II,pct,34.0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'I-II', age category 31-40",false,false
+31-40,31,40,III-IV,n,3,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'III-IV', age category 31-40",false,false
+31-40,31,40,III-IV,pct,3.0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'III-IV', age category 31-40",false,false
+31-40,31,40,V-VI,n,1,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'V-VI', age category 31-40",false,false
+31-40,31,40,V-VI,pct,1.0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'V-VI', age category 31-40",false,false
+31-40,31,40,Total,n,100,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains, age category 31-40",false,false
+41-50,41,50,No changes,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'No changes', age category 41-50",false,false
+41-50,41,50,a-c,n,7,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'a-c', age category 41-50",false,false
+41-50,41,50,a-c,pct,3.7,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'a-c', age category 41-50",false,false
+41-50,41,50,1a-1b,n,90,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group '1a-1b', age category 41-50",false,false
+41-50,41,50,1a-1b,pct,47.9,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group '1a-1b', age category 41-50",false,false
+41-50,41,50,I-II,n,84,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'I-II', age category 41-50",false,false
+41-50,41,50,I-II,pct,44.7,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'I-II', age category 41-50",false,false
+41-50,41,50,III-IV,n,5,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'III-IV', age category 41-50",false,false
+41-50,41,50,III-IV,pct,2.7,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'III-IV', age category 41-50",false,false
+41-50,41,50,V-VI,n,2,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'V-VI', age category 41-50",false,false
+41-50,41,50,V-VI,pct,1.1,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'V-VI', age category 41-50",false,false
+41-50,41,50,Total,n,188,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains, age category 41-50",false,false
+51-60,51,60,No changes,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'No changes', age category 51-60",false,false
+51-60,51,60,a-c,n,1,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'a-c', age category 51-60",false,false
+51-60,51,60,a-c,pct,0.3,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'a-c', age category 51-60",false,false
+51-60,51,60,1a-1b,n,61,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group '1a-1b', age category 51-60",false,false
+51-60,51,60,1a-1b,pct,18.5,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group '1a-1b', age category 51-60",false,false
+51-60,51,60,I-II,n,234,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'I-II', age category 51-60",false,false
+51-60,51,60,I-II,pct,70.9,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'I-II', age category 51-60",false,false
+51-60,51,60,III-IV,n,27,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'III-IV', age category 51-60",false,false
+51-60,51,60,III-IV,pct,8.2,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'III-IV', age category 51-60",false,false
+51-60,51,60,V-VI,n,7,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'V-VI', age category 51-60",false,false
+51-60,51,60,V-VI,pct,2.1,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'V-VI', age category 51-60",false,false
+51-60,51,60,Total,n,330,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains, age category 51-60",false,false
+61-70,61,70,No changes,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'No changes', age category 61-70",false,false
+61-70,61,70,a-c,n,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'a-c', age category 61-70",false,false
+61-70,61,70,a-c,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'a-c', age category 61-70",false,false
+61-70,61,70,1a-1b,n,34,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group '1a-1b', age category 61-70",false,false
+61-70,61,70,1a-1b,pct,6.9,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group '1a-1b', age category 61-70",false,false
+61-70,61,70,I-II,n,343,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'I-II', age category 61-70",false,false
+61-70,61,70,I-II,pct,69.7,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'I-II', age category 61-70",false,false
+61-70,61,70,III-IV,n,98,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'III-IV', age category 61-70",false,false
+61-70,61,70,III-IV,pct,19.9,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'III-IV', age category 61-70",false,false
+61-70,61,70,V-VI,n,17,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'V-VI', age category 61-70",false,false
+61-70,61,70,V-VI,pct,3.5,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'V-VI', age category 61-70",false,false
+61-70,61,70,Total,n,492,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains, age category 61-70",false,false
+71-80,71,80,No changes,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'No changes', age category 71-80",false,false
+71-80,71,80,a-c,n,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'a-c', age category 71-80",false,false
+71-80,71,80,a-c,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'a-c', age category 71-80",false,false
+71-80,71,80,1a-1b,n,10,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group '1a-1b', age category 71-80",false,false
+71-80,71,80,1a-1b,pct,1.8,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group '1a-1b', age category 71-80",false,false
+71-80,71,80,I-II,n,253,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'I-II', age category 71-80",false,false
+71-80,71,80,I-II,pct,44.4,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'I-II', age category 71-80",false,false
+71-80,71,80,III-IV,n,251,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'III-IV', age category 71-80",false,false
+71-80,71,80,III-IV,pct,44.0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'III-IV', age category 71-80",false,false
+71-80,71,80,V-VI,n,56,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'V-VI', age category 71-80",false,false
+71-80,71,80,V-VI,pct,9.8,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'V-VI', age category 71-80",false,false
+71-80,71,80,Total,n,570,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains, age category 71-80",false,false
+81-90,81,90,No changes,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'No changes', age category 81-90",false,false
+81-90,81,90,a-c,n,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'a-c', age category 81-90",false,false
+81-90,81,90,a-c,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'a-c', age category 81-90",false,false
+81-90,81,90,1a-1b,n,1,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group '1a-1b', age category 81-90",false,false
+81-90,81,90,1a-1b,pct,0.2,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group '1a-1b', age category 81-90",false,false
+81-90,81,90,I-II,n,111,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'I-II', age category 81-90",false,false
+81-90,81,90,I-II,pct,22.9,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'I-II', age category 81-90",false,false
+81-90,81,90,III-IV,n,254,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'III-IV', age category 81-90",false,false
+81-90,81,90,III-IV,pct,52.5,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'III-IV', age category 81-90",false,false
+81-90,81,90,V-VI,n,118,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'V-VI', age category 81-90",false,false
+81-90,81,90,V-VI,pct,24.4,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'V-VI', age category 81-90",false,false
+81-90,81,90,Total,n,484,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains, age category 81-90",false,false
+91-100,91,100,No changes,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'No changes', age category 91-100",false,false
+91-100,91,100,a-c,n,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'a-c', age category 91-100",false,false
+91-100,91,100,a-c,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'a-c', age category 91-100",false,false
+91-100,91,100,1a-1b,n,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group '1a-1b', age category 91-100",false,false
+91-100,91,100,1a-1b,pct,0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group '1a-1b', age category 91-100",false,false
+91-100,91,100,I-II,n,10,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'I-II', age category 91-100",false,false
+91-100,91,100,I-II,pct,13.3,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'I-II', age category 91-100",false,false
+91-100,91,100,III-IV,n,44,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'III-IV', age category 91-100",false,false
+91-100,91,100,III-IV,pct,58.7,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'III-IV', age category 91-100",false,false
+91-100,91,100,V-VI,n,21,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains in AT8 group 'V-VI', age category 91-100",false,false
+91-100,91,100,V-VI,pct,28.0,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Row percent of brains in AT8 group 'V-VI', age category 91-100",false,false
+91-100,91,100,Total,n,75,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains, age category 91-100",false,false
+total,1,100,No changes,n,10,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Number of brains at AT8 stage 'No changes', all ages",false,false
+total,1,100,a,n,40,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Number of brains at AT8 stage 'a', all ages",false,false
+total,1,100,b,n,12,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Number of brains at AT8 stage 'b', all ages",false,false
+total,1,100,c,n,6,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Number of brains at AT8 stage 'c', all ages",false,false
+total,1,100,1a,n,38,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Number of brains at AT8 stage '1a', all ages",false,false
+total,1,100,1b,n,236,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Number of brains at AT8 stage '1b', all ages",false,false
+total,1,100,I,n,589,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Number of brains at AT8 stage 'I', all ages",false,false
+total,1,100,II,n,497,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Number of brains at AT8 stage 'II', all ages",false,false
+total,1,100,III,n,491,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Number of brains at AT8 stage 'III', all ages",false,false
+total,1,100,IV,n,191,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Number of brains at AT8 stage 'IV', all ages",false,false
+total,1,100,V,n,138,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Number of brains at AT8 stage 'V', all ages",false,false
+total,1,100,VI,n,84,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Number of brains at AT8 stage 'VI', all ages",false,false
+total,1,100,No changes,pct,0.43,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Row percent of brains in AT8 group 'No changes', age category total",false,false
+total,1,100,a-c,n,58,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Number of brains in AT8 group 'a-c', age category total",false,false
+total,1,100,a-c,pct,2.5,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Row percent of brains in AT8 group 'a-c', age category total",false,false
+total,1,100,1a-1b,n,274,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Number of brains in AT8 group '1a-1b', age category total",false,false
+total,1,100,1a-1b,pct,11.8,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Row percent of brains in AT8 group '1a-1b', age category total",false,false
+total,1,100,I-II,n,1086,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Number of brains in AT8 group 'I-II', age category total",false,false
+total,1,100,I-II,pct,46.6,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Row percent of brains in AT8 group 'I-II', age category total",false,false
+total,1,100,III-IV,n,682,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Number of brains in AT8 group 'III-IV', age category total",false,false
+total,1,100,III-IV,pct,29.2,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Row percent of brains in AT8 group 'III-IV', age category total",false,false
+total,1,100,V-VI,n,222,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Number of brains in AT8 group 'V-VI', age category total",false,false
+total,1,100,V-VI,pct,9.5,braak2011,"Supplemental Digital Content 1 (Supplementary Table 1), total row","Row percent of brains in AT8 group 'V-VI', age category total",false,false
+total,1,100,Total,n,2332,braak2011,Supplemental Digital Content 1 (Supplementary Table 1),"Number of brains, age category total",false,false

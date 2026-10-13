@@ -1,0 +1,52 @@
+quantity,value,unit,source_id,locator,verbatim,verified,machine_rechecked
+Cases devoid of AD-related intraneuronal tau (no changes),10,cases,braak2011,"Results, Absence of Intraneuronal Lesions","tau protein within the brain was found in 10 of 2,332 cases; these are desig-nated as ‘‘c",false,false
+No-change cases younger than 10 years,6,cases,braak2011,"Results, Absence of Intraneuronal Lesions",were encountered in young age categories; 6 persons were younger than 10 years; 2 were younger than 20 years,false,false
+No-change cases younger than 20 years,2,cases,braak2011,"Results, Absence of Intraneuronal Lesions",ge categories; 6 persons were younger than 10 years; 2 were younger than 20 years; and the eldest were 22 and 2,false,false
+Age of the younger of the two eldest no-change cases,22,years,braak2011,"Results, Absence of Intraneuronal Lesions","re younger than 20 years; and the eldest were 22 and 23 years (Fig. 1, Table, Supplemental",false,false
+Age of the eldest no-change case,23,years,braak2011,"Results, Absence of Intraneuronal Lesions","re younger than 20 years; and the eldest were 22 and 23 years (Fig. 1, Table, Supplemental",false,false
+Pretangle stage a cases,40,cases,braak2011,"Results, Pretangle Stage a","ttp://links.lww.com/NEN/A273. Forty of 2,332 cases were classiﬁed as pretangle Stage a cases",false,false
+Pretangle stage b cases,12,cases,braak2011,"Results, Pretangle Stage b",age groups. Pretangle Stage b Twelve cases (designated Stage b) showed involvement conﬁned to,false,false
+Pretangle stage c cases,6,cases,braak2011,"Results, Pretangle Stage c","/NEN/A273). Pretangle Stage c Six of 2,332 cases displayed more widely distributed subcortical lesio",false,false
+Pretangle stages a-c cases (no cortical AT8-ir projection neurons),58,cases,braak2011,"Results, Pretangle Stage c","tp://links.lww.com/NEN/A273). In summary, 58 of 2,332 cases (i.e. pretangle Stages aYc) d",false,false
+Pretangle stage 1a cases,38,cases,braak2011,"Results, Pretangle Stages 1a and 1b","on to subcortical pathologic ﬁndings, 38 of 2,332 cases displayed mild cortical lesions consisting only of AT",false,false
+Pretangle stage 1b cases,236,cases,braak2011,"Results, Pretangle Stages 1a and 1b","e pretangle lesions described previously, 236 of 2,332 cases showed the presence of AT8-ir nonarg",false,false
+Pretangle stages 1a and 1b cases,274,cases,braak2011,"Results, Pretangle Stages 1a and 1b",able 2 as pretangle Stage 1b. All 1a and 1b cases (n = 274) had subcortical lesions simil,false,false
+NFT stage I cases,589,cases,braak2011,"Results, Neurofibrillary Stages I to VI",ses with advanced NFT stages. The 589 NFT Stage I cases were characterized by low num,false,false
+NFT stage II cases,497,cases,braak2011,"Results, Neurofibrillary Stages I to VI",n the transentorhinal region. The 497 NFT Stage II cases had additional lesions in bot,false,false
+NFT stage III cases,491,cases,braak2011,"Results, Neurofibrillary Stages I to VI",male with Down syndrome (8). There were 491 NFT Stage III cases that displayed a progression,false,false
+NFT stage IV cases,191,cases,braak2011,"Results, Neurofibrillary Stages I to VI","l areas of the temporal lobe; in 191 NFT Stage IV cases, they reached insular and bas",false,false
+NFT stage V cases,138,cases,braak2011,"Results, Neurofibrillary Stages I to VI",ular and basal frontal areas. The 138 NFT Stage V cases displayed involvement of,false,false
+NFT stage VI cases,84,cases,braak2011,"Results, Neurofibrillary Stages I to VI","ssociation neocortex, whereas in the 84 NFT Stage VI cases, the premotor and pri-mary mo",false,false
+NFT stages V and VI cases,222,cases,braak2011,"Results, Neurofibrillary Stages I to VI",/links.lww.com/NEN/A273). NFT Stages V and VI (222 cases) were frequently combined with,false,false
+Cases with beta-amyloid plaques,1031,cases,braak2011,"Results, Extracellular beta-Amyloid Protein Aggregation","A-Amyloid Protein Aggregation All 1,031 cases that displayed the presence of A-amyloid plaques also showed",false,false
+Percent males among ages 1 to 80 years,58,percent,braak2011,"Results, Statistical Analyses","d across all age decades rang-ing from 1 to 80 years (58% males), whereas females were only pr",false,false
+Percent females among ages older than 80 years,54.7,percent,braak2011,"Results, Statistical Analyses",were only predominant at ages older than 80 years (54.7% females) (Fig. 2B and Table 1). The co,false,false
+"Younger-age cases with abnormal tau only in LC projection neurons (stage 'a'), as stated in the Discussion",52,cases,braak2011,"Discussion, paragraph 3",ly extends into old age (55). We observed 52 cases in younger age groups with abnormal tau only in nor,false,false
+Cases with abnormal tau in pretangle or early NFT stages without beta-amyloid plaques (numerator),1291,cases,braak2011,"Discussion, conclusion paragraph","esence of insoluble A-amyloid plaques (1,291/2,332 cases) means that not only a",false,false
+Figure 1 title: all cases,2332,cases,braak2011,Figure 1 (panel titles),(figure image; printed number),false,false
+Figure 1 panel: cases devoid of changes,10,cases,braak2011,Figure 1 (panel titles),(figure image; printed number),false,false
+Figure 1 panel: stages a-c,58,cases,braak2011,Figure 1 (panel titles),(figure image; printed number),false,false
+Figure 1 panel: stages 1a-1b,274,cases,braak2011,Figure 1 (panel titles),(figure image; printed number),false,false
+Figure 1 panel: stages I-II,1086,cases,braak2011,Figure 1 (panel titles),(figure image; printed number),false,false
+Figure 1 panel: stages III-IV,682,cases,braak2011,Figure 1 (panel titles),(figure image; printed number),false,false
+Figure 1 panel: stages V-VI,222,cases,braak2011,Figure 1 (panel titles),(figure image; printed number),false,false
+"Figure 2A, n printed above the 1-10 y bar",8,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2A, n printed above the 11-20 y bar",24,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2A, n printed above the 21-30 y bar",61,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2A, n printed above the 31-40 y bar",100,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2A, n printed above the 41-50 y bar",188,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2A, n printed above the 51-60 y bar",330,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2A, n printed above the 61-70 y bar",492,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2A, n printed above the 71-80 y bar",570,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2A, n printed above the 81-90 y bar",484,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2A, n printed above the 91-100 y bar",75,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2B, n printed above the 1-10 y bar",8,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2B, n printed above the 11-20 y bar",24,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2B, n printed above the 21-30 y bar",61,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2B, n printed above the 31-40 y bar",100,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2B, n printed above the 41-50 y bar",188,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2B, n printed above the 51-60 y bar",330,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2B, n printed above the 61-70 y bar",492,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2B, n printed above the 71-80 y bar",570,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2B, n printed above the 81-90 y bar",484,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false
+"Figure 2B, n printed above the 91-100 y bar",75,cases,braak2011,Figure 2 (numbers above bars),(figure image; printed number),false,false

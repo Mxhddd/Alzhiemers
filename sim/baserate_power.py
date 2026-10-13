@@ -238,6 +238,10 @@ def main(argv=None) -> int:
                 pd.DataFrame([row]).to_csv(reps_csv, mode="a", header=not reps_csv.exists(), index=False)
                 done = pd.concat([done, pd.DataFrame([row])], ignore_index=True)
                 run.info(f"{tname} rep {r}: {row['verdict']} (best {row['cv_best']}), {row['seconds']:.0f} s")
+                try:            # outputs after every replicate, merged over all shards written so far
+                    write_summary()
+                except Exception as e:      # another shard may be mid-append; the next replicate retries
+                    run.warning(f"summary not rewritten this time ({type(e).__name__}: {e})")
         if args.summarise:
             write_summary()
         run.info("POWER STUDY COMPLETE")
