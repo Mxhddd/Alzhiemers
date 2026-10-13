@@ -85,3 +85,11 @@ def test_freeze_never_overwrites(repo):
     with pytest.raises(FileExistsError):
         freeze("mediation", repo / "prereg" / "mediation.md", "https://osf.io/zzzzz/",
                prereg_dir=repo / "prereg")
+
+
+def test_document_marked_do_not_freeze_is_refused(repo):
+    doc = repo / "prereg" / "mediation.md"
+    doc.write_text("# DAG\n> **DO NOT FREEZE** — open issue\n")
+    with pytest.raises(PreregistrationError, match="DO NOT FREEZE"):
+        freeze("mediation", doc, "https://osf.io/abcde/", prereg_dir=repo / "prereg")
+    assert not (repo / "prereg" / "mediation.freeze.yaml").exists()

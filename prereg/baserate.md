@@ -7,6 +7,18 @@ states them; the researcher reviews, uploads to OSF and runs
 fitted to real data. Configuration: `config/baserate.yaml` at the commit
 that freezes this file.
 
+> **DO NOT FREEZE — open issue (raised 2026-10-13, awaiting the researcher's
+> decision).** Criterion 1 (§2) cannot reliably come out against the
+> hypothesis. Variant A's LC → cortex rate μ0(1 + (HR_A − 1)A(t)) has no age
+> term of its own, and A(t) rises with age, so ANY age-related acceleration
+> of that transition is read as amyloid gating. Simulated check: with no
+> amyloid effect at all and an age slope of 0.1 per decade on that edge,
+> the fit gives HR_A = 2.22 (95% CI on the log scale 0.28–1.31), i.e.
+> "supports gating" and "consistent" with the published 2.43. Details,
+> further checks and the proposed fixes:
+> `manuscript/notes/module2_identifiability.md`. `make freeze-prereg`
+> refuses this file while this marker is present.
+
 ## 1. Question
 
 Nearly everyone has locus coeruleus (LC) tau by mid-life, yet only a

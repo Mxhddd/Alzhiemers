@@ -43,6 +43,9 @@ from src.common.provenance import iso_utc, sha256_file, utc_now
 
 REQUIRED_FIELDS = ("name", "document", "sha256", "frozen_at_utc", "osf_url")
 OSF_PREFIX = "https://osf.io/"
+# A document containing this marker has an open issue that must be resolved
+# (and the marker removed) before it can be frozen.
+BLOCK_MARKER = "DO NOT FREEZE"
 
 
 class PreregistrationError(PermissionError):
@@ -62,6 +65,9 @@ def freeze(name: str, document: Path, osf_url: str, *,
         raise PreregistrationError(f"{document} must live directly in {prereg_dir}")
     if not osf_url.startswith(OSF_PREFIX):
         raise PreregistrationError(f"osf_url must start with {OSF_PREFIX}: {osf_url!r}")
+    if BLOCK_MARKER in document.read_text(encoding="utf-8"):
+        raise PreregistrationError(f"{document.name} is marked {BLOCK_MARKER!r}: resolve the open issue it "
+                                   "describes and remove the marker first")
     out = freeze_path(name, prereg_dir)
     record = {
         "name": name,

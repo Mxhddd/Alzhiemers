@@ -15,6 +15,7 @@ from pathlib import Path
 import yaml
 
 from src.common.paths import CONFIG_DIR, PREREG_DIR, REPO_ROOT
+from src.common.prereg import BLOCK_MARKER
 
 TARGETS_DIR = REPO_ROOT / "tests" / "validation" / "targets"
 MODULES = ("mr", "baserate", "metaanalysis", "dynamics", "mediation", "network")
@@ -78,7 +79,11 @@ def main() -> int:
         frozen = (PREREG_DIR / f"{m}.freeze.yaml").exists()
         complete = (PREREG_DIR / f"{m}.md").exists()
         draft = (PREREG_DIR / f"{m}.DRAFT.md").exists()
-        state = ("FROZEN" if frozen else "complete — review, upload to OSF, `make freeze-prereg`" if complete
+        blocked = complete and BLOCK_MARKER in (PREREG_DIR / f"{m}.md").read_text(encoding="utf-8")
+        state = ("FROZEN" if frozen
+                 else f"BLOCKED — open issue in prereg/{m}.md ({BLOCK_MARKER}); needs the researcher's decision"
+                 if blocked
+                 else "complete — review, upload to OSF, `make freeze-prereg`" if complete
                  else "partial draft (Claude to complete)" if draft else "not written")
         lines.append(f"  - {m}: {state}")
     print("Researcher inputs still needed (computed from the repository):" + "\n".join(lines))
