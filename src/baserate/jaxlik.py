@@ -55,8 +55,9 @@ def make_loglik(model: StageModel, data: list[StageCounts], *, step: float, star
     n = model.n_hidden
     edges = model.edges
     ei = np.array([e.i for e in edges]); ej = np.array([e.j for e in edges])
-    kind = np.array([{"loglinear": 0, "gated": 1, "const": 2}[e.kind] for e in edges])
+    kind = np.array([{"loglinear": 0, "gated": 1, "const": 2, "gated_loglinear": 3}[e.kind] for e in edges])
     p0 = np.array([e.p0 for e in edges]); p1 = np.array([max(e.p1, 0) for e in edges])
+    p2 = np.array([max(e.p2, 0) for e in edges])
     u = np.array([model.u(t) for t in grid.t_mid])                     # (S,)
     A = (np.array([model.amyloid(t) for t in grid.t_mid]) if model.amyloid is not None
          else np.zeros(len(grid.t_mid)))
@@ -67,14 +68,16 @@ def make_loglik(model: StageModel, data: list[StageCounts], *, step: float, star
     init = model.initial()
 
     u_j, A_j, h_j = jnp.asarray(u), jnp.asarray(A), jnp.asarray(grid.h)
-    kind_j, p0_j, p1_j = jnp.asarray(kind), jnp.asarray(p0), jnp.asarray(p1)
+    kind_j, p0_j, p1_j, p2_j = jnp.asarray(kind), jnp.asarray(p0), jnp.asarray(p1), jnp.asarray(p2)
 
     def rates(theta, uk, ak):
-        a, b = theta[p0_j], theta[p1_j]
+        a, b, c = theta[p0_j], theta[p1_j], theta[p2_j]
         loglin = jnp.exp(a + b * uk)
         gated = jnp.exp(a) * (1.0 + (jnp.exp(b) - 1.0) * ak)
         const_r = jnp.exp(a)
-        return jnp.where(kind_j == 0, loglin, jnp.where(kind_j == 1, gated, const_r))
+        gated_ll = loglin * (1.0 + (jnp.exp(c) - 1.0) * ak)
+        return jnp.where(kind_j == 0, loglin, jnp.where(kind_j == 1, gated,
+                                                        jnp.where(kind_j == 3, gated_ll, const_r)))
 
     def generator(theta, uk, ak):
         Q = jnp.zeros((n, n)).at[ei, ej].add(rates(theta, uk, ak))

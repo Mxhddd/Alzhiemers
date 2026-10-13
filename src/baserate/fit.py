@@ -10,7 +10,7 @@ jaxlik.py (same edges, same grid, exact gradients); tests require agreement.
 
 Parameter roles (decide initial values, bounds and priors):
   log-rate intercepts:  alpha[k], a_nu, log_mu0, log_lambda
-  age slopes (per age_scale years):  beta[k], b_nu
+  age slopes (per age_scale years):  beta[k], b_nu, beta_mu
   amyloid log hazard ratio:  log_hr_amyloid
 """
 
@@ -29,7 +29,7 @@ from src.baserate.solve import stage_probabilities
 
 
 def role(name: str) -> str:
-    if name.startswith("beta[") or name == "b_nu":
+    if name.startswith("beta[") or name in ("b_nu", "beta_mu"):
         return "slope"
     if name == "log_hr_amyloid":
         return "log_hr"

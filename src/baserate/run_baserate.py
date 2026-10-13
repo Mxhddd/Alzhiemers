@@ -7,25 +7,41 @@ Real-data mode refuses to start unless Module 2's validation passed on the
 current code and prereg/baserate.md is frozen. The dry run never reads
 data/: it simulates counts with the real structure (stage scheme, decade
 bands) from a known parameter set, writes to results/dryrun/ with every
-output stamped SIMULATED, and exists to test the pipeline end to end and
-measure run time before the real run.
+output stamped SIMULATED, and exists to test the pipeline end to end.
 
-Primary analysis (config/baserate.yaml, all fixed before any fit):
-  per variant: multi-start MLE with exact gradients; step-error audit against
-  a Radau solution (step halved and refitted if it fails); NUTS posterior
-  with R-hat / ESS / divergences; k-fold CV by age band; falsification
-  against published incidence the model never saw; gamma vs the derivation.
-Sensitivity analyses (MLE only, pre-specified): dementia threshold IV;
-open incidence band at 87.5; band-average evaluation; 3 hits for C;
-Jansen 2015 amyloid curve for A.
+What Module 2 tests (prereg/baserate.md, revised 2026-10-13):
+  * criterion 2 — which variant (A: LC first, B: independent cortical
+    entry, C: multi-hit) best explains the stage distribution, by k-fold
+    cross-validation over whole age bands;
+  * falsification — each variant's predicted incidence of the dementia-
+    threshold stage against published incidence it never saw.
+It does NOT test amyloid gating (criterion 1 was dropped): the stage counts
+carry no per-brain amyloid status, so the population amyloid curve A(t) is
+just a function of age. The age-adjusted amyloid HR from variant A is
+reported as "descriptive, not a test of gating"; the brief's literal
+variant A is a sensitivity analysis labelled "confounded with age".
+``require_gating_disabled`` refuses to run if the config ever re-enables
+gating as a test, and the validation suite checks that it does.
+
+Every stage (primary fit per variant, CV per variant, each sensitivity
+refit) is checkpointed under results/dryrun/checkpoints/ (or
+results/checkpoints/baserate/) and the tables are rewritten as soon as it
+finishes. A run stopped part-way (e.g. by a job time limit) loses at most
+the stage in progress; rerunning resumes. Checkpoints are keyed on the
+config, the module's code fingerprint and the run settings, so stale ones
+are never reused. ``--max-minutes`` stops cleanly (exit code 3) before
+starting a stage once the budget is spent.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import sys
 import time
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,17 +49,36 @@ import pandas as pd
 
 from src.baserate.data import StageCounts, jansen_bands, load_amyloid_bands, load_braak_counts, load_incidence
 from src.baserate.fit import fit_bayesian, fit_mle, group_probabilities
-from src.baserate.model import AGated, BIndependent, ChainSpec, CMultiHit, StepFunction
+from src.baserate.model import AGated, AGatedAge, BIndependent, ChainSpec, CMultiHit, StepFunction
 from src.baserate.predict import compare_models, predict_incidence, stage_prevalence_table
 from src.baserate.solve import error_bound, stage_probabilities_ode
 from src.common.config import load_config
 from src.common.paths import CONFIG_DIR, FIGURES_DIR, REPO_ROOT, RESULTS_DIR, TABLES_DIR
 from src.common.plotting import INK, apply_theme, save_figure, series_colors
 from src.common.prereg import require_preregistration
+from src.common.provenance import sha256_file
 from src.common.runlog import start_run
-from src.common.validation import require_validated
+from src.common.validation import code_fingerprint, require_validated
 
 CONFIG = CONFIG_DIR / "baserate.yaml"
+DESCRIPTIVE = "descriptive, not a test of gating"
+CONFOUNDED = "confounded with age"
+INCOMPLETE_EXIT = 3
+
+
+class GatingReenabledError(RuntimeError):
+    pass
+
+
+def require_gating_disabled(cfg) -> None:
+    """Criterion 1 (amyloid gating) was dropped on 2026-10-13. Refuse to run
+    if the configuration ever turns it back on."""
+    flag = cfg.get("amyloid.gating_is_a_test")
+    if flag is not False:
+        raise GatingReenabledError(
+            f"amyloid.gating_is_a_test is {flag!r}: Module 2 cannot test amyloid gating (stage-by-age counts "
+            "carry no per-brain amyloid status; prereg/baserate.md change log 2026-10-13). Re-enabling it "
+            "needs per-person amyloid x tau-stage data, a new model and a new pre-registration.")
 
 
 @dataclass(frozen=True)
@@ -54,7 +89,8 @@ class Scenario:
     eval_mode: str
     c_hits: int
     open_age: float
-    refit: tuple[str, ...]  # variants refitted in this scenario (others reuse the primary fit)
+    refit: tuple[str, ...]      # variants refitted in this scenario (others reuse the primary fit)
+    variants: tuple[str, ...] = field(default=())   # variants reported in this scenario (default: primary ones)
 
 
 @dataclass
@@ -63,6 +99,7 @@ class Inputs:
     amyloid: dict[str, StepFunction]
     incidence: pd.DataFrame          # band, eval_age, observed_min, observed_max (open band at primary age)
     incidence_open_lower: float | None
+    files: list[Path] = field(default_factory=list)   # real input files (checkpoint key)
 
 
 # ---------------------------------------------------------------- inputs ----
@@ -97,16 +134,15 @@ def check_braak_totals(data: list[StageCounts], stages: list[str], run) -> None:
 def real_inputs(cfg, run) -> Inputs:
     stages = [str(s) for s in cfg.get("data.stage_order")]
     inc = cfg.get("data.upper_inclusive")
-    data = load_braak_counts(REPO_ROOT / cfg.get("data.braak_counts"), stages, upper_inclusive=inc, run=run)
+    files = [REPO_ROOT / cfg.get(k) for k in ("data.braak_counts", "data.amyloid_prevalence",
+                                              "data.amyloid_prevalence_sensitivity", "data.dementia_incidence")]
+    data = load_braak_counts(files[0], stages, upper_inclusive=inc, run=run)
     check_braak_totals(data, stages, run)
-    primary = StepFunction(load_amyloid_bands(REPO_ROOT / cfg.get("data.amyloid_prevalence"),
-                                              upper_inclusive=inc, run=run))
-    jb = jansen_bands(REPO_ROOT / cfg.get("data.amyloid_prevalence_sensitivity"), run=run)
-    sens = splice_amyloid(primary, jb)
-    incidence = load_incidence(REPO_ROOT / cfg.get("data.dementia_incidence"),
-                               open_band_age=cfg.get("data.open_band_evaluation_age"), run=run)
-    return Inputs(data, {"primary": primary, "sensitivity": sens}, incidence,
-                  _open_lower(REPO_ROOT / cfg.get("data.dementia_incidence")))
+    primary = StepFunction(load_amyloid_bands(files[1], upper_inclusive=inc, run=run))
+    sens = splice_amyloid(primary, jansen_bands(files[2], run=run))
+    incidence = load_incidence(files[3], open_band_age=cfg.get("data.open_band_evaluation_age"), run=run)
+    return Inputs(data, {"primary": primary, "sensitivity": sens}, incidence, _open_lower(files[3]),
+                  files + [REPO_ROOT / "data/extracted/braak2011_abstract_totals.csv"])
 
 
 def splice_amyloid(primary: StepFunction, inner: list[tuple[float, float, float]]) -> StepFunction:
@@ -131,23 +167,32 @@ def _open_lower(path) -> float | None:
     return float(o["age_lower"].iloc[0]) if len(o) else None
 
 
-def simulated_inputs(cfg, spec: ChainSpec, step: float, start: float, centre: float, scale: float) -> tuple[Inputs, np.ndarray]:
+SIM_TRUTH = {  # SIMULATION SETTINGS (not data): log-rate at age 50 and log-slope per decade per edge
+    "alpha[0]": -2.5, "beta[0]": 0.0, "alpha[1]": -2.5, "beta[1]": 0.0, "alpha[2]": -3.0, "beta[2]": 0.1,
+    # LC -> cortex: rises with age (0.1 per decade, like its neighbours) and has NO amyloid effect,
+    # so the dry run shows the literal variant A manufacturing a hazard ratio from age alone.
+    "log_mu0": -4.0, "beta_mu": 0.1, "log_hr_amyloid": 0.0,
+    "alpha[4]": -2.5, "beta[4]": 0.1, "alpha[5]": -3.0, "beta[5]": 0.2, "alpha[6]": -3.0, "beta[6]": 0.3,
+    "alpha[7]": -3.5, "beta[7]": 0.5, "alpha[8]": -4.0, "beta[8]": 0.6, "alpha[9]": -4.5, "beta[9]": 0.8,
+    "alpha[10]": -4.0, "beta[10]": 0.5}
+SIM_AMYLOID = [(1, 41, 0.0), (41, 51, 0.05), (51, 61, 0.15), (61, 71, 0.3), (71, 81, 0.45), (81, 91, 0.6),
+               (91, 101, 0.7)]
+SIM_AMYLOID_SENS = [(1, 47.5, 0.0), (47.5, 67.5, 0.1), (67.5, 87.5, 0.3), (87.5, 101, 0.45)]
+
+
+def simulated_inputs(cfg, spec: ChainSpec, step: float, start: float, centre: float, scale: float,
+                     truth_settings: dict | None = None, seed: int | None = None) -> tuple[Inputs, np.ndarray]:
     """Synthetic world with the real structure. All numbers here are
     SIMULATION SETTINGS, not data, and never leave the dry run."""
     from sim.baserate_sim import simulate_counts
 
-    amy = StepFunction([(1, 41, 0.0), (41, 51, 0.05), (51, 61, 0.15), (61, 71, 0.3), (71, 81, 0.45),
-                        (81, 91, 0.6), (91, 101, 0.7)])
-    amy_sens = StepFunction([(1, 47.5, 0.0), (47.5, 67.5, 0.1), (67.5, 87.5, 0.3), (87.5, 101, 0.45)])
-    truth_model = AGated(spec, amy, centre, scale)
-    # log-rate at age 50 and log-slope per decade for each edge, in edge order
-    settings = {"alpha[0]": -2.5, "beta[0]": 0.0, "alpha[1]": -2.5, "beta[1]": 0.0, "alpha[2]": -3.0, "beta[2]": 0.1,
-                "log_mu0": -4.0, "log_hr_amyloid": np.log(2.0), "alpha[4]": -2.5, "beta[4]": 0.1,
-                "alpha[5]": -3.0, "beta[5]": 0.2, "alpha[6]": -3.0, "beta[6]": 0.3, "alpha[7]": -3.5, "beta[7]": 0.5,
-                "alpha[8]": -4.0, "beta[8]": 0.6, "alpha[9]": -4.5, "beta[9]": 0.8, "alpha[10]": -4.0, "beta[10]": 0.5}
+    amy, amy_sens = StepFunction(SIM_AMYLOID), StepFunction(SIM_AMYLOID_SENS)
+    truth_model = AGatedAge(spec, amy, centre, scale)
+    settings = dict(SIM_TRUTH, **(truth_settings or {}))
     theta = np.array([settings[n] for n in truth_model.param_names])
     bands = [(lo, lo + 10) for lo in range(1, 101, 10)]
-    data = simulate_counts(truth_model, theta, bands, 230, step=step, start_age=start, seed=cfg.get("seed"))
+    data = simulate_counts(truth_model, theta, bands, 230, step=step, start_age=start,
+                           seed=cfg.get("seed") if seed is None else seed)
     ages = np.array([67.5, 72.5, 77.5, 82.5, float(cfg.get("data.open_band_evaluation_age"))])
     thr = list(spec.stages).index(str(cfg.get("data.dementia_threshold_stage")))
     true_inc = 1000 * predict_incidence(truth_model, theta, ages, threshold=thr, step=step, start_age=start)
@@ -157,18 +202,20 @@ def simulated_inputs(cfg, spec: ChainSpec, step: float, start: float, centre: fl
 
 
 # ------------------------------------------------------------- analysis ----
+def build_model(spec, name: str, sc: Scenario, inputs: Inputs, centre, scale):
+    if name == "A_gated_age":
+        return AGatedAge(spec, inputs.amyloid[sc.amyloid], centre, scale)
+    if name == "A_gated_literal":
+        return AGated(spec, inputs.amyloid[sc.amyloid], centre, scale)
+    if name == "B_independent":
+        return BIndependent(spec, centre, scale)
+    if name == "C_multihit":
+        return CMultiHit(spec, sc.c_hits, centre, scale)
+    raise ValueError(f"unknown variant {name}")
+
+
 def build_models(spec, sc: Scenario, inputs: Inputs, centre, scale, names):
-    out = {}
-    for v in names:
-        if v == "A_gated":
-            out[v] = AGated(spec, inputs.amyloid[sc.amyloid], centre, scale)
-        elif v == "B_independent":
-            out[v] = BIndependent(spec, centre, scale)
-        elif v == "C_multihit":
-            out[v] = CMultiHit(spec, sc.c_hits, centre, scale)
-        else:
-            raise ValueError(f"unknown variant {v}")
-    return out
+    return {v: build_model(spec, v, sc, inputs, centre, scale) for v in names}
 
 
 def audit(model, theta, data, *, step, start, eval_mode, n_points) -> tuple[float, float]:
@@ -182,15 +229,18 @@ def audit(model, theta, data, *, step, start, eval_mode, n_points) -> tuple[floa
         P_ode.append(w @ P_ode_all[i:i + len(a)])
         i += len(a)
     P_ode = np.array(P_ode)
-    ll = lambda P: sum(float(np.sum(g.counts[g.counts > 0] * np.log(np.maximum(p[g.counts > 0], 1e-300))))  # noqa: E731
-                       for g, p in zip(data, P))
+
+    def ll(P):
+        return sum(float(np.sum(g.counts[g.counts > 0] * np.log(np.maximum(p[g.counts > 0], 1e-300))))
+                   for g, p in zip(data, P))
+
     return float(np.abs(P_h - P_ode).max()), abs(ll(P_h) - ll(P_ode))
 
 
 def fit_audited(model, data, *, cfg, step, start, eval_mode, n_points, seed, run, warm=None):
     """MLE, then the pre-registered step audit; halve h and refit on failure.
     `warm` (e.g. the primary fit) is added as one extra start."""
-    for attempt in range(4):
+    for _attempt in range(4):
         fit = fit_mle(model, data, step=step, start_age=start, cfg_mle=cfg.get("mle"), seed=seed,
                       eval_mode=eval_mode, n_points=n_points, extra_starts=None if warm is None else [warm])
         dp, dll = audit(model, fit.theta, data, step=step, start=start, eval_mode=eval_mode, n_points=n_points)
@@ -201,7 +251,7 @@ def fit_audited(model, data, *, cfg, step, start, eval_mode, n_points, seed, run
         run.info(f"{model.name}: step {step:g} y: bound h^2*Phi = {bound:.2e}, Radau audit max|dp| = {dp:.2e}, "
                  f"|dLL| = {dll:.2e} -> {'ok' if ok else 'FAIL: halving the step'}")
         if ok:
-            return fit, step, dp, dll
+            return fit, step, dp, dll, bound
         step /= 2
     raise RuntimeError(f"{model.name}: step audit still failing after 3 halvings")
 
@@ -220,21 +270,12 @@ def falsification(model, theta, inputs: Inputs, *, threshold: int, open_age: flo
     return inc, verdict
 
 
-def gating_verdict(interval: tuple[float, float], exp_lo: float) -> str:
-    """Pre-registered three-way reading of the amyloid log HR interval (prereg §2.1)."""
-    lo, hi = interval
-    if lo > 0:
-        return "supports gating (interval above 0)"
-    if hi < exp_lo:
-        return "AGAINST gating (rules out the smallest published-compatible effect)"
-    return "inconclusive (interval includes values on both sides; underpowered)"
-
-
-def cv_verdict_3way(cv_df: pd.DataFrame, margin: float) -> str:
-    """Pre-registered three-way reading of the CV comparison (prereg §2.2)."""
+def cv_verdict_3way(cv_df: pd.DataFrame, margin: float, a_name: str) -> str:
+    """Pre-registered three-way reading of the CV comparison (prereg §2,
+    criterion 2): A = the LC-first variant `a_name`."""
     ll = dict(zip(cv_df["model"], cv_df["cv_heldout_loglik"]))
-    a = ll["A_gated"]
-    others = {k: v for k, v in ll.items() if k != "A_gated"}
+    a = ll[a_name]
+    others = {k: v for k, v in ll.items() if k != a_name}
     if all(a - v > margin for v in others.values()):
         return "supports (A beats B and C by more than the margin)"
     if any(v - a > margin for v in others.values()):
@@ -242,32 +283,108 @@ def cv_verdict_3way(cv_df: pd.DataFrame, margin: float) -> str:
     return "inconclusive (A not separated from the alternatives by the margin)"
 
 
-def gamma_verdict(interval: tuple[float, float], expected: float, exp_lo: float, exp_hi: float) -> str:
+def expectation_comparison(interval: tuple[float, float], expected: float, exp_lo: float, exp_hi: float) -> str:
+    """Descriptive comparison of a fitted log HR interval with the published
+    expectation (manuscript/derivations/module2_gamma.md). Not a test."""
     lo, hi = interval
     if lo <= expected <= hi:
-        return "consistent"
+        return "published value inside the interval"
     if hi < exp_lo or lo > exp_hi:
-        return "DISAGREES (intervals do not overlap)"
-    return "tension (expected value outside the interval; intervals overlap)"
+        return "intervals do not overlap"
+    return "published value outside the interval; intervals overlap"
 
 
+# --------------------------------------------------------- checkpoints ----
+def _jsonable(x):
+    if isinstance(x, dict):
+        return {str(k): _jsonable(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple)):
+        return [_jsonable(v) for v in x]
+    if isinstance(x, np.ndarray):
+        return [_jsonable(v) for v in x.tolist()]
+    if isinstance(x, (np.floating, float)):
+        return None if not np.isfinite(x) else float(x)
+    if isinstance(x, (np.integer,)):
+        return int(x)
+    if isinstance(x, (np.bool_,)):
+        return bool(x)
+    return x
+
+
+class Checkpoints:
+    """One JSON file per finished stage, valid only for the key it was written
+    under (config + code fingerprint + run settings [+ input file hashes])."""
+
+    def __init__(self, directory: Path, key: str, run):
+        self.dir = Path(directory)
+        self.dir.mkdir(parents=True, exist_ok=True)
+        self.key = key
+        self.run = run
+
+    def _path(self, stage: str) -> Path:
+        return self.dir / (stage.replace("/", "__") + ".json")
+
+    def get(self, stage: str):
+        p = self._path(stage)
+        if not p.exists():
+            return None
+        rec = json.loads(p.read_text(encoding="utf-8"))
+        if rec.get("key") != self.key:
+            self.run.warning(f"checkpoint {p.name} was written under different code/config/settings: ignored")
+            return None
+        self.run.info(f"stage {stage}: reusing checkpoint {p.name} (finished {rec.get('finished_utc')})")
+        return rec["data"]
+
+    def put(self, stage: str, data: dict) -> dict:
+        """Write atomically (a killed run never leaves a half-written file) and
+        return the data exactly as a later run will read it back."""
+        rec = {"key": self.key, "stage": stage, "finished_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+               "data": _jsonable(data)}
+        text = json.dumps(rec, indent=1)
+        tmp = self._path(stage).with_suffix(".tmp")
+        tmp.write_text(text, encoding="utf-8")
+        tmp.replace(self._path(stage))
+        return json.loads(text)["data"]
+
+
+def checkpoint_key(cfg_path: Path, settings: dict, input_files: list[Path]) -> str:
+    h = hashlib.sha256()
+    h.update(sha256_file(cfg_path).encode())
+    h.update(code_fingerprint("baserate").encode())
+    h.update(sha256_file(REPO_ROOT / "sim" / "baserate_sim.py").encode())
+    h.update(json.dumps(settings, sort_keys=True).encode())
+    for f in sorted(input_files):
+        h.update(f"{f.name}:{sha256_file(f)}".encode())
+    return h.hexdigest()
+
+
+class OutOfTime(Exception):
+    pass
+
+
+# ----------------------------------------------------------------- main ----
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run-simulated", action="store_true")
     ap.add_argument("--dry-run-nuts", type=int, nargs=3, metavar=("TUNE", "DRAWS", "CHAINS"),
                     help="reduced NUTS settings for timing the dry run")
     ap.add_argument("--dry-run-mle-starts", type=int, help="fewer random MLE starts in the dry run")
+    ap.add_argument("--max-minutes", type=float, help="do not START a new stage after this many minutes")
     args = ap.parse_args(argv)
     dry = args.dry_run_simulated
     cfg = load_config(CONFIG)
+    require_gating_disabled(cfg)
     prereg = None
     if (args.dry_run_nuts or args.dry_run_mle_starts) and not dry:
         raise SystemExit("reduced settings are only allowed with --dry-run-simulated")
     if not dry:
         require_validated("baserate")
         prereg = require_preregistration("baserate")
-    tables = RESULTS_DIR / "dryrun" / "tables" if dry else TABLES_DIR
-    figures = RESULTS_DIR / "dryrun" / "figures" if dry else FIGURES_DIR
+    base = RESULTS_DIR / "dryrun" if dry else RESULTS_DIR
+    tables = base / "tables" if dry else TABLES_DIR
+    figures = base / "figures" if dry else FIGURES_DIR
+    ck_dir = RESULTS_DIR / "dryrun" / "checkpoints" if dry else RESULTS_DIR / "checkpoints" / "baserate"
+    t_start = time.time()
 
     with start_run(module="baserate_dryrun" if dry else "baserate", config_path=CONFIG, seed=cfg.get("seed"),
                    packages=["numpy", "scipy", "pandas", "numpyro", "arviz", "jax"], preregistration=prereg) as run:
@@ -281,187 +398,282 @@ def main(argv=None) -> int:
             run.mark_simulated()
             inputs, truth = simulated_inputs(cfg, spec, step0, start, centre, scale)
         else:
-            inputs = real_inputs(cfg, run)
+            inputs, truth = real_inputs(cfg, run), None
         run.info(f"{len(inputs.data)} age-band groups, {sum(g.n for g in inputs.data)} brains, {len(stages)} stages")
         bayes = dict(cfg.get("bayes"))
         if dry and args.dry_run_nuts:
             bayes.update(tune=args.dry_run_nuts[0], draws=args.dry_run_nuts[1], chains=args.dry_run_nuts[2])
             run.warning(f"dry run: NUTS reduced to tune={bayes['tune']}, draws={bayes['draws']}, chains={bayes['chains']}")
-
         if dry and args.dry_run_mle_starts:
             cfg._data["mle"]["n_starts"] = args.dry_run_mle_starts
-            run.warning(f"dry run: MLE random starts reduced to {args.dry_run_mle_starts}")
+            cv_r = min(args.dry_run_mle_starts, cfg.get("cross_validation.n_random_starts"))
+            cfg._data["cross_validation"]["n_random_starts"] = cv_r
+            run.warning(f"dry run: MLE random starts reduced to {args.dry_run_mle_starts} ({cv_r} per CV fold)")
+        ck = Checkpoints(ck_dir, checkpoint_key(CONFIG, {"dry": dry, "nuts": args.dry_run_nuts,
+                                                         "mle_starts": args.dry_run_mle_starts},
+                                                inputs.files), run)
+
         variants = list(cfg.get("variants.fit"))
+        a_name = cfg.get("variants.lc_first")
+        literal = cfg.get("variants.literal_a_sensitivity")
         primary = Scenario("primary", cfg.get("data.dementia_threshold_stage"), "primary", cfg.get("solver.evaluate_at"),
-                           cfg.get("variants.c_hits"), cfg.get("data.open_band_evaluation_age"), tuple(variants))
+                           cfg.get("variants.c_hits"), cfg.get("data.open_band_evaluation_age"), tuple(variants),
+                           tuple(variants))
         scenarios = [
             replace(primary, name="threshold_IV", threshold=cfg.get("data.dementia_threshold_stage_sensitivity"), refit=()),
             replace(primary, name="open_band_87.5", open_age=cfg.get("data.open_band_evaluation_age_sensitivity"), refit=()),
             replace(primary, name="band_average", eval_mode=cfg.get("solver.evaluate_at_sensitivity"), refit=tuple(variants)),
-            replace(primary, name="c_hits_3", c_hits=cfg.get("variants.c_hits_sensitivity"), refit=("C_multihit",)),
-            replace(primary, name="amyloid_jansen2015", amyloid="sensitivity", refit=("A_gated",)),
+            replace(primary, name="c_hits_3", c_hits=cfg.get("variants.c_hits_sensitivity"), refit=("C_multihit",),
+                    variants=("C_multihit",)),
+            replace(primary, name="amyloid_jansen2015", amyloid="sensitivity", refit=(a_name,), variants=(a_name,)),
+            replace(primary, name="literal_A_confounded_with_age", refit=(literal,), variants=(literal,)),
         ]
         tol = cfg.get("falsification.max_abs_log_ratio")
         g_exp = (cfg.get("gamma_check.expected_log_hr"), cfg.get("gamma_check.expected_log_hr_ci_lower"),
                  cfg.get("gamma_check.expected_log_hr_ci_upper"))
-        run.info(f"pre-stated expectation: log HR_A = {g_exp[0]} [{g_exp[1]}, {g_exp[2]}] "
-                 f"({cfg.get('gamma_check.source')}); falsification tolerance |log ratio| <= {tol}")
+        run.info(f"falsification tolerance |log ratio| <= {tol}; amyloid HR is reported as '{DESCRIPTIVE}' "
+                 f"(published reference log HR {g_exp[0]} [{g_exp[1]}, {g_exp[2]}], {cfg.get('gamma_check.source')})")
 
-        # ------------------------------------------------ primary ----------
         models = build_models(spec, primary, inputs, centre, scale, variants)
-        fits, steps, params, diags, fals, gammas = {}, {}, [], [], [], []
-        sens_rows, cv_df = [], None
+        prim: dict[str, dict] = {}
+        cvrec: dict[str, dict] = {}
+        sens: dict[str, dict] = {}
+        flags = {"cv_done": False}
 
-        def flush_tables():
-            """Write every table that has content so far (overwriting earlier
-            versions), so a run stopped part-way still leaves its completed
-            stages on disk; the run log's footer keeps the final hashes."""
-            out = [(pd.DataFrame(params), "baserate_parameters.csv"), (pd.DataFrame(diags), "baserate_diagnostics.csv"),
-                   (pd.DataFrame(gammas), "baserate_gamma_check.csv"), (pd.DataFrame(sens_rows), "baserate_sensitivity.csv")]
-            if fals:
-                out.append((pd.concat(fals, ignore_index=True), "baserate_incidence_falsification.csv"))
-            if cv_df is not None:
-                out.append((cv_df, "baserate_cv.csv"))
-            for df, fname in out:
-                if len(df):
-                    run.write_table(df, tables / fname)
-        for name, m in models.items():
+        def stage(name, fn):
+            rec = ck.get(name)
+            if rec is not None:
+                return rec
+            if args.max_minutes is not None and (time.time() - t_start) / 60 > args.max_minutes:
+                raise OutOfTime(name)
             t0 = time.time()
-            fit, step, dp, dll = fit_audited(m, inputs.data, cfg=cfg, step=step0, start=start,
-                                             eval_mode=primary.eval_mode, n_points=npts, seed=seed, run=run)
-            fits[name], steps[name] = fit, step
+            run.info(f"stage {name}: started")
+            rec = fn()
+            rec["seconds"] = time.time() - t0
+            rec = ck.put(name, rec)
+            run.info(f"stage {name}: finished in {rec['seconds']:.0f} s; checkpoint written")
+            return rec
+
+        # ---------------------------------------------- stage functions -----
+        def primary_fit(name):
+            m = models[name]
+            fit, step, dp, dll, bound = fit_audited(m, inputs.data, cfg=cfg, step=step0, start=start,
+                                                    eval_mode=primary.eval_mode, n_points=npts, seed=seed, run=run)
             for msg in fit.messages:
                 if msg.startswith(("WARNING", "NOT")):
                     run.warning(f"{name}: {msg}")
             run.info(f"{name}: MLE logLik {fit.loglik:.2f}, AIC {fit.aic:.2f}, {fit.n_at_best}/{fit.converged_starts} "
-                     f"starts at best, Hessian {'ok' if fit.hessian_ok else 'NOT positive definite'}, "
-                     f"{time.time() - t0:.0f} s")
-            t1 = time.time()
-            idata, summ, diag = fit_bayesian(m, inputs.data, step=step, start_age=start, cfg_bayes=bayes, seed=seed,
-                                             init_theta=fit.theta, eval_mode=primary.eval_mode, n_points=npts)
+                     f"starts at best, Hessian {'ok' if fit.hessian_ok else 'NOT positive definite'}")
+            _, summ, diag = fit_bayesian(m, inputs.data, step=step, start_age=start, cfg_bayes=bayes, seed=seed,
+                                         init_theta=fit.theta, eval_mode=primary.eval_mode, n_points=npts)
             clean = diag["max_rhat"] <= bayes["max_rhat"] and diag["divergences"] <= bayes["max_divergences"]
             (run.info if clean else run.warning)(
                 f"{name} NUTS: max R-hat {diag['max_rhat']:.3f}, min bulk ESS {diag['min_ess_bulk']:.0f}, "
                 f"divergences {diag['divergences']}, mean leapfrog {diag['mean_leapfrog_steps']:.1f}, "
-                f"{diag['chain_method']} chains, {time.time() - t1:.0f} s"
-                + ("" if clean else " — POSTERIOR NOT CLEAN: reported with this caveat"))
-            diags.append({"model": name, "step_years": step, "audit_max_dp": dp, "audit_dll": dll,
-                          "mle_loglik": fit.loglik, "aic": fit.aic, "hessian_ok": fit.hessian_ok,
-                          "on_bound": ";".join(fit.on_bound), "starts_at_best": fit.n_at_best,
-                          **diag, "posterior_clean": clean})
+                f"{diag['chain_method']} chains" + ("" if clean else " — POSTERIOR NOT CLEAN: reported with this caveat"))
             lo_col, hi_col = [c for c in summ.columns if c.startswith("hdi_")]
-            for i, pname in enumerate(m.param_names):
-                r = summ.loc[pname.replace("[", "_").replace("]", "")]
-                params.append({"model": name, "parameter": pname, "mle": fit.theta[i], "mle_se": fit.se[i],
-                               "posterior_mean": r["mean"], "ci_lower": r[lo_col], "ci_upper": r[hi_col],
-                               "r_hat": r["r_hat"], "ess_bulk": r["ess_bulk"],
-                               **({"truth_simulated": truth[i]} if dry and name == "A_gated" else {})})
-                if pname == "log_hr_amyloid":
-                    v = gamma_verdict((r[lo_col], r[hi_col]), *g_exp)
-                    mu0 = np.exp(fit.theta[m.param_names.index("log_mu0")])
-                    gv = gating_verdict((r[lo_col], r[hi_col]), g_exp[1])
-                    gammas.append({"scenario": "primary", "interval_from": "NUTS 95% HDI", "log_hr_estimate": r["mean"],
-                                   "ci_lower": r[lo_col], "ci_upper": r[hi_col], "hr_estimate": np.exp(r["mean"]),
-                                   "implied_gamma_per_year_at_mle_mu0": mu0 * (np.exp(r["mean"]) - 1),
-                                   "expected_log_hr": g_exp[0], "verdict": v, "gating_verdict": gv})
-                    (run.warning if v.startswith("DIS") else run.info)(f"gamma check (primary): {v}")
-                    run.info(f"PRE-REGISTERED CRITERION 1 (amyloid gating): {gv}")
-            thr = stages.index(primary.threshold)
-            tab, verdict = falsification(m, fit.theta, inputs, threshold=thr, open_age=primary.open_age, step=step,
-                                         start=start, tol=tol)
-            tab.insert(0, "model", name); tab.insert(0, "scenario", "primary"); tab["verdict"] = verdict
-            fals.append(tab)
+            post = {p: {"mean": summ.loc[p.replace("[", "_").replace("]", ""), "mean"],
+                        "ci_lower": summ.loc[p.replace("[", "_").replace("]", ""), lo_col],
+                        "ci_upper": summ.loc[p.replace("[", "_").replace("]", ""), hi_col],
+                        "r_hat": summ.loc[p.replace("[", "_").replace("]", ""), "r_hat"],
+                        "ess_bulk": summ.loc[p.replace("[", "_").replace("]", ""), "ess_bulk"]} for p in m.param_names}
+            tab, verdict = falsification(m, fit.theta, inputs, threshold=stages.index(primary.threshold),
+                                         open_age=primary.open_age, step=step, start=start, tol=tol)
             (run.info if verdict == "PASS" else run.warning)(f"falsification {name} (primary): {verdict}")
-            flush_tables()
+            return {"fit": _fit_dict(fit), "step": step, "audit_max_dp": dp, "audit_dll": dll, "bound": bound,
+                    "posterior": post, "nuts": {**diag, "posterior_clean": clean},
+                    "falsification": tab.to_dict("records"), "verdict": verdict}
 
-        cv = compare_models(list(models.values()), inputs.data, k=cfg.get("cross_validation.k"), step=step0,
-                            start_age=start, cfg_mle=cfg.get("mle"), seed=seed, eval_mode=primary.eval_mode,
-                            n_points=npts, warm_starts={n: f.theta for n, f in fits.items()},
-                            n_random=cfg.get("cross_validation.n_random_starts"))
-        cv_df = pd.DataFrame([{k: v for k, v in r.items() if k != "per_fold"} for r in cv]).sort_values(
-            "cv_heldout_loglik", ascending=False)
-        best, second = cv_df.iloc[0], cv_df.iloc[1]
-        margin = cfg.get("cross_validation.margin")
-        cv_verdict = (f"{best['model']} best by {best['cv_heldout_loglik'] - second['cv_heldout_loglik']:.2f} "
-                      f"(margin {margin}): " + ("clear" if best["cv_heldout_loglik"] - second["cv_heldout_loglik"] > margin
-                                                else "NOT distinguishable from the runner-up"))
-        run.info(f"cross-validation: {cv_verdict}")
-        run.info(f"PRE-REGISTERED CRITERION 2 (variant comparison): {cv_verdict_3way(cv_df, margin)}")
-        flush_tables()
+        def cv_stage(name):
+            r = compare_models([models[name]], inputs.data, k=cfg.get("cross_validation.k"), step=step0,
+                               start_age=start, cfg_mle=cfg.get("mle"), seed=seed, eval_mode=primary.eval_mode,
+                               n_points=npts, warm_starts={name: np.array(prim[name]["fit"]["theta"])},
+                               n_random=cfg.get("cross_validation.n_random_starts"))[0]
+            run.info(f"cross-validation {name}: held-out logLik {r['cv_heldout_loglik']:.2f}")
+            return {"model": name, "cv_heldout_loglik": r["cv_heldout_loglik"], "k": r["k"],
+                    "per_fold": r["per_fold"]}
 
-        # --------------------------------------------- sensitivity ---------
-        for sc in scenarios:
-            sm = build_models(spec, sc, inputs, centre, scale, variants)
-            for name, m in sm.items():
-                if name in sc.refit:
-                    fit, step, _, _ = fit_audited(m, inputs.data, cfg=cfg, step=step0, start=start,
-                                                  eval_mode=sc.eval_mode, n_points=npts, seed=seed, run=run,
-                                                  warm=fits[name].theta if len(m.param_names) == len(fits[name].theta) else None)
-                else:
-                    fit, step = fits[name], steps[name]
-                thr = stages.index(sc.threshold)
-                tab, verdict = falsification(m, fit.theta, inputs, threshold=thr, open_age=sc.open_age, step=step,
-                                             start=start, tol=tol)
-                tab.insert(0, "model", name); tab.insert(0, "scenario", sc.name); tab["verdict"] = verdict
-                fals.append(tab)
-                row = {"scenario": sc.name, "model": name, "refitted": name in sc.refit, "mle_loglik": fit.loglik,
-                       "falsification": verdict}
-                if "log_hr_amyloid" in m.param_names:
-                    i = m.param_names.index("log_hr_amyloid")
-                    ci = (fit.theta[i] - 1.96 * fit.se[i], fit.theta[i] + 1.96 * fit.se[i])
-                    v = gamma_verdict(ci, *g_exp)
-                    row.update(log_hr_mle=fit.theta[i], log_hr_ci_lower=ci[0], log_hr_ci_upper=ci[1], gamma_check=v,
-                               gating_verdict=gating_verdict(ci, g_exp[1]))
-                    gammas.append({"scenario": sc.name, "interval_from": "MLE +/- 1.96 SE", "log_hr_estimate": fit.theta[i],
-                                   "ci_lower": ci[0], "ci_upper": ci[1], "hr_estimate": np.exp(fit.theta[i]),
-                                   "implied_gamma_per_year_at_mle_mu0":
-                                       np.exp(fit.theta[m.param_names.index("log_mu0")]) * (np.exp(fit.theta[i]) - 1),
-                                   "expected_log_hr": g_exp[0], "verdict": v})
+        def sens_stage(sc, name):
+            m = build_model(spec, name, sc, inputs, centre, scale)
+            if name in sc.refit:
+                warm = prim[name]["fit"]["theta"] if name in prim and len(prim[name]["fit"]["theta"]) == len(
+                    m.param_names) else None
+                fit, step, _, _, _ = fit_audited(m, inputs.data, cfg=cfg, step=step0, start=start,
+                                                 eval_mode=sc.eval_mode, n_points=npts, seed=seed, run=run,
+                                                 warm=None if warm is None else np.array(warm))
+                fd = _fit_dict(fit)
+            else:
+                fd, step = prim[name]["fit"], prim[name]["step"]
+            tab, verdict = falsification(m, np.array(fd["theta"]), inputs, threshold=stages.index(sc.threshold),
+                                         open_age=sc.open_age, step=step, start=start, tol=tol)
+            run.info(f"sensitivity {sc.name} / {name}: falsification {verdict}")
+            return {"scenario": sc.name, "model": name, "refitted": name in sc.refit, "fit": fd, "step": step,
+                    "falsification": tab.to_dict("records"), "verdict": verdict}
+
+        # ------------------------------------------------------ tables ------
+        def flush_tables():
+            params, diags, fals, amy_rows, sens_rows = [], [], [], [], []
+            for name, rec in prim.items():
+                f = rec["fit"]
+                for i, p in enumerate(f["param_names"]):
+                    note = (DESCRIPTIVE if p == "log_hr_amyloid" and name == a_name else
+                            CONFOUNDED if p == "log_hr_amyloid" else "")
+                    params.append({"model": name, "parameter": p, "note": note, "mle": f["theta"][i],
+                                   "mle_se": np.nan if f["se"][i] is None else f["se"][i], "posterior_mean": rec["posterior"][p]["mean"],
+                                   "ci_lower": rec["posterior"][p]["ci_lower"], "ci_upper": rec["posterior"][p]["ci_upper"],
+                                   "r_hat": rec["posterior"][p]["r_hat"], "ess_bulk": rec["posterior"][p]["ess_bulk"],
+                                   **({"truth_simulated": truth[i]} if dry and name == "A_gated_age" else {})})
+                    if p == "log_hr_amyloid":
+                        ci = (rec["posterior"][p]["ci_lower"], rec["posterior"][p]["ci_upper"])
+                        amy_rows.append({"label": DESCRIPTIVE if name == a_name else CONFOUNDED, "scenario": "primary",
+                                         "model": name, "interval_from": "NUTS 95% HDI",
+                                         "log_hr_estimate": rec["posterior"][p]["mean"], "ci_lower": ci[0],
+                                         "ci_upper": ci[1], "hr_estimate": np.exp(rec["posterior"][p]["mean"]),
+                                         "published_log_hr": g_exp[0],
+                                         "descriptive_comparison": expectation_comparison(ci, *g_exp)})
+                diags.append({"model": name, "step_years": rec["step"], "error_bound_h2phi": rec["bound"],
+                              "audit_max_dp": rec["audit_max_dp"], "audit_dll": rec["audit_dll"],
+                              "mle_loglik": f["loglik"], "aic": f["aic"], "hessian_ok": f["hessian_ok"],
+                              "on_bound": ";".join(f["on_bound"]), "starts_at_best": f["n_at_best"],
+                              "converged_starts": f["converged_starts"], "stage_seconds": rec.get("seconds"),
+                              **rec["nuts"]})
+                fals += [dict(r, scenario="primary", model=name, verdict=rec["verdict"]) for r in rec["falsification"]]
+            for rec in sens.values():
+                f = rec["fit"]
+                row = {"scenario": rec["scenario"], "model": rec["model"], "refitted": rec["refitted"],
+                       "mle_loglik": f["loglik"], "hessian_ok": f["hessian_ok"], "falsification": rec["verdict"]}
+                if "log_hr_amyloid" in f["param_names"]:
+                    i = f["param_names"].index("log_hr_amyloid")
+                    se = f["se"][i] if f["se"][i] is not None else np.nan
+                    ci = (f["theta"][i] - 1.96 * se, f["theta"][i] + 1.96 * se)
+                    lab = DESCRIPTIVE if rec["model"] == a_name else CONFOUNDED
+                    row.update(amyloid_label=lab, log_hr_mle=f["theta"][i], log_hr_ci_lower=ci[0], log_hr_ci_upper=ci[1])
+                    amy_rows.append({"label": lab, "scenario": rec["scenario"], "model": rec["model"],
+                                     "interval_from": "MLE +/- 1.96 SE", "log_hr_estimate": f["theta"][i],
+                                     "ci_lower": ci[0], "ci_upper": ci[1], "hr_estimate": np.exp(f["theta"][i]),
+                                     "published_log_hr": g_exp[0],
+                                     "descriptive_comparison": expectation_comparison(ci, *g_exp)})
                 sens_rows.append(row)
-                run.info(f"sensitivity {sc.name} / {name}: falsification {verdict}"
-                         + (f", gamma {row['gamma_check']}" if "gamma_check" in row else ""))
-                flush_tables()
+                fals += [dict(r, scenario=rec["scenario"], model=rec["model"], verdict=rec["verdict"])
+                         for r in rec["falsification"]]
+            out = [(params, "baserate_parameters.csv"), (diags, "baserate_diagnostics.csv"),
+                   (amy_rows, "baserate_amyloid_hr_descriptive.csv"), (sens_rows, "baserate_sensitivity.csv"),
+                   (fals, "baserate_incidence_falsification.csv")]
+            crit = []
+            if flags["cv_done"]:
+                cv_df = pd.DataFrame([{k: v for k, v in r.items() if k != "per_fold"} for r in cvrec.values()]
+                                     ).sort_values("cv_heldout_loglik", ascending=False)
+                out.append((cv_df.to_dict("records"), "baserate_cv.csv"))
+                crit.append({"criterion": "2: variant comparison (5-fold CV by age band)",
+                             "verdict": cv_verdict_3way(cv_df, cfg.get("cross_validation.margin"), a_name)})
+            for name, rec in prim.items():
+                crit.append({"criterion": f"falsification: {name} (primary)", "verdict": rec["verdict"]})
+            crit.append({"criterion": "1: amyloid gating", "verdict": "NOT TESTED (dropped 2026-10-13: no per-brain "
+                                                                     "amyloid status in stage-by-age counts)"})
+            out.append((crit, "baserate_criteria.csv"))
+            for rows, fname in out:
+                if rows:
+                    run.write_table(pd.DataFrame(rows), tables / fname)
 
+        # ------------------------------------------------------- run --------
+        try:
+            for name in variants:
+                prim[name] = stage(f"primary/{name}", lambda name=name: primary_fit(name))
+                flush_tables()
+            for name in variants:
+                cvrec[name] = stage(f"cv/{name}", lambda name=name: cv_stage(name))
+            flags["cv_done"] = True
+            flush_tables()
+            cv_df = pd.DataFrame([{k: v for k, v in r.items() if k != "per_fold"} for r in cvrec.values()])
+            run.info(f"PRE-REGISTERED CRITERION 2 (variant comparison): "
+                     f"{cv_verdict_3way(cv_df, cfg.get('cross_validation.margin'), a_name)}")
+            for sc in scenarios:
+                for name in sc.variants:
+                    sens[f"{sc.name}/{name}"] = stage(f"sensitivity/{sc.name}/{name}",
+                                                      lambda sc=sc, name=name: sens_stage(sc, name))
+                    flush_tables()
+        except OutOfTime as e:
+            flush_tables()
+            run.warning(f"time budget of {args.max_minutes} min spent: stopping before stage {e}; "
+                        "rerun the same command to continue from the checkpoints")
+            print(f"INCOMPLETE: stopped before stage {e}; rerun to continue", file=sys.stderr)
+            return INCOMPLETE_EXIT
+
+        # ------------------------------------------------ final outputs -----
         prev = pd.DataFrame([dict(r, model=n) for n, m in models.items()
-                             for r in stage_prevalence_table(m, fits[n].theta, inputs.data, step=steps[n], start_age=start,
+                             for r in stage_prevalence_table(m, np.array(prim[n]["fit"]["theta"]), inputs.data,
+                                                             step=prim[n]["step"], start_age=start,
                                                              eval_mode=primary.eval_mode, n_points=npts)])
         prev["stage"] = [stages[k] for k in prev["stage_index"]]
-        fal_df = pd.concat(fals, ignore_index=True)
-        flush_tables()
         run.write_table(prev, tables / "baserate_prevalence_fit.csv")
-
-        apply_theme()
-        cols = series_colors(len(models))
-        fig, ax = plt.subplots(figsize=(6.5, 4))
-        p0 = fal_df[fal_df["scenario"] == "primary"]
-        env = p0.drop_duplicates("band")
-        ax.vlines(env["eval_age"], env["observed_min"], env["observed_max"], color=INK["primary"], lw=3,
-                  label="published range (sex x CFAS wave)")
-        ax.vlines(env["eval_age"], env["observed_min"] / np.exp(tol), env["observed_max"] * np.exp(tol),
-                  color=INK["muted"], lw=1, label="pre-set tolerance (x2)")
-        for (name, g), c in zip(p0.groupby("model", sort=False), cols):
-            ax.plot(g["eval_age"], g["predicted_per_1000py"], "-o", ms=3, color=c,
-                    label=f"{name}: {g['verdict'].iloc[0]}")
-        ax.set_yscale("log")
-        ax.set_xlabel("Age (years)")
-        ax.set_ylabel(f"Incidence of Braak {primary.threshold}+ / dementia per 1,000 PY")
-        ax.legend(fontsize=7)
-        save_figure(fig, "baserate_incidence_falsification", run, figures_dir=figures)
-
-        fig, axes = plt.subplots(1, len(models), figsize=(4 * len(models), 3.6), sharey=True)
-        for ax, (name, m) in zip(np.atleast_1d(axes), models.items()):
-            d = prev[prev["model"] == name]
-            for k, c in zip(range(len(stages)), plt.cm.viridis(np.linspace(0, 0.95, len(stages)))):
-                s = d[d["stage_index"] == k]
-                mid = (s["age_lower"] + s["age_upper"]) / 2
-                ax.plot(mid, s["observed_prop"], "o", ms=2.5, color=c)
-                ax.plot(mid, s["predicted_prop"], "-", lw=1, color=c, label=stages[k])
-            ax.set_title(name, fontsize=8)
-            ax.set_xlabel("Age (years)")
-        np.atleast_1d(axes)[0].set_ylabel("Proportion at stage (dots observed, lines fitted)")
-        np.atleast_1d(axes)[-1].legend(fontsize=6, ncol=2)
-        save_figure(fig, "baserate_prevalence_fit", run, figures_dir=figures)
+        _figures(prim, sens, prev, models, stages, primary, tol, figures, run, a_name, literal, g_exp)
+        run.info("ALL STAGES COMPLETE")
     return 0
+
+
+def _fit_dict(fit) -> dict:
+    return {"param_names": fit.param_names, "theta": fit.theta, "se": fit.se, "loglik": fit.loglik, "aic": fit.aic,
+            "hessian_ok": fit.hessian_ok, "on_bound": fit.on_bound, "n_at_best": fit.n_at_best,
+            "converged_starts": fit.converged_starts, "n_starts": fit.n_starts, "messages": fit.messages}
+
+
+def _figures(prim, sens, prev, models, stages, primary, tol, figures, run, a_name, literal, g_exp):
+    apply_theme()
+    cols = series_colors(len(models))
+    fal = pd.DataFrame([dict(r, model=n, verdict=rec["verdict"]) for n, rec in prim.items() for r in rec["falsification"]])
+    fig, ax = plt.subplots(figsize=(6.5, 4))
+    env = fal.drop_duplicates("band")
+    ax.vlines(env["eval_age"], env["observed_min"], env["observed_max"], color=INK["primary"], lw=3,
+              label="published range (sex x CFAS wave)")
+    ax.vlines(env["eval_age"], env["observed_min"] / np.exp(tol), env["observed_max"] * np.exp(tol),
+              color=INK["muted"], lw=1, label="pre-set tolerance (x2)")
+    for (name, g), c in zip(fal.groupby("model", sort=False), cols):
+        ax.plot(g["eval_age"], g["predicted_per_1000py"], "-o", ms=3, color=c, label=f"{name}: {g['verdict'].iloc[0]}")
+    ax.set_yscale("log")
+    ax.set_xlabel("Age (years)")
+    ax.set_ylabel(f"Incidence of Braak {primary.threshold}+ / dementia per 1,000 PY")
+    ax.legend(fontsize=7)
+    save_figure(fig, "baserate_incidence_falsification", run, figures_dir=figures)
+
+    fig, axes = plt.subplots(1, len(models), figsize=(4 * len(models), 3.6), sharey=True)
+    for ax, name in zip(np.atleast_1d(axes), models):
+        d = prev[prev["model"] == name]
+        for k, c in zip(range(len(stages)), plt.cm.viridis(np.linspace(0, 0.95, len(stages)))):
+            s = d[d["stage_index"] == k]
+            mid = (s["age_lower"] + s["age_upper"]) / 2
+            ax.plot(mid, s["observed_prop"], "o", ms=2.5, color=c)
+            ax.plot(mid, s["predicted_prop"], "-", lw=1, color=c, label=stages[k])
+        ax.set_title(name, fontsize=8)
+        ax.set_xlabel("Age (years)")
+    np.atleast_1d(axes)[0].set_ylabel("Proportion at stage (dots observed, lines fitted)")
+    np.atleast_1d(axes)[-1].legend(fontsize=6, ncol=2)
+    save_figure(fig, "baserate_prevalence_fit", run, figures_dir=figures)
+
+    # Amyloid HR: every estimate labelled; the reference band is the published value (not a criterion).
+    rows = []
+    p = prim[a_name]["posterior"]["log_hr_amyloid"]
+    rows.append((f"{a_name} (primary, NUTS 95% HDI)\n{DESCRIPTIVE}", p["mean"], p["ci_lower"], p["ci_upper"]))
+    for rec in sens.values():
+        f = rec["fit"]
+        if "log_hr_amyloid" in f["param_names"]:
+            i = f["param_names"].index("log_hr_amyloid")
+            se = f["se"][i] if f["se"][i] is not None else np.nan
+            lab = DESCRIPTIVE if rec["model"] == a_name else CONFOUNDED
+            rows.append((f"{rec['model']} [{rec['scenario']}] (MLE ± 1.96 SE)\n{lab}", f["theta"][i],
+                         f["theta"][i] - 1.96 * se, f["theta"][i] + 1.96 * se))
+    fig, ax = plt.subplots(figsize=(6.5, 0.9 + 0.75 * len(rows)))
+    ax.axvspan(g_exp[1], g_exp[2], color=INK["muted"], alpha=0.2, lw=0, label="published 95% CI (Ossenkoppele 2022)")
+    ax.axvline(0, color=INK["primary"], lw=0.8)
+    for y, (lab, est, lo, hi) in enumerate(rows):
+        c = INK["primary"] if CONFOUNDED not in lab else INK["muted"]
+        ax.plot([lo, hi], [y, y], color=c, lw=2)
+        ax.plot([est], [y], "o", color=c)
+    ax.set_yticks(range(len(rows)), [r[0] for r in rows], fontsize=7)
+    ax.invert_yaxis()
+    ax.set_xlabel("log amyloid hazard ratio on the LC → cortex step")
+    ax.set_title(f"Amyloid HR — {DESCRIPTIVE}", fontsize=9)
+    ax.legend(fontsize=7, loc="lower right")
+    save_figure(fig, "baserate_amyloid_hr_descriptive", run, figures_dir=figures)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ import pytest
 from src.baserate.data import load_braak_counts
 from src.baserate.fit import log_likelihood
 from src.baserate.data import StageCounts
-from src.baserate.model import (AGated, BIndependent, ChainSpec, CMultiHit, InvalidParameters, Sequential,
+from src.baserate.model import (AGated, AGatedAge, BIndependent, ChainSpec, CMultiHit, InvalidParameters, Sequential,
                                 build_generator, piecewise_constant)
 from src.baserate.predict import age_band_folds
 
@@ -145,12 +145,13 @@ def test_bayesian_fit_runs_and_reports_diagnostics():
 
 
 @pytest.mark.parametrize("mode", ["midpoint", "band_average"])
-@pytest.mark.parametrize("which", ["sequential", "A", "B", "C"])
+@pytest.mark.parametrize("which", ["sequential", "A_literal", "A_age", "B", "C"])
 def test_jax_likelihood_and_gradient_agree_with_the_numpy_reference(which, mode):
     from src.baserate.jaxlik import make_loglik
 
     am = piecewise_constant([(0, 40, 0.0), (40, 60, 0.2), (60, 200, 0.6)])
-    m = {"sequential": Sequential(SPEC, 50, 10), "A": AGated(SPEC, am, 50, 10),
+    m = {"sequential": Sequential(SPEC, 50, 10), "A_literal": AGated(SPEC, am, 50, 10),
+         "A_age": AGatedAge(SPEC, am, 50, 10),
          "B": BIndependent(SPEC, 50, 10), "C": CMultiHit(SPEC, 2, 50, 10)}[which]
     data = [StageCounts(lo, lo + 10, "x", np.array([30, 10, 5, 2])) for lo in range(30, 100, 10)]
     rng = np.random.default_rng(1)
@@ -217,15 +218,64 @@ def test_amyloid_splice_uses_the_inner_curve_inside_and_the_primary_outside():
     assert s.breakpoints[0] == 1 and s.breakpoints[-1] == 101
 
 
-def test_preregistered_three_way_readings():
+def test_preregistered_three_way_reading_of_the_variant_comparison():
     import pandas as pd
-    from src.baserate.run_baserate import cv_verdict_3way, gating_verdict
+    from src.baserate.run_baserate import cv_verdict_3way
 
-    assert gating_verdict((0.1, 1.2), 0.322).startswith("supports")
-    assert gating_verdict((-0.9, 0.2), 0.322).startswith("AGAINST")
-    assert gating_verdict((-0.07, 1.06), 0.322).startswith("inconclusive")   # the dry-run case: not "against"
-    cv = lambda a, b, c: pd.DataFrame({"model": ["A_gated", "B_independent", "C_multihit"],  # noqa: E731
-                                       "cv_heldout_loglik": [a, b, c]})
-    assert cv_verdict_3way(cv(-100, -105, -110), 2).startswith("supports")
-    assert cv_verdict_3way(cv(-100, -95, -110), 2).startswith("AGAINST")
-    assert cv_verdict_3way(cv(-100, -101, -110), 2).startswith("inconclusive")
+    def cv(a, b, c):
+        return pd.DataFrame({"model": ["A_gated_age", "B_independent", "C_multihit"], "cv_heldout_loglik": [a, b, c]})
+
+    assert cv_verdict_3way(cv(-100, -105, -110), 2, "A_gated_age").startswith("supports")
+    assert cv_verdict_3way(cv(-100, -95, -110), 2, "A_gated_age").startswith("AGAINST")
+    assert cv_verdict_3way(cv(-100, -101, -110), 2, "A_gated_age").startswith("inconclusive")
+
+
+def test_age_adjusted_gated_rate_has_its_own_age_slope_and_the_amyloid_factor():
+    am = piecewise_constant([(0, 200, 0.5)])
+    a = AGatedAge(SPEC, am, 50, 10)
+    assert a.param_names[2:5] == ["log_mu0", "beta_mu", "log_hr_amyloid"]
+    th = np.zeros(len(a.param_names))
+    th[a.param_names.index("log_mu0")], th[a.param_names.index("beta_mu")] = np.log(0.01), 0.3
+    th[a.param_names.index("log_hr_amyloid")] = np.log(3.0)
+    for t in (40.0, 70.0):
+        want = 0.01 * np.exp(0.3 * (t - 50) / 10) * (1 + 2.0 * 0.5)
+        assert build_generator(a, t, th)[1, 2] == pytest.approx(want, rel=1e-12)
+    lit = AGated(SPEC, am, 50, 10)                       # literal: no age slope on the gated step
+    th_l = np.zeros(len(lit.param_names))
+    th_l[lit.param_names.index("log_mu0")] = np.log(0.01)
+    assert build_generator(lit, 40.0, th_l)[1, 2] == build_generator(lit, 90.0, th_l)[1, 2]
+
+
+def test_gating_cannot_be_reenabled_in_the_config():
+    from src.baserate.run_baserate import GatingReenabledError, require_gating_disabled
+    from src.common.config import Config
+
+    require_gating_disabled(Config({"amyloid": {"gating_is_a_test": False}}, "x.yaml"))
+    for bad in (True, "false", 0):
+        with pytest.raises(GatingReenabledError, match="cannot test amyloid gating"):
+            require_gating_disabled(Config({"amyloid": {"gating_is_a_test": bad}}, "x.yaml"))
+    with pytest.raises(Exception, match="empty"):        # a blank value is refused by the config layer
+        require_gating_disabled(Config({"amyloid": {"gating_is_a_test": None}}, "x.yaml"))
+
+
+def test_checkpoints_round_trip_and_ignore_a_different_key(tmp_path):
+    from src.baserate.run_baserate import Checkpoints
+
+    class _Run:
+        def __init__(self):
+            self.msgs = []
+
+        def info(self, m):
+            self.msgs.append(m)
+
+        warning = info
+
+    run = _Run()
+    ck = Checkpoints(tmp_path, "key1", run)
+    assert ck.get("primary/A") is None
+    back = ck.put("primary/A", {"theta": np.array([1.0, np.nan]), "n": np.int64(3)})
+    assert back == {"theta": [1.0, None], "n": 3}
+    assert ck.get("primary/A") == back
+    assert not list(tmp_path.glob("*.tmp"))
+    assert Checkpoints(tmp_path, "key2", run).get("primary/A") is None      # stale: never reused
+    assert any("different code/config" in m for m in run.msgs)

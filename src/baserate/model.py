@@ -10,13 +10,20 @@ on very different scales, which stalls both the optimiser and NUTS).
 Three variants share one interface (``StageModel``) so none is favoured by
 construction:
 
-* **A_gated** — the LC -> cortex step (stage c-1 -> c) has rate
-      mu(t) = mu0 + gamma * A(t),  A(t) = amyloid-positivity probability,
-  parameterised as mu0 = exp(log_mu0) and gamma = mu0 * (HR_A - 1) with
-  HR_A = exp(log_hr_amyloid): HR_A is the rate ratio amyloid-positive vs
-  amyloid-negative (manuscript/derivations/module2_gamma.md). Any real
-  log_hr_amyloid gives a positive rate, HR_A < 1 is allowed, so the fit can
-  say amyloid does not speed the transition, or slows it.
+* **A_gated_age** (primary A) — LC first: cortical tau (stage c) is entered
+  only from the last LC stage (c-1), at rate
+      mu(t) = exp(log_mu0 + beta_mu u) * (1 + (HR_A - 1) A(t)),
+  A(t) = population amyloid-positivity probability at age t. The age term
+  is what makes this the age-adjusted form: without it every age-related
+  acceleration of the step is attributed to amyloid, because A(t) rises
+  with age (manuscript/notes/module2_identifiability.md). HR_A from this
+  model is DESCRIPTIVE ONLY, not a test of gating: stage-by-age counts carry
+  no per-brain amyloid status (prereg/baserate.md change log).
+* **A_gated_literal** (sensitivity only, "confounded with age") — the
+  brief's literal form mu(t) = mu0 (1 + (HR_A - 1) A(t)) with no age term,
+  i.e. mu0 + gamma A(t) with gamma = mu0 (HR_A - 1)
+  (manuscript/derivations/module2_gamma.md). Any real log_hr_amyloid gives
+  a positive rate.
 * **B_independent** — cortical tau arises unrelated to LC stage: every
   pre-cortical stage k < c enters stage c at the same rate
   nu(t) = exp(a_nu + b_nu u), so entry does not require the LC stages.
@@ -71,9 +78,10 @@ class ChainSpec:
 class Edge:
     """One transition i -> j between hidden states.
 
-    kind "loglinear": rate = exp(theta[p0] + theta[p1] * u(t))
-    kind "gated":     rate = exp(theta[p0]) * (1 + (exp(theta[p1]) - 1) * A(t))
-    kind "const":     rate = exp(theta[p0])            (p1 unused, -1)
+    kind "loglinear":       rate = exp(theta[p0] + theta[p1] * u(t))
+    kind "gated":           rate = exp(theta[p0]) * (1 + (exp(theta[p1]) - 1) * A(t))
+    kind "gated_loglinear": rate = exp(theta[p0] + theta[p1] * u(t)) * (1 + (exp(theta[p2]) - 1) * A(t))
+    kind "const":           rate = exp(theta[p0])            (p1 unused, -1)
     """
 
     i: int
@@ -81,6 +89,7 @@ class Edge:
     kind: str
     p0: int
     p1: int
+    p2: int = -1
 
 
 class StepFunction:
@@ -189,10 +198,13 @@ class StageModel(ABC):
             for e in self._edges:
                 if e.kind == "loglinear":
                     r = np.exp(theta[e.p0] + theta[e.p1] * u)
-                elif e.kind == "gated":
+                elif e.kind in ("gated", "gated_loglinear"):
                     if not 0.0 <= a <= 1.0:
                         raise ValueError(f"amyloid probability {a} at age {t} outside [0, 1]")
-                    r = np.exp(theta[e.p0]) * (1.0 + (np.exp(theta[e.p1]) - 1.0) * a)
+                    if e.kind == "gated":
+                        r = np.exp(theta[e.p0]) * (1.0 + (np.exp(theta[e.p1]) - 1.0) * a)
+                    else:
+                        r = np.exp(theta[e.p0] + theta[e.p1] * u) * (1.0 + (np.exp(theta[e.p2]) - 1.0) * a)
                 elif e.kind == "const":
                     r = np.exp(theta[e.p0])
                 else:
@@ -227,7 +239,10 @@ class Sequential(StageModel):
 
 
 class AGated(StageModel):
-    name = "A_gated"
+    """The brief's literal variant A (no age term on the gated step).
+    Sensitivity analysis only: confounded with age."""
+
+    name = "A_gated_literal"
 
     def __init__(self, spec: ChainSpec, amyloid: StepFunction, age_centre: float = 0.0, age_scale: float = 1.0):
         if not isinstance(amyloid, StepFunction):
@@ -245,6 +260,21 @@ class AGated(StageModel):
             if k == c - 1:
                 m, h = self._p("log_mu0"), self._p("log_hr_amyloid")
                 self._edges.append(Edge(k, k + 1, "gated", m, h))
+            else:
+                self._seq_edge(k, k + 1, k)
+
+
+class AGatedAge(AGated):
+    """Primary variant A: the gated step also has its own age slope."""
+
+    name = "A_gated_age"
+
+    def _build(self):
+        c = self.spec.first_cortical
+        for k in range(self.spec.K - 1):
+            if k == c - 1:
+                m, b, h = self._p("log_mu0"), self._p("beta_mu"), self._p("log_hr_amyloid")
+                self._edges.append(Edge(k, k + 1, "gated_loglinear", m, b, h))
             else:
                 self._seq_edge(k, k + 1, k)
 

@@ -12,7 +12,7 @@ import pytest
 
 from sim.baserate_sim import simulate_counts
 from src.baserate.fit import fit_mle
-from src.baserate.model import AGated, BIndependent, ChainSpec, CMultiHit, Sequential, piecewise_constant
+from src.baserate.model import AGated, AGatedAge, BIndependent, ChainSpec, CMultiHit, Sequential, piecewise_constant
 from src.baserate.predict import predict_incidence
 from src.baserate.solve import max_step_error, stage_probabilities
 
@@ -68,44 +68,79 @@ def test_a_simulation_recovery_at_three_sample_sizes():
     assert errors[2] < errors[0], f"relative error did not shrink with n: {errors}"
 
 
-def test_a_amyloid_hazard_ratio_is_recovered_in_the_gated_variant():
-    amyloid = piecewise_constant([(0, 50, 0.0), (50, 70, 0.3), (70, 200, 0.6)])
-    model = AGated(SPEC3, amyloid, C, S)
-    theta = np.array([-4.0, 0.3, np.log(0.002), np.log(4.0)])
+AMYLOID3 = piecewise_constant([(0, 50, 0.0), (50, 70, 0.3), (70, 200, 0.6)])
+
+
+def test_a_amyloid_hazard_ratio_is_recovered_in_the_age_adjusted_variant():
+    """Machinery check for the retained (descriptive) estimate: with a real
+    amyloid effect AND an age slope on the LC -> cortex step, the age-adjusted
+    variant A recovers both."""
+    model = AGatedAge(SPEC3, AMYLOID3, C, S)
+    theta = np.array([-4.0, 0.3, np.log(0.002), 0.3, np.log(4.0)])
     fit = _recover(model, theta, 3000, seed=7)
-    i = model.param_names.index("log_hr_amyloid")
     assert fit.hessian_ok and not fit.on_bound
-    assert abs(fit.theta[i] - theta[i]) < 3 * fit.se[i], (fit.theta[i], fit.se[i])
+    z = (fit.theta - theta) / fit.se
+    assert np.all(np.abs(z) < 3.5), f"estimates {fit.theta} vs truth {theta}, z = {z}"
 
 
 def test_null_amyloid_effect_is_not_manufactured():
-    """With amyloid having NO effect in the truth (HR = 1), the fit must not
-    report one: the analysis can come out against the hypothesis."""
-    amyloid = piecewise_constant([(0, 50, 0.0), (50, 70, 0.3), (70, 200, 0.6)])
-    model = AGated(SPEC3, amyloid, C, S)
-    theta = np.array([-4.0, 0.3, np.log(0.01), 0.0])
+    """With amyloid having NO effect and no age slope in the truth, the
+    age-adjusted variant A must not report one."""
+    model = AGatedAge(SPEC3, AMYLOID3, C, S)
+    theta = np.array([-4.0, 0.3, np.log(0.01), 0.0, 0.0])
     fit = _recover(model, theta, 3000, seed=8)
     i = model.param_names.index("log_hr_amyloid")
     assert abs(fit.theta[i]) < 3 * fit.se[i]
 
 
-def test_age_acceleration_is_not_read_as_amyloid_gating():
-    """No amyloid effect in the truth, but the LC -> cortex rate rises with age
-    (0.3 per decade). The fit must not report an amyloid effect. Added
-    2026-10-13: the brief's variant A has no age term on the gated edge, so
-    it attributes any age acceleration to the age-rising amyloid curve and
-    this test is EXPECTED TO FAIL until the open issue in
-    manuscript/notes/module2_identifiability.md is resolved. It keeps the
-    validation gate shut on that issue."""
-    amyloid = piecewise_constant([(0, 50, 0.0), (50, 70, 0.3), (70, 200, 0.6)])
+def _age_only_world(seed):
+    """No amyloid effect; the LC -> cortex rate rises 0.3 per decade."""
     truth = Sequential(SPEC3, C, S)
     theta = np.array([-4.0, 0.3, np.log(0.01), 0.3])
-    data = simulate_counts(truth, theta, BANDS, 3000, step=1.0, start_age=0, seed=8)
-    model = AGated(SPEC3, amyloid, C, S)
+    return simulate_counts(truth, theta, BANDS, 3000, step=1.0, start_age=0, seed=seed)
+
+
+def test_age_acceleration_is_not_read_as_amyloid_by_the_age_adjusted_variant():
+    """GUARD for the 2026-10-13 revision. The retained variant A, which has
+    its own age slope on the gated step, must not turn pure age acceleration
+    into an amyloid effect."""
+    data = _age_only_world(seed=8)
+    model = AGatedAge(SPEC3, AMYLOID3, C, S)
     fit = fit_mle(model, data, step=1.0, start_age=0, cfg_mle=CFG_MLE, seed=8)
     i = model.param_names.index("log_hr_amyloid")
     assert abs(fit.theta[i]) < 3 * fit.se[i], (
         f"amyloid log HR {fit.theta[i]:.2f} (SE {fit.se[i]:.2f}) manufactured from age acceleration alone")
+
+
+def test_literal_variant_a_is_confounded_with_age():
+    """GUARD for the 2026-10-13 revision. On the same age-only data, the
+    brief's literal variant A (no age term on the gated step) DOES report an
+    amyloid effect. This is why it is only a sensitivity analysis labelled
+    "confounded with age" and why criterion 1 was dropped. If this ever stops
+    holding, the label and the revision must be re-examined."""
+    data = _age_only_world(seed=8)
+    model = AGated(SPEC3, AMYLOID3, C, S)
+    fit = fit_mle(model, data, step=1.0, start_age=0, cfg_mle=CFG_MLE, seed=8)
+    i = model.param_names.index("log_hr_amyloid")
+    assert fit.theta[i] > 3 * fit.se[i], (fit.theta[i], fit.se[i])
+
+
+def test_amyloid_gating_criterion_stays_dropped():
+    """GUARD: criterion 1 (amyloid gating) was dropped on 2026-10-13. This
+    fails loudly if it is re-enabled in the config, the code or the
+    pre-registration."""
+    import src.baserate.run_baserate as rb
+    from src.common.config import load_config
+    from src.common.paths import CONFIG_DIR, PREREG_DIR
+
+    cfg = load_config(CONFIG_DIR / "baserate.yaml")
+    assert cfg.get("amyloid.gating_is_a_test") is False, "config re-enables amyloid gating as a test"
+    rb.require_gating_disabled(cfg)
+    for name in ("gating_verdict", "gamma_verdict"):
+        assert not hasattr(rb, name), f"run_baserate defines {name}: the dropped gating criterion is back"
+    prereg = (PREREG_DIR / "baserate.md").read_text(encoding="utf-8")
+    assert "does not test amyloid gating" in prereg, "pre-registration no longer states that gating is not tested"
+    assert "supports gating" not in prereg.split("## 1.")[1], "pre-registration criteria mention 'supports gating'"
 
 
 def test_multihit_incidence_scales_as_t_to_the_m_minus_1():

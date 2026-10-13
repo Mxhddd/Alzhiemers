@@ -16,7 +16,7 @@ import numpy as np
 
 from src.baserate.data import StageCounts
 from src.baserate.fit import fit_mle
-from src.baserate.model import AGated, BIndependent, ChainSpec, CMultiHit
+from src.baserate.model import AGated, AGatedAge, BIndependent, ChainSpec, CMultiHit
 from src.baserate.run_baserate import simulated_inputs
 from src.baserate.solve import stage_probabilities
 from src.common.config import load_config
@@ -25,9 +25,14 @@ from src.common.paths import CONFIG_DIR
 cfg = load_config(CONFIG_DIR / "baserate.yaml")
 spec = ChainSpec.from_labels([str(s) for s in cfg.get("data.stage_order")], cfg.get("data.first_cortical_stage"))
 step, start, Cn, S = 0.25, 1, 50, 10
-inp, thA = simulated_inputs(cfg, spec, step, start, Cn, S)
+# The pre-revision dry-run world (literal variant A truth: log_mu0 -4, HR 2,
+# no age slope on the gated step); reproduces the numbers in
+# manuscript/notes/module2_identifiability.md written before the revision.
+OLD_WORLD = {"beta_mu": 0.0, "log_hr_amyloid": float(np.log(2.0))}
+inp, th_age = simulated_inputs(cfg, spec, step, start, Cn, S, truth_settings=OLD_WORLD)
 A = AGated(spec, inp.amyloid["primary"], Cn, S); B = BIndependent(spec, Cn, S); C = CMultiHit(spec, 2, Cn, S)
-dA = A.unpack(thA)
+dA = AGatedAge(spec, inp.amyloid["primary"], Cn, S).unpack(th_age)
+thA = np.array([dA[n] for n in A.param_names])
 def theta_for(m, extra):
     return np.array([extra[n] if n in extra else dA[n] for n in m.param_names])
 truths = {

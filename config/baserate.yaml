@@ -4,7 +4,7 @@
 # analysis). Empirical inputs are extracted values in data/extracted/ with
 # sources and `verified` flags. Fixed before any fit to real data.
 
-# Seed for multi-start initial values and for PyMC sampling.
+# Seed for multi-start initial values and for NUTS sampling.
 seed: 20261016
 
 data:
@@ -76,8 +76,20 @@ solver:
   band_average_points: 10
 
 variants:
-  # Brief §5: three variants sharing one interface; none favoured.
-  fit: [A_gated, B_independent, C_multihit]
+  # Brief §5: three variants sharing one interface; none favoured. Variant A
+  # is the AGE-ADJUSTED LC-first model (revision 2026-10-13): its LC -> cortex
+  # rate exp(log_mu0 + beta_mu u)(1 + (HR_A - 1)A(t)) has its own age slope,
+  # so A, B and C are compared on pathway structure (LC first / independent
+  # entry / multi-hit), not on how age enters. It nests the brief's literal A
+  # (beta_mu = 0) and the plain LC-first chain (HR_A = 1).
+  fit: [A_gated_age, B_independent, C_multihit]
+  # Which of the fitted variants is "A" (LC first) in criterion 2.
+  lc_first: A_gated_age
+  # The brief's literal variant A (no age term on the gated step) is fitted
+  # only as a sensitivity analysis labelled "confounded with age": it reads
+  # any age acceleration of the LC -> cortex step as an amyloid effect
+  # (manuscript/notes/module2_identifiability.md).
+  literal_a_sensitivity: A_gated_literal
   # Number of hits for variant C: 2 is the smallest that differs from a
   # constant hazard. Sensitivity: 3 (compared by cross-validation, not tuned).
   c_hits: 2
@@ -149,8 +161,19 @@ bayes:
   # primary analysis gets MLE + NUTS.
   sensitivity_uses_mle_only: true
 
+amyloid:
+  # Criterion 1 (amyloid gating) was DROPPED on 2026-10-13 (prereg/baserate.md
+  # change log): stage-by-age counts carry no per-brain amyloid status, so the
+  # population curve A(t) is only a function of age and no fit to them can
+  # separate amyloid gating from ageing. Gating is deferred to data with
+  # per-person amyloid and tau stage. Must stay false: the run refuses to
+  # start otherwise, and `make validate-baserate` fails.
+  gating_is_a_test: false
+
 gamma_check:
-  # Stated BEFORE any fit: manuscript/derivations/module2_gamma.md. Expected
+  # DESCRIPTIVE reference only since 2026-10-13 (no longer a criterion): the
+  # fitted age-adjusted HR_A is shown next to it, labelled "descriptive, not a
+  # test of gating". Stated BEFORE any fit: manuscript/derivations/module2_gamma.md. Expected
   # log HR_A = ln 2.43 = 0.888 (95% CI 0.322-1.449) from Ossenkoppele 2022
   # Table 2 (A+T- vs A-T-, progression to MCI) under a proxy assumption.
   expected_log_hr: 0.888

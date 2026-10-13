@@ -14,8 +14,8 @@ import numpy as np
 
 from src.baserate.data import StageCounts
 from src.baserate.fit import fit_mle
-from src.baserate.model import ChainSpec, Sequential
-from src.baserate.run_baserate import Scenario, build_models, simulated_inputs
+from src.baserate.model import AGated, ChainSpec, Sequential
+from src.baserate.run_baserate import simulated_inputs
 from src.baserate.solve import stage_probabilities
 from src.common.config import load_config
 from src.common.paths import CONFIG_DIR
@@ -23,10 +23,16 @@ from src.common.paths import CONFIG_DIR
 cfg = load_config(CONFIG_DIR / "baserate.yaml")
 spec = ChainSpec.from_labels([str(s) for s in cfg.get("data.stage_order")], cfg.get("data.first_cortical_stage"))
 step, start, C, S = 0.25, 1, 50, 10
-inp, truthA = simulated_inputs(cfg, spec, step, start, C, S)
-A = build_models(spec, Scenario("p", "V", "primary", "midpoint", 2, 90, ()), inp, C, S, ["A_gated"])["A_gated"]
+# The pre-revision dry-run world (literal variant A truth: log_mu0 -4, HR 2,
+# no age slope on the gated step); reproduces the numbers in
+# manuscript/notes/module2_identifiability.md written before the revision.
+OLD_WORLD = {"beta_mu": 0.0, "log_hr_amyloid": float(np.log(2.0))}
+inp, truth_age = simulated_inputs(cfg, spec, step, start, C, S, truth_settings=OLD_WORLD)
+A = AGated(spec, inp.amyloid["primary"], C, S)          # the brief's literal variant A
 seq = Sequential(spec, C, S)
-dA = A.unpack(truthA)
+from src.baserate.model import AGatedAge  # noqa: E402
+dA = AGatedAge(spec, inp.amyloid["primary"], C, S).unpack(truth_age)
+truthA = np.array([dA[n] for n in A.param_names])
 bands = [(g.age_lower, g.age_upper) for g in inp.data]
 mle = dict(cfg.get("mle"))
 for beta3 in [float(x) for x in sys.argv[1:]]:

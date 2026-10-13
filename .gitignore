@@ -35,3 +35,6 @@ __pycache__/
 # --- OS / editors
 .DS_Store
 *.swp
+results/dryrun/*
+results/checkpoints/*
+!results/logs/progress/
