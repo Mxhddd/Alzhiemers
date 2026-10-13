@@ -128,4 +128,10 @@ the brief's literal variant A only as a sensitivity analysis labelled
 descriptive under (a) and (c).
 
 Nothing has been changed in the model, configuration or pre-registration
-criteria pending this decision.
+criteria pending this decision. To keep the gate shut meanwhile, a
+validation target was added:
+`tests/validation/test_baserate.py::test_age_acceleration_is_not_read_as_amyloid_gating`.
+It uses a 3-stage truth with no amyloid effect, an LC → cortex age slope of
+0.3 per decade, and 3,000 brains per band. Variant A returns log HR_A = 2.12
+(SE 0.08), so `make validate-baserate` now FAILS, and
+`make baserate` refuses to run on real data.

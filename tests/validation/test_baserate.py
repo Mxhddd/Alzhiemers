@@ -89,6 +89,25 @@ def test_null_amyloid_effect_is_not_manufactured():
     assert abs(fit.theta[i]) < 3 * fit.se[i]
 
 
+def test_age_acceleration_is_not_read_as_amyloid_gating():
+    """No amyloid effect in the truth, but the LC -> cortex rate rises with age
+    (0.3 per decade). The fit must not report an amyloid effect. Added
+    2026-10-13: the brief's variant A has no age term on the gated edge, so
+    it attributes any age acceleration to the age-rising amyloid curve and
+    this test is EXPECTED TO FAIL until the open issue in
+    manuscript/notes/module2_identifiability.md is resolved. It keeps the
+    validation gate shut on that issue."""
+    amyloid = piecewise_constant([(0, 50, 0.0), (50, 70, 0.3), (70, 200, 0.6)])
+    truth = Sequential(SPEC3, C, S)
+    theta = np.array([-4.0, 0.3, np.log(0.01), 0.3])
+    data = simulate_counts(truth, theta, BANDS, 3000, step=1.0, start_age=0, seed=8)
+    model = AGated(SPEC3, amyloid, C, S)
+    fit = fit_mle(model, data, step=1.0, start_age=0, cfg_mle=CFG_MLE, seed=8)
+    i = model.param_names.index("log_hr_amyloid")
+    assert abs(fit.theta[i]) < 3 * fit.se[i], (
+        f"amyloid log HR {fit.theta[i]:.2f} (SE {fit.se[i]:.2f}) manufactured from age acceleration alone")
+
+
 def test_multihit_incidence_scales_as_t_to_the_m_minus_1():
     m = CMultiHit(ChainSpec(("0", "1"), first_cortical=1), hits=3)
     ages = np.array([0.5, 1.0])
