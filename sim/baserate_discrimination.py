@@ -11,7 +11,9 @@ on average even in-sample.
 Results and interpretation: manuscript/notes/module2_identifiability.md.
 """
 import time
+
 import numpy as np
+
 from src.baserate.data import StageCounts
 from src.baserate.fit import fit_mle
 from src.baserate.model import AGated, BIndependent, ChainSpec, CMultiHit

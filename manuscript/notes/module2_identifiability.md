@@ -1,0 +1,127 @@
+# Module 2 — what stage-by-age counts can and cannot test
+
+> **Status: open issue raised by Claude on 2026-10-13, awaiting the
+> researcher's decision.** All numbers below come from SIMULATED data (no
+> real data have been fitted). `prereg/baserate.md` is marked DO NOT FREEZE
+> until this is resolved.
+
+## 1. The problem: criterion 1 reads ageing as amyloid gating
+
+Variant A (as specified in PROJECT_BRIEF.md §5) gives the LC → cortex
+transition (Braak stage c → 1a) the rate
+
+    h(t) = μ0 (1 + (HR_A − 1) A(t)),
+
+where A(t) is the *population* amyloid prevalence at age t. Two facts combine:
+
+1. The data are stage counts by age band. They carry no per-brain amyloid
+   status, so A(t) enters only as a known function of age.
+2. A(t) rises with age, and h(t) has no other way to change with age.
+
+So **any** increase of the c → 1a rate with age is fitted as HR_A > 1,
+whether its cause is amyloid, age itself, or anything else that rises with
+age. Criterion 1 ("supports gating" if the 95% interval for log HR_A is
+above 0) and the γ consistency check therefore test "does this transition
+speed up with age?", not "does amyloid speed it up?". Nearly every
+age-related neuropathological transition speeds up with age, so in practice
+the criterion could essentially only come out in favour of the hypothesis.
+This is the situation the standing guardrail names ("an analysis that
+cannot come out against the hypothesis → stop and tell").
+
+## 2. Simulated demonstration (`python -m sim.baserate_age_confound 0.0 0.1 0.3`)
+
+Truth: the dry run's synthetic world (12 Braak-2011 stages, 10 decade bands,
+230 brains each), but with **no amyloid effect**: the c → 1a rate is
+exp(α + β (t − 50)/10), with its age-50 value equal to the A world's.
+Variant A is fitted to the *expected* counts (230 × true probabilities),
+which gives the large-sample value it converges to, free of Monte Carlo
+noise. SEs are at n = 2,300.
+
+| true age slope β of c → 1a (per decade), no amyloid effect | fitted HR_A | log HR_A, 95% CI | criterion 1 verdict | γ check vs published 2.43 |
+|---|---|---|---|---|
+| 0 | 1.00 | −0.76 to 0.76 | inconclusive | — |
+| 0.1 (same slope as the neighbouring edges in the simulation) | **2.22** | **0.28 to 1.31** | **supports gating** | **consistent** |
+| 0.3 | **7.58** | **1.61 to 2.44** | **supports gating** | disagrees (too large) |
+
+A modest, amyloid-free age slope is enough for the pre-registered analysis
+to report amyloid gating at almost exactly the published hazard ratio.
+
+Even with no age slope at all (first row), the 95% interval is ±0.76, so the
+"against" outcome (upper end < 0.322) needs the estimate to fall below
+−0.44 by chance. Under the Wald approximation with SE 0.388, that happens
+about 13% of the time.
+
+## 3. Can cross-validation (criterion 2) discriminate? (`python -m sim.baserate_discrimination`)
+
+The truth is each variant in turn. The table gives the in-sample
+log-likelihood gap between the true variant and each wrong one, fitted to
+expected counts. That gap is the *average* evidence a study of 2,300 brains
+in 10 decade bands would have (n × KL divergence).
+
+| truth | gap to A_gated | gap to B_independent | gap to C_multihit |
+|---|---|---|---|
+| A_gated (HR 2; the dry-run world) | — | 8.27 | 35.72 |
+| B_independent | 116.19 | — | 17.06 |
+| C_multihit (2 hits) | PENDING | PENDING | — |
+
+In the full-settings dry run (one simulated data set from the A world), the
+in-sample gap A vs B was 9.1 (log-likelihoods −166.55 vs −175.63). But
+5-fold cross-validation by age band put **B ahead of A by 0.43**: "not
+distinguishable" under the margin of 2. Held-out bands are dealt
+round-robin, so each fold must interpolate two whole decades. That loses
+most of A's in-sample advantage.
+
+Reading: criterion 2 **can** come out against A. If the truth is B, A loses
+by over 100 units. If the truth is A, it struggles to separate A from B. So it
+is capable of "against" but weak for "supports". That asymmetry is
+acceptable under the guardrail but should be stated in the
+pre-registration.
+
+## 4. Other dry-run observations (simulated; not caused by the issue above)
+
+* The falsification test passed for all three variants in the primary
+  scenario. That is expected: the synthetic incidence envelope was built
+  around the true stage-V incidence. It therefore does not discriminate
+  between variants here, and was never meant to.
+* The threshold-IV sensitivity scenario failed falsification for all three
+  variants. This is an artefact of the same construction: the envelope is
+  built around stage-V incidence, and stage-IV incidence is higher.
+* Band-average evaluation (sensitivity) failed falsification for A. The
+  synthetic counts were generated at band midpoints, so band-averaging is a
+  misspecified likelihood in this world. The run stopped (2-hour background
+  limit) before B and C were refitted, so whether they fail too is unknown.
+
+## 5. Options (decision needed)
+
+**(a) Age-adjusted gating.** h(t) = exp(α + β (t − 50)/10) · (1 + (HR_A − 1) A(t)).
+HR_A is then identified only by the part of A(t)'s shape that a log-linear
+age trend cannot mimic. This removes the bias, but the interval for HR_A
+will be wide. Criterion 1 would then almost always be "inconclusive"
+in *both* directions: honest, but not a test.
+
+**(b) Per-brain amyloid × tau-stage counts by age.** This is the only design
+here that can actually test gating. It uses a bivariate chain (amyloid
+status × tau stage) with a shared age slope on c → 1a and the rate
+multiplied by HR_A in amyloid-positive brains. HR_A is then identified from
+amyloid-positive vs amyloid-negative brains *of the same age*. Possible
+sources:
+
+* the Braak 2011 full text, if it cross-tabulates stage by plaque status
+  (cannot be checked: the paper is not reachable from here);
+* the NACC Neuropathology Data Set, which requires the researcher's data
+  application;
+* other autopsy series that report stage × amyloid phase by age.
+
+**(c) Drop criterion 1 from Module 2.** Module 2 keeps the base rate, the
+variant comparison (criterion 2) and the falsification test. The amyloid-
+gating question is left to modules with per-person data (Killer 1:
+LC function → tau accumulation in amyloid-positive people).
+
+**Recommendation:** (c) now, with (a) reported as a descriptive estimate
+labelled "not a test". Pursue (b) if per-brain data can be obtained. Keep
+the brief's literal variant A only as a sensitivity analysis labelled
+"confounded with age; not evidence either way". The γ check becomes
+descriptive under (a) and (c).
+
+Nothing has been changed in the model, configuration or pre-registration
+criteria pending this decision.

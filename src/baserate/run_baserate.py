@@ -310,6 +310,21 @@ def main(argv=None) -> int:
         # ------------------------------------------------ primary ----------
         models = build_models(spec, primary, inputs, centre, scale, variants)
         fits, steps, params, diags, fals, gammas = {}, {}, [], [], [], []
+        sens_rows, cv_df = [], None
+
+        def flush_tables():
+            """Write every table that has content so far (overwriting earlier
+            versions), so a run stopped part-way still leaves its completed
+            stages on disk; the run log's footer keeps the final hashes."""
+            out = [(pd.DataFrame(params), "baserate_parameters.csv"), (pd.DataFrame(diags), "baserate_diagnostics.csv"),
+                   (pd.DataFrame(gammas), "baserate_gamma_check.csv"), (pd.DataFrame(sens_rows), "baserate_sensitivity.csv")]
+            if fals:
+                out.append((pd.concat(fals, ignore_index=True), "baserate_incidence_falsification.csv"))
+            if cv_df is not None:
+                out.append((cv_df, "baserate_cv.csv"))
+            for df, fname in out:
+                if len(df):
+                    run.write_table(df, tables / fname)
         for name, m in models.items():
             t0 = time.time()
             fit, step, dp, dll = fit_audited(m, inputs.data, cfg=cfg, step=step0, start=start,
@@ -357,6 +372,7 @@ def main(argv=None) -> int:
             tab.insert(0, "model", name); tab.insert(0, "scenario", "primary"); tab["verdict"] = verdict
             fals.append(tab)
             (run.info if verdict == "PASS" else run.warning)(f"falsification {name} (primary): {verdict}")
+            flush_tables()
 
         cv = compare_models(list(models.values()), inputs.data, k=cfg.get("cross_validation.k"), step=step0,
                             start_age=start, cfg_mle=cfg.get("mle"), seed=seed, eval_mode=primary.eval_mode,
@@ -371,9 +387,9 @@ def main(argv=None) -> int:
                                                 else "NOT distinguishable from the runner-up"))
         run.info(f"cross-validation: {cv_verdict}")
         run.info(f"PRE-REGISTERED CRITERION 2 (variant comparison): {cv_verdict_3way(cv_df, margin)}")
+        flush_tables()
 
         # --------------------------------------------- sensitivity ---------
-        sens_rows = []
         for sc in scenarios:
             sm = build_models(spec, sc, inputs, centre, scale, variants)
             for name, m in sm.items():
@@ -404,17 +420,15 @@ def main(argv=None) -> int:
                 sens_rows.append(row)
                 run.info(f"sensitivity {sc.name} / {name}: falsification {verdict}"
                          + (f", gamma {row['gamma_check']}" if "gamma_check" in row else ""))
+                flush_tables()
 
         prev = pd.DataFrame([dict(r, model=n) for n, m in models.items()
                              for r in stage_prevalence_table(m, fits[n].theta, inputs.data, step=steps[n], start_age=start,
                                                              eval_mode=primary.eval_mode, n_points=npts)])
         prev["stage"] = [stages[k] for k in prev["stage_index"]]
         fal_df = pd.concat(fals, ignore_index=True)
-        for df, fname in ((pd.DataFrame(params), "baserate_parameters.csv"), (pd.DataFrame(diags), "baserate_diagnostics.csv"),
-                          (cv_df, "baserate_cv.csv"), (fal_df, "baserate_incidence_falsification.csv"),
-                          (pd.DataFrame(gammas), "baserate_gamma_check.csv"),
-                          (pd.DataFrame(sens_rows), "baserate_sensitivity.csv"), (prev, "baserate_prevalence_fit.csv")):
-            run.write_table(df, tables / fname)
+        flush_tables()
+        run.write_table(prev, tables / "baserate_prevalence_fit.csv")
 
         apply_theme()
         cols = series_colors(len(models))

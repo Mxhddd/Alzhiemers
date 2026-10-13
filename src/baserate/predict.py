@@ -7,7 +7,10 @@ import numpy as np
 from src.baserate.data import StageCounts
 from src.baserate.fit import fit_mle, log_likelihood
 from src.baserate.model import StageModel, build_generator
-from src.baserate.solve import hidden_probabilities, integration_grid, stage_probabilities
+from src.baserate.solve import (
+    hidden_probabilities,
+    integration_grid,
+)
 
 
 def predict_incidence(model: StageModel, theta: np.ndarray, ages, *, threshold: int,

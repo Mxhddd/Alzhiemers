@@ -23,7 +23,12 @@ import pandas as pd
 from sim.baserate_sim import simulate_counts
 from src.baserate.fit import fit_mle
 from src.baserate.model import ChainSpec
-from src.baserate.run_baserate import Scenario, build_models, gating_verdict, simulated_inputs
+from src.baserate.run_baserate import (
+    Scenario,
+    build_models,
+    gating_verdict,
+    simulated_inputs,
+)
 from src.common.config import load_config
 from src.common.paths import CONFIG_DIR, RESULTS_DIR
 from src.common.runlog import start_run

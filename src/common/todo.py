@@ -10,7 +10,6 @@ that is still a draft. Exit status is 0; this is a report, not a gate.
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 import yaml
 
