@@ -19,8 +19,9 @@ from src.baserate.solve import max_step_error, stage_probabilities
 pytestmark = pytest.mark.validation
 
 BANDS = [(a, a + 10) for a in range(0, 100, 10)]
-CFG_MLE = {"n_starts": 6, "method": "nelder-mead+l-bfgs-b", "nm_maxiter": 4000,
-           "init_alpha_range": [-8.0, -2.0], "init_beta_range": [-0.5, 1.0]}
+CFG_MLE = {"n_starts": 6, "method": "l-bfgs-b", "maxiter": 2000, "newton_steps": 20, "max_newton_decrement": 1e-3,
+           "init": {"log_rate": [-8.0, -2.0], "slope": [-0.5, 1.0], "log_hr": [-0.5, 0.5]},
+           "bounds": {"log_rate": [-20.0, 3.0], "slope": [-3.0, 3.0], "log_hr": [-5.0, 5.0]}}
 C, S = 50.0, 10.0  # age centre and scale used throughout these tests
 SPEC3 = ChainSpec(("none", "LC", "cortex"), first_cortical=2)
 
@@ -38,7 +39,7 @@ def test_b_two_state_constant_rate_matches_analytic_to_8dp():
 
 @pytest.mark.parametrize("model,theta", [
     (Sequential(SPEC3, C, S), [-4, 0.3, -7, 0.5]),
-    (AGated(SPEC3, piecewise_constant([(0, 50, 0.0), (50, 70, 0.3), (70, 200, 0.6)]), C, S), [-4, 0.3, -6, 0.02]),
+    (AGated(SPEC3, piecewise_constant([(0, 50, 0.0), (50, 70, 0.3), (70, 200, 0.6)]), C, S), [-4, 0.3, -6, 1.2]),
     (BIndependent(SPEC3, C, S), [-4, 0.3, -7, 0.5]),
     (CMultiHit(SPEC3, hits=3, age_centre=C, age_scale=S), [-4, 0.3, -3.5]),
 ])
@@ -67,24 +68,24 @@ def test_a_simulation_recovery_at_three_sample_sizes():
     assert errors[2] < errors[0], f"relative error did not shrink with n: {errors}"
 
 
-def test_a_gamma_is_recovered_in_the_gated_variant():
+def test_a_amyloid_hazard_ratio_is_recovered_in_the_gated_variant():
     amyloid = piecewise_constant([(0, 50, 0.0), (50, 70, 0.3), (70, 200, 0.6)])
     model = AGated(SPEC3, amyloid, C, S)
-    theta = np.array([-4.0, 0.3, np.log(0.002), 0.03])
+    theta = np.array([-4.0, 0.3, np.log(0.002), np.log(4.0)])
     fit = _recover(model, theta, 3000, seed=7)
-    i = model.param_names.index("gamma")
-    assert fit.hessian_ok
+    i = model.param_names.index("log_hr_amyloid")
+    assert fit.hessian_ok and not fit.on_bound
     assert abs(fit.theta[i] - theta[i]) < 3 * fit.se[i], (fit.theta[i], fit.se[i])
 
 
-def test_null_gamma_is_not_manufactured():
-    """With amyloid having NO effect in the truth, the fit must not report one:
-    the analysis can come out against the hypothesis."""
+def test_null_amyloid_effect_is_not_manufactured():
+    """With amyloid having NO effect in the truth (HR = 1), the fit must not
+    report one: the analysis can come out against the hypothesis."""
     amyloid = piecewise_constant([(0, 50, 0.0), (50, 70, 0.3), (70, 200, 0.6)])
     model = AGated(SPEC3, amyloid, C, S)
     theta = np.array([-4.0, 0.3, np.log(0.01), 0.0])
     fit = _recover(model, theta, 3000, seed=8)
-    i = model.param_names.index("gamma")
+    i = model.param_names.index("log_hr_amyloid")
     assert abs(fit.theta[i]) < 3 * fit.se[i]
 
 

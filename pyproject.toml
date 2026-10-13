@@ -15,7 +15,9 @@ dependencies = [
     "pandas>=3.0.6",
     "statsmodels>=0.15.0",
     "salib>=1.6.0",
-    "pymc>=5.28.5",
+    "jax[cpu]>=0.10.2",
+    "numpyro>=0.22.0",
+    "arviz>=0.23.4",
 ]
 
 [dependency-groups]

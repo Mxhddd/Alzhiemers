@@ -59,7 +59,40 @@ class Run:
     repo_root: Path
     drops: list[Drop] = field(default_factory=list)
     outputs: dict[str, str] = field(default_factory=dict)
+    unverified_inputs: list[str] = field(default_factory=list)
+    simulated: bool = False
     _closed: bool = False
+
+    def mark_simulated(self) -> None:
+        """Dry run on simulated data: every output is stamped SIMULATED."""
+        self.simulated = True
+        self.logger.warning("SIMULATED DATA: this run's outputs are a dry run, not results")
+
+    # -- verification status of inputs ----------------------------------------
+    def mark_unverified(self, description: str) -> None:
+        """Record that an input contains extracted values not yet verified by
+        the researcher. Every figure and table this run writes afterwards is
+        stamped (save_figure / write_table), and the footer lists them."""
+        self.unverified_inputs.append(description)
+        self.logger.warning("UNVERIFIED INPUT: %s", description)
+
+    @property
+    def unverified(self) -> bool:
+        return bool(self.unverified_inputs)
+
+    def write_table(self, df, path: Path) -> Path:
+        """Write a pandas DataFrame as CSV; if any input is unverified, the
+        first column says so on every row, so the flag survives copy-paste."""
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        out = df.copy()
+        if self.simulated:
+            out.insert(0, "SIMULATED_DATA", "dry run on simulated data - not a result")
+        if self.unverified:
+            out.insert(0, "UNVERIFIED_INPUTS", "built on extracted values not yet verified against the source PDFs")
+        out.to_csv(path, index=False)
+        self.record_output(path)
+        return path
 
     # -- logging -------------------------------------------------------------
     def info(self, msg: str) -> None:
@@ -129,6 +162,8 @@ class Run:
             "finished_utc": iso_utc(utc_now()),
             "status": status,
             "error": error,
+            "unverified_inputs": self.unverified_inputs,
+            "simulated": self.simulated,
             "n_dropped": len(self.drops),
             "dropped_by_stage_and_reason": self.drop_counts(),
             "outputs_sha256": self.outputs,

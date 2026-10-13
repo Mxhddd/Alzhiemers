@@ -109,6 +109,16 @@ def save_figure(fig: Figure, stem: str, run, *, figures_dir: Path = FIGURES_DIR,
     figures_dir = Path(figures_dir)
     figures_dir.mkdir(parents=True, exist_ok=True)
     commit = run.header["git"]["commit"]
+    if getattr(run, "simulated", False):
+        fig.text(0.5, 1.04 if getattr(run, "unverified", False) else 1.0,
+                 "SIMULATED DATA — dry run of the pipeline, not a result", ha="center", va="bottom", fontsize=8,
+                 color=INK["primary"], fontweight="bold",
+                 bbox={"facecolor": "#e7eefd", "edgecolor": "#2a78d6", "boxstyle": "round,pad=0.3"})
+    if getattr(run, "unverified", False):
+        fig.text(0.5, 1.0, "UNVERIFIED INPUT VALUES — built on extracted numbers not yet checked against the "
+                 "source papers. Not for publication.", ha="center", va="bottom", fontsize=8,
+                 color=INK["primary"], fontweight="bold",
+                 bbox={"facecolor": "#fde7e7", "edgecolor": "#d03b3b", "boxstyle": "round,pad=0.3"})
     paths = []
     for fmt in formats:
         out = figures_dir / f"{stem}.{fmt}"

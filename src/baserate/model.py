@@ -1,40 +1,45 @@
 """Continuous-time Markov chain over tau stages (Module 2).
 
-dp/dt = p(t) Q(t), with progression rates q_{k,k+1}(t) = exp(alpha_k + beta_k (t - t_c) / s).
-Age is centred at t_c and scaled by s (config: solver.age_centre, age_scale):
-the same model as the brief's exp(alpha + beta t), with alpha re-expressed as
-the log-rate at age t_c and beta per s years. Uncentred, unscaled alpha and
-beta are almost collinear and on very different scales, which stalls both the
-optimiser and NUTS.
+dp/dt = p(t) Q(t), with progression rates q_{k,k+1}(t) = exp(alpha_k + beta_k u),
+u = (t - t_c) / s. Age is centred at t_c and scaled by s (config:
+solver.age_centre, age_scale): the same model as the brief's
+exp(alpha + beta t), with alpha re-expressed as the log-rate at age t_c and
+beta per s years (uncentred, unscaled alpha and beta are almost collinear and
+on very different scales, which stalls both the optimiser and NUTS).
+
 Three variants share one interface (``StageModel``) so none is favoured by
 construction:
 
 * **A_gated** — the LC -> cortex step (stage c-1 -> c) has rate
-  mu(t) = mu0 + gamma * A(t), A(t) = amyloid-positivity probability at age t.
-  gamma is unconstrained in sign: the fit can say amyloid does not help.
+      mu(t) = mu0 + gamma * A(t),  A(t) = amyloid-positivity probability,
+  parameterised as mu0 = exp(log_mu0) and gamma = mu0 * (HR_A - 1) with
+  HR_A = exp(log_hr_amyloid): HR_A is the rate ratio amyloid-positive vs
+  amyloid-negative (manuscript/derivations/module2_gamma.md). Any real
+  log_hr_amyloid gives a positive rate, HR_A < 1 is allowed, so the fit can
+  say amyloid does not speed the transition, or slows it.
 * **B_independent** — cortical tau arises unrelated to LC stage: every
-  pre-cortical stage k < c enters stage c at the same rate nu(t) =
-  exp(a_nu + b_nu t), so entry does not require passing through the LC stages.
+  pre-cortical stage k < c enters stage c at the same rate
+  nu(t) = exp(a_nu + b_nu u), so entry does not require the LC stages.
 * **C_multihit** — cortical entry needs m independent hits accumulating from
   birth at constant rate lambda each (hidden counter), independent of LC
   stage; early incidence scales as t^(m-1) (Armitage–Doll).
 
-Stage c is ``first_cortical``; stages are indexed 0..K-1 in the
-researcher-supplied order. Hidden states (variant C) map onto observed stages
-through ``observed_of_hidden``.
+Each model is described ONCE, declaratively, as a list of ``Edge``s (from,
+to, rate formula, parameter indices). ``build_generator`` (numpy, the
+reference) and ``src/baserate/jaxlik.py`` (JAX, used for fitting) both
+evaluate that same list, and a test requires them to agree to 1e-9.
 """
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
 from dataclasses import dataclass
 
 import numpy as np
 
 
 class InvalidParameters(ValueError):
-    """Parameters give a negative rate; the likelihood is -inf there."""
+    """Parameters give a non-finite rate; the likelihood is -inf there."""
 
 
 @dataclass(frozen=True)
@@ -62,12 +67,50 @@ class ChainSpec:
         return len(self.stages)
 
 
-def _rate(a: float, b: float, t: float) -> float:
-    with np.errstate(over="raise"):
-        try:
-            return float(np.exp(a + b * t))
-        except FloatingPointError as e:
-            raise InvalidParameters(f"rate overflow: exp({a} + {b} * {t})") from e
+@dataclass(frozen=True)
+class Edge:
+    """One transition i -> j between hidden states.
+
+    kind "loglinear": rate = exp(theta[p0] + theta[p1] * u(t))
+    kind "gated":     rate = exp(theta[p0]) * (1 + (exp(theta[p1]) - 1) * A(t))
+    kind "const":     rate = exp(theta[p0])            (p1 unused, -1)
+    """
+
+    i: int
+    j: int
+    kind: str
+    p0: int
+    p1: int
+
+
+class StepFunction:
+    """Piecewise-constant function of age from (lower, upper, value) bands.
+    No interpolation; ages outside every band raise. ``breakpoints`` are
+    forced onto the integration grid so no step straddles a jump."""
+
+    def __init__(self, bands: list[tuple[float, float, float]]):
+        bands = sorted((float(a), float(b), float(v)) for a, b, v in bands)
+        for (l1, u1, _), (l2, _, _) in zip(bands, bands[1:]):
+            if l2 < u1:
+                raise ValueError(f"overlapping bands [{l1},{u1}) and [{l2},...)")
+        for lo, hi, v in bands:
+            if not lo < hi:
+                raise ValueError(f"empty band [{lo},{hi})")
+        self.bands = bands
+
+    def __call__(self, t: float) -> float:
+        for lo, hi, v in self.bands:
+            if lo <= t < hi:
+                return v
+        raise ValueError(f"age {t} is outside every supplied band; refusing to extrapolate")
+
+    @property
+    def breakpoints(self) -> list[float]:
+        return sorted({x for lo, hi, _ in self.bands for x in (lo, hi)})
+
+
+def piecewise_constant(bands) -> StepFunction:
+    return StepFunction(bands)
 
 
 class StageModel(ABC):
@@ -79,14 +122,29 @@ class StageModel(ABC):
         if not age_scale > 0:
             raise ValueError("age_scale must be positive")
         self.age_scale = float(age_scale)
+        self._names: list[str] = []
+        self._edges: list[Edge] = []
+        self._build()
 
-    def _u(self, t: float) -> float:
-        """Rescaled age entering every rate: (t - centre) / scale."""
-        return (t - self.age_centre) / self.age_scale
+    # -- declarative description -------------------------------------------
+    def _p(self, name: str) -> int:
+        self._names.append(name)
+        return len(self._names) - 1
+
+    def _seq_edge(self, i: int, j: int, k: int) -> None:
+        a, b = self._p(f"alpha[{k}]"), self._p(f"beta[{k}]")
+        self._edges.append(Edge(i, j, "loglinear", a, b))
+
+    @abstractmethod
+    def _build(self) -> None: ...
 
     @property
-    @abstractmethod
-    def param_names(self) -> list[str]: ...
+    def param_names(self) -> list[str]:
+        return list(self._names)
+
+    @property
+    def edges(self) -> list[Edge]:
+        return list(self._edges)
 
     @property
     def n_hidden(self) -> int:
@@ -96,31 +154,61 @@ class StageModel(ABC):
     def observed_of_hidden(self) -> np.ndarray:
         return np.arange(self.spec.K)
 
+    @property
+    def amyloid(self) -> StepFunction | None:
+        return None
+
+    @property
+    def breakpoints(self) -> list[float]:
+        return self.amyloid.breakpoints if self.amyloid is not None else []
+
+    def u(self, t: float) -> float:
+        """Rescaled age entering every log-linear rate: (t - centre) / scale."""
+        return (t - self.age_centre) / self.age_scale
+
     def initial(self) -> np.ndarray:
         p = np.zeros(self.n_hidden)
         p[0] = 1.0
         return p
 
-    @abstractmethod
-    def transitions(self, t: float, theta: np.ndarray) -> list[tuple[int, int, float]]:
-        """(from, to, rate) triples among hidden states at age t."""
-
     def unpack(self, theta: np.ndarray) -> dict[str, float]:
         theta = np.asarray(theta, dtype=float)
-        if theta.shape != (len(self.param_names),):
-            raise ValueError(f"{self.name} expects {len(self.param_names)} parameters, got {theta.shape}")
-        return dict(zip(self.param_names, theta))
+        if theta.shape != (len(self._names),):
+            raise ValueError(f"{self.name} expects {len(self._names)} parameters, got {theta.shape}")
+        return dict(zip(self._names, theta))
 
-    def _seq(self, k: int) -> tuple[str, str]:
-        return f"alpha[{k}]", f"beta[{k}]"
+    # -- numpy evaluation (reference implementation) -------------------------
+    def transitions(self, t: float, theta: np.ndarray) -> list[tuple[int, int, float]]:
+        theta = np.asarray(theta, dtype=float)
+        if theta.shape != (len(self._names),):
+            raise ValueError(f"{self.name} expects {len(self._names)} parameters, got {theta.shape}")
+        u = self.u(t)
+        a = self.amyloid(t) if self.amyloid is not None else None
+        out = []
+        with np.errstate(over="ignore", invalid="ignore"):
+            for e in self._edges:
+                if e.kind == "loglinear":
+                    r = np.exp(theta[e.p0] + theta[e.p1] * u)
+                elif e.kind == "gated":
+                    if not 0.0 <= a <= 1.0:
+                        raise ValueError(f"amyloid probability {a} at age {t} outside [0, 1]")
+                    r = np.exp(theta[e.p0]) * (1.0 + (np.exp(theta[e.p1]) - 1.0) * a)
+                elif e.kind == "const":
+                    r = np.exp(theta[e.p0])
+                else:
+                    raise ValueError(f"unknown edge kind {e.kind}")
+                if not np.isfinite(r):
+                    raise InvalidParameters(f"{self.name}: rate {e.i}->{e.j} at age {t} is not finite")
+                out.append((e.i, e.j, float(r)))
+        return out
 
 
 def build_generator(model: StageModel, t: float, theta: np.ndarray) -> np.ndarray:
     """Q(t). Off-diagonals are rates; rows sum to zero (asserted)."""
     Q = np.zeros((model.n_hidden, model.n_hidden))
     for i, j, r in model.transitions(t, theta):
-        if not np.isfinite(r) or r < 0:
-            raise InvalidParameters(f"{model.name}: rate {i}->{j} at age {t} is {r}")
+        if r < 0:
+            raise InvalidParameters(f"{model.name}: negative rate {i}->{j} at age {t}")
         Q[i, j] += r
     Q[np.diag_indices_from(Q)] = -Q.sum(axis=1)
     if not np.allclose(Q.sum(axis=1), 0.0, atol=1e-12 * max(1.0, np.abs(Q).max())):
@@ -133,65 +221,46 @@ class Sequential(StageModel):
 
     name = "sequential"
 
-    @property
-    def param_names(self) -> list[str]:
-        return [n for k in range(self.spec.K - 1) for n in self._seq(k)]
-
-    def transitions(self, t, theta):
-        p = self.unpack(theta)
-        return [(k, k + 1, _rate(p[f"alpha[{k}]"], p[f"beta[{k}]"], self._u(t))) for k in range(self.spec.K - 1)]
+    def _build(self):
+        for k in range(self.spec.K - 1):
+            self._seq_edge(k, k + 1, k)
 
 
 class AGated(StageModel):
     name = "A_gated"
 
-    def __init__(self, spec: ChainSpec, amyloid: Callable[[float], float], age_centre: float = 0.0,
-                 age_scale: float = 1.0):
+    def __init__(self, spec: ChainSpec, amyloid: StepFunction, age_centre: float = 0.0, age_scale: float = 1.0):
+        if not isinstance(amyloid, StepFunction):
+            raise TypeError("amyloid must be a StepFunction (piecewise constant, with breakpoints)")
+        self._amyloid = amyloid
         super().__init__(spec, age_centre, age_scale)
-        self.amyloid = amyloid
 
     @property
-    def param_names(self) -> list[str]:
-        c = self.spec.first_cortical
-        names = []
-        for k in range(self.spec.K - 1):
-            names += ["log_mu0", "gamma"] if k == c - 1 else list(self._seq(k))
-        return names
+    def amyloid(self) -> StepFunction:
+        return self._amyloid
 
-    def transitions(self, t, theta):
-        p = self.unpack(theta)
+    def _build(self):
         c = self.spec.first_cortical
-        out = []
         for k in range(self.spec.K - 1):
             if k == c - 1:
-                a = self.amyloid(t)
-                if not 0.0 <= a <= 1.0:
-                    raise ValueError(f"amyloid probability {a} at age {t} outside [0, 1]")
-                out.append((k, k + 1, np.exp(p["log_mu0"]) + p["gamma"] * a))
+                m, h = self._p("log_mu0"), self._p("log_hr_amyloid")
+                self._edges.append(Edge(k, k + 1, "gated", m, h))
             else:
-                out.append((k, k + 1, _rate(p[f"alpha[{k}]"], p[f"beta[{k}]"], self._u(t))))
-        return out
+                self._seq_edge(k, k + 1, k)
 
 
 class BIndependent(StageModel):
     name = "B_independent"
 
-    @property
-    def param_names(self) -> list[str]:
+    def _build(self):
         c = self.spec.first_cortical
-        names = [n for k in range(c - 1) for n in self._seq(k)]
-        names += ["a_nu", "b_nu"]
-        names += [n for k in range(c, self.spec.K - 1) for n in self._seq(k)]
-        return names
-
-    def transitions(self, t, theta):
-        p = self.unpack(theta)
-        c = self.spec.first_cortical
-        out = [(k, k + 1, _rate(p[f"alpha[{k}]"], p[f"beta[{k}]"], self._u(t))) for k in range(c - 1)]
-        nu = _rate(p["a_nu"], p["b_nu"], self._u(t))
-        out += [(k, c, nu) for k in range(c)]
-        out += [(k, k + 1, _rate(p[f"alpha[{k}]"], p[f"beta[{k}]"], self._u(t))) for k in range(c, self.spec.K - 1)]
-        return out
+        for k in range(c - 1):
+            self._seq_edge(k, k + 1, k)
+        a, b = self._p("a_nu"), self._p("b_nu")
+        for k in range(c):
+            self._edges.append(Edge(k, c, "loglinear", a, b))
+        for k in range(c, self.spec.K - 1):
+            self._seq_edge(k, k + 1, k)
 
 
 class CMultiHit(StageModel):
@@ -201,23 +270,10 @@ class CMultiHit(StageModel):
     name = "C_multihit"
 
     def __init__(self, spec: ChainSpec, hits: int, age_centre: float = 0.0, age_scale: float = 1.0):
-        super().__init__(spec, age_centre, age_scale)
         if not isinstance(hits, int) or hits < 1:
             raise ValueError("hits must be a positive integer")
         self.m = hits
-
-    @property
-    def param_names(self) -> list[str]:
-        c = self.spec.first_cortical
-        names = [n for k in range(c - 1) for n in self._seq(k)]
-        names += ["log_lambda"]
-        names += [n for k in range(c, self.spec.K - 1) for n in self._seq(k)]
-        return names
-
-    @property
-    def n_hidden(self) -> int:
-        c = self.spec.first_cortical
-        return c * self.m + (self.spec.K - c)
+        super().__init__(spec, age_centre, age_scale)
 
     def _h(self, k: int, h: int) -> int:
         return k * self.m + h
@@ -225,40 +281,28 @@ class CMultiHit(StageModel):
     def _cort(self, k: int) -> int:
         return self.spec.first_cortical * self.m + (k - self.spec.first_cortical)
 
+    def _build(self):
+        c = self.spec.first_cortical
+        seq = {}
+        for k in range(c - 1):
+            seq[k] = (self._p(f"alpha[{k}]"), self._p(f"beta[{k}]"))
+        lam = self._p("log_lambda")
+        for k in range(c):
+            for h in range(self.m):
+                if k < c - 1:
+                    self._edges.append(Edge(self._h(k, h), self._h(k + 1, h), "loglinear", *seq[k]))
+                target = self._h(k, h + 1) if h < self.m - 1 else self._cort(c)
+                self._edges.append(Edge(self._h(k, h), target, "const", lam, -1))
+        for k in range(c, self.spec.K - 1):
+            self._seq_edge(self._cort(k), self._cort(k + 1), k)
+
+    @property
+    def n_hidden(self) -> int:
+        c = self.spec.first_cortical
+        return c * self.m + (self.spec.K - c)
+
     @property
     def observed_of_hidden(self) -> np.ndarray:
         c = self.spec.first_cortical
         obs = [k for k in range(c) for _ in range(self.m)]
         return np.array(obs + list(range(c, self.spec.K)))
-
-    def transitions(self, t, theta):
-        p = self.unpack(theta)
-        c = self.spec.first_cortical
-        lam = float(np.exp(p["log_lambda"]))
-        out = []
-        for k in range(c):
-            for h in range(self.m):
-                if k < c - 1:
-                    out.append((self._h(k, h), self._h(k + 1, h), _rate(p[f"alpha[{k}]"], p[f"beta[{k}]"], self._u(t))))
-                target = self._h(k, h + 1) if h < self.m - 1 else self._cort(c)
-                out.append((self._h(k, h), target, lam))
-        for k in range(c, self.spec.K - 1):
-            out.append((self._cort(k), self._cort(k + 1), _rate(p[f"alpha[{k}]"], p[f"beta[{k}]"], self._u(t))))
-        return out
-
-
-def piecewise_constant(bands: list[tuple[float, float, float]]) -> Callable[[float], float]:
-    """Step function from (lower, upper, value) bands — no interpolation.
-    Ages outside every band raise rather than being extrapolated."""
-    bands = sorted(bands)
-    for (l1, u1, _), (l2, _, _) in zip(bands, bands[1:]):
-        if l2 < u1:
-            raise ValueError(f"overlapping bands [{l1},{u1}) and [{l2},...)")
-
-    def f(t: float) -> float:
-        for lo, hi, v in bands:
-            if lo <= t < hi:
-                return float(v)
-        raise ValueError(f"age {t} is outside every supplied band; refusing to extrapolate")
-
-    return f

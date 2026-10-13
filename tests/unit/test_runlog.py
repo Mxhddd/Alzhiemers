@@ -65,3 +65,20 @@ def test_missing_config_raises(tmp_path):
     with pytest.raises(FileNotFoundError):
         start_run(module="unit", config_path=tmp_path / "nope.yaml", seed=None,
                   packages=[], logs_dir=tmp_path)
+
+
+def test_unverified_inputs_stamp_tables_and_footer(tmp_path):
+    import pandas as pd
+    with start_run(module="unit", config_path=CFG, seed=None, packages=[], logs_dir=tmp_path) as run:
+        run.mark_unverified("x.csv: 3 of 3 values unverified")
+        out = run.write_table(pd.DataFrame({"a": [1, 2]}), tmp_path / "t.csv")
+    df = pd.read_csv(out)
+    assert list(df.columns)[0] == "UNVERIFIED_INPUTS"
+    assert read_footer(run.log_path)["unverified_inputs"] == ["x.csv: 3 of 3 values unverified"]
+
+
+def test_verified_inputs_leave_tables_unstamped(tmp_path):
+    import pandas as pd
+    with start_run(module="unit", config_path=CFG, seed=None, packages=[], logs_dir=tmp_path) as run:
+        out = run.write_table(pd.DataFrame({"a": [1]}), tmp_path / "t.csv")
+    assert list(pd.read_csv(out).columns) == ["a"]

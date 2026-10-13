@@ -54,14 +54,32 @@ def main() -> int:
     if missing_files:
         lines.append(f"\nData files referenced but absent ({len(missing_files)}):")
         lines += [f"  - {p}" for p in sorted(missing_files)]
+    extracted = sorted((REPO_ROOT / "data" / "extracted").glob("*.csv"))
+    if extracted:
+        lines.append("\nExtracted values (data/extracted/) — verify against the PDFs, flip verified to true:")
+        for f in extracted:
+            import csv
+            with f.open(encoding="utf-8") as fh:
+                rows = list(csv.DictReader(fh))
+            if not rows:
+                lines.append(f"  - {f.name}: EMPTY (not yet extractable — see SOURCES.md)")
+            else:
+                n_unv = sum(1 for r in rows if str(r.get("verified", "")).strip().lower() != "true")
+                lines.append(f"  - {f.name}: {n_unv} of {len(rows)} rows unverified")
+    drafts = sorted((REPO_ROOT / "manuscript" / "derivations").glob("*.md"))
+    if drafts:
+        lines.append("\nDerivations to check by hand (manuscript/derivations/):")
+        lines += [f"  - {d.name}" for d in drafts]
     params = yaml.safe_load((CONFIG_DIR / "dynamics_params.yaml").read_text(encoding="utf-8"))
     if not params.get("parameters"):
         lines.append("\nconfig/dynamics_params.yaml: no parameters yet; src/dynamics/lc_model.py: equations not written")
     lines.append("\nPre-registrations:")
     for m in MODULES:
         frozen = (PREREG_DIR / f"{m}.freeze.yaml").exists()
+        complete = (PREREG_DIR / f"{m}.md").exists()
         draft = (PREREG_DIR / f"{m}.DRAFT.md").exists()
-        state = "FROZEN" if frozen else ("draft to review, then freeze" if draft else "not written")
+        state = ("FROZEN" if frozen else "complete — review, upload to OSF, `make freeze-prereg`" if complete
+                 else "partial draft (Claude to complete)" if draft else "not written")
         lines.append(f"  - {m}: {state}")
     print("Researcher inputs still needed (computed from the repository):" + "\n".join(lines))
     return 0

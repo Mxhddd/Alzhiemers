@@ -29,7 +29,7 @@ BUILT_MODULES := mr baserate metaanalysis dynamics mediation network
 
 .PHONY: help todo setup test test-py test-r test-slow validate validate-mr validate-baserate validate-metaanalysis validate-dynamics validate-mediation validate-network check-validated provenance-check all lock \
         freeze-prereg check-prereg clean-results \
-        mr baserate mediation dynamics metaanalysis network
+        mr baserate baserate-dryrun baserate-power mediation dynamics metaanalysis network
 
 help:
 	@sed -n '1,16p' Makefile | sed 's/^# \{0,1\}//'
@@ -110,9 +110,17 @@ mr:
 	$(RSCRIPT) src/mr/run_mr.R
 	$(PY) -m src.mr.forest_plot --summary results/tables/mr_summary.csv
 # Module 2. Refuses to run unless validated on the current code and
-# prereg/baserate.md is frozen; needs the researcher's hand-transcribed files.
+# prereg/baserate.md is frozen; reads the extracted values in data/extracted/
+# (the Braak 2011 stage table is still empty: needs the paper's full text).
 baserate:
 	$(PY) -m src.baserate.run_baserate
+# Module 2 end to end on SIMULATED counts (no gates; writes results/dryrun/).
+# Full pre-registered settings: about 1.5-2 h on 4 CPU cores.
+baserate-dryrun:
+	$(PY) -m src.baserate.run_baserate --dry-run-simulated
+# SIMULATED power of the amyloid-gating criterion (true HR 1 vs 2.43).
+baserate-power:
+	$(PY) -m sim.baserate_power --reps 30
 # Module 5. Gated on validation + frozen prereg/metaanalysis.md; the
 # anticholinergic positive control must be recovered before anything else.
 metaanalysis:

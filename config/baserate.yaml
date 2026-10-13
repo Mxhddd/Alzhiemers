@@ -1,108 +1,185 @@
 # Module 2 — Markov base-rate model (PROJECT_BRIEF.md §5).
-# `null` = researcher must supply; the pipeline stops naming the field.
+# All methodological choices below were made by Claude under the researcher's
+# standing policy (decide, explain, report; close calls get a sensitivity
+# analysis). Empirical inputs are extracted values in data/extracted/ with
+# sources and `verified` flags. Fixed before any fit to real data.
 
-# Seed for multi-start MLE initial values and for PyMC sampling.
+# Seed for multi-start initial values and for PyMC sampling.
 seed: 20261016
 
 data:
-  # Hand-transcribed by the researcher (brief: never created by code).
-  braak_counts: data/raw/braak_counts.csv
-  # RESEARCHER: ordered stage labels exactly as they appear in the `stage`
-  # column, earliest first (e.g. pretangle and Braak stages). Defines the chain.
-  stage_order: null
-  # RESEARCHER: label of the first CORTICAL stage. The transition into it from
-  # the stage before is the LC -> cortex transition that variant A gates on
-  # amyloid and variant B frees from LC stage.
-  first_cortical_stage: null
-  # RESEARCHER: amyloid-positivity probability by age for variant A
-  # (columns age_lower, age_upper, prevalence, source). Used piecewise-constant
-  # within each age band — no interpolation between bands.
-  amyloid_prevalence: data/raw/amyloid_prevalence.csv
-  # RESEARCHER: published dementia incidence the model never sees, for the
-  # falsification test (columns age_lower, age_upper, rate_per_1000_py, source).
-  dementia_incidence: data/raw/dementia_incidence.csv
-  # RESEARCHER: first stage label counted as clinically demented for the
-  # incidence prediction (an assumption the researcher must own).
-  dementia_threshold_stage: null
+  # Braak et al. 2011 stage counts by age band (extracted; currently EMPTY —
+  # the paper's full text is paywalled, see data/extracted/SOURCES.md).
+  braak_counts: data/extracted/braak2011_stage_counts.csv
+  # Stage scheme of Braak et al. 2011 (and Braak & Del Tredici 2011): no
+  # AT8 tau ("0"), subcortical pretangle stages a-c (LC first), cortical
+  # pretangle stages 1a (transentorhinal neurites) and 1b (transentorhinal
+  # pyramidal cells), then NFT stages I-VI. Labels must match the counts file.
+  stage_order: ["0", "a", "b", "c", "1a", "1b", "I", "II", "III", "IV", "V", "VI"]
+  # 1a is the first stage with cortical tau (Braak 2011 abstract: "cortical
+  # involvement ... identified first in the transentorhinal region (Stage 1a)"),
+  # so c -> 1a is the LC -> cortex transition variant A gates on amyloid.
+  first_cortical_stage: "1a"
+  # Age bands in the extracted files are written with inclusive integer upper
+  # bounds (e.g. 61-70); band [lo, hi] is treated as the interval [lo, hi + 1).
+  upper_inclusive: true
+  # Primary amyloid curve A(t): plaque prevalence by decade in the SAME autopsy
+  # cohort (Braak 2011) — the population the stage counts come from. EMPTY
+  # until the full text is available.
+  amyloid_prevalence: data/extracted/braak2011_amyloid_by_age.csv
+  # Sensitivity amyloid curve: Jansen 2015 modelled prevalence in cognitively
+  # normal people (biomarker-defined; excludes dementia, so it understates
+  # population prevalence at old ages). Point estimates at ages 50..90 are
+  # assigned to the 5-year bands centred on them (47.5-52.5, ...), Jansen's own
+  # binning (Table 3); outside 47.5-92.5 the primary curve is used.
+  amyloid_prevalence_sensitivity: data/extracted/amyloid_prevalence_jansen2015.csv
+  # Published dementia incidence the model never sees (falsification test).
+  dementia_incidence: data/extracted/dementia_incidence_cfas.csv
+  # Entry into Braak NFT stage V counts as clinically demented: NIA-AA 2012
+  # (Hyman et al.) puts Braak V-VI in the highest tangle category (B3), the one
+  # most consistently associated with dementia. Sensitivity: stage IV.
+  dementia_threshold_stage: "V"
+  # Sensitivity analysis for the threshold.
+  dementia_threshold_stage_sensitivity: "IV"
+  # Open incidence band (85+) is evaluated at age 90. A choice; sensitivity 87.5.
+  open_band_evaluation_age: 90
+  # Sensitivity analysis for the open band.
+  open_band_evaluation_age_sensitivity: 87.5
 
 solver:
-  # RESEARCHER: integration step (years) for the piecewise matrix exponential,
-  # from the hand error analysis (Q(t1), Q(t2) do not commute). Brief: ask,
-  # never pick.
-  step_years: null
-  # Age at which every person is in the first stage (p(0) = e_0). 0 = birth.
-  start_age: 0
-  # Ages are centred here inside the rates, exp(alpha + beta (t - centre)):
+  # Exponential-midpoint step (manuscript/derivations/module2_step_size.md):
+  # global error <= h^2 * Phi(theta). Phi = 0.0099 at a realistic simulated
+  # parameter set -> h <= 0.32 y; 0.25 y chosen. (The worst-case envelope gives
+  # h = 0.05 for ANY parameters in it, at 5-10x the run time; instead the bound
+  # is re-checked at every fitted estimate, below.)
+  step_years: 0.25
+  # After every fit: h^2 * Phi(theta_hat) and the Radau audit max |p_h - p_ODE|
+  # must both be below this, else h is halved and the fit repeated.
+  max_prob_error: 1.0e-3
+  # ... and the log-likelihood must change by less than this many units.
+  max_loglik_error: 0.1
+  # Age at which everyone is in stage "0": the youngest age in the autopsy
+  # series (Braak 2011: ages 1-100), so no assumption is needed before it.
+  start_age: 1
+  # Ages are centred here inside the rates, exp(alpha + beta (t - centre)/scale):
   # the same model as the brief's exp(alpha + beta t), better conditioned.
   # Reported alphas are log-rates at this age.
   age_centre: 50
   # Age enters the rates as (t - centre) / age_scale, so beta is per decade.
-  # Same model; puts alpha and beta on similar scales, which NUTS needs.
   age_scale: 10
   # Stage probabilities for an age band are evaluated at the band midpoint.
-  # A choice; averaging over the band is the alternative.
+  # Close call; sensitivity: average over the band (uniform ages within it).
   evaluate_at: midpoint
+  # The sensitivity alternative.
+  evaluate_at_sensitivity: band_average
+  # Points per band for band_average.
+  band_average_points: 10
 
 variants:
   # Brief §5: three variants sharing one interface; none favoured.
   fit: [A_gated, B_independent, C_multihit]
-  # Number of hits for variant C. A structural choice; 2 is the smallest
-  # value that differs from a one-hit (constant hazard) model. Compare others
-  # by cross-validation rather than tuning to fit.
+  # Number of hits for variant C: 2 is the smallest that differs from a
+  # constant hazard. Sensitivity: 3 (compared by cross-validation, not tuned).
   c_hits: 2
+  # Sensitivity value.
+  c_hits_sensitivity: 3
 
 mle:
   # Independent random starts; the best optimum is kept and the spread of
   # optima reported (a flat or multi-modal likelihood is a result).
   n_starts: 20
-  # Nelder-Mead first (tolerates parameter regions with negative rates, where
-  # the likelihood is -inf), then an L-BFGS-B polish.
-  method: nelder-mead+l-bfgs-b
-  # Iteration cap for the Nelder-Mead stage.
-  nm_maxiter: 4000
-  # Initial values for log-rate intercepts drawn uniformly in this range
-  # (per-year rates ~ e^-8 to e^-2).
-  init_alpha_range: [-8.0, -2.0]
-  # Initial age slopes drawn uniformly in this range (per decade).
-  init_beta_range: [-0.5, 1.0]
+  # L-BFGS-B with exact gradients (JAX), inside the box below.
+  method: l-bfgs-b
+  # Iteration cap per start.
+  maxiter: 3000
+  # Each start is finished with up to this many exact-Hessian Newton steps.
+  newton_steps: 20
+  # A start counts as converged only if the Newton decrement (predicted
+  # log-likelihood still to gain by moving to the optimum) is below this and
+  # the Hessian is positive definite. The optimiser's own message is not
+  # trusted: L-BFGS-B can report convergence far from an optimum.
+  max_newton_decrement: 1.0e-3
+  # Initial values drawn uniformly per parameter role.
+  init:
+    # log per-year rates e^-8 .. e^-2
+    log_rate: [-8.0, -2.0]
+    # log-slopes per decade
+    slope: [-0.5, 1.0]
+    # log amyloid HR, symmetric around 0 (no favoured direction)
+    log_hr: [-0.5, 0.5]
+  # Search box. An estimate on its edge is reported as non-interior.
+  bounds:
+    # rates between e^-20 and e^2 (= 7.4) per year: a mean stage sojourn
+    # under ~2 months is biologically implausible for these stages
+    log_rate: [-20.0, 2.0]
+    # a rate may change at most e^2 (= 7.4)-fold per decade (dementia incidence
+    # in the extracted CFAS data rises ~2.6-fold per decade)
+    slope: [-2.0, 2.0]
+    # amyloid HR between e^-5 and e^5
+    log_hr: [-5.0, 5.0]
 
 bayes:
-  # Weakly-informative priors on the log-scale intercepts: N(-5, 3) spans
-  # per-year rates from ~1e-6 to ~0.5 at +/-2 SD.
-  alpha_prior: {mu: -5.0, sigma: 3.0}
-  # Age slopes per decade N(0, 1): +/-2 per decade at 2 SD covers rate
-  # doubling times from ~3.5 years upward, in either direction.
-  beta_prior: {mu: 0.0, sigma: 1.0}
-  # Amyloid effect gamma centred on ZERO so the prior does not favour the
-  # hypothesis (gamma > 0 means amyloid speeds LC -> cortex).
-  gamma_prior: {mu: 0.0, sigma: 1.0}
-  # NUTS settings; R-hat and divergences are always reported.
+  # Weakly-informative priors per parameter role. Log-rate N(-5, 3): per-year
+  # rates ~1e-6 .. ~0.5 at +/-2 SD.
+  log_rate_prior: {mu: -5.0, sigma: 3.0}
+  # Log-slope per decade N(0, 1), symmetric: no assumed direction of ageing.
+  slope_prior: {mu: 0.0, sigma: 1.0}
+  # log HR_A ~ N(0, 1): centred on NO amyloid effect (HR 1), 95% range
+  # HR 0.14-7.1, so the prior does not favour the hypothesis.
+  log_hr_prior: {mu: 0.0, sigma: 1.0}
+  # NUTS (NumPyro; dense mass matrix initialised from the Laplace covariance
+  # at the MLE). R-hat, ESS and divergences are always reported.
   draws: 1000
   # Warm-up iterations per chain.
   tune: 1000
   # Four chains: the minimum for a meaningful R-hat.
   chains: 4
-  # Target acceptance: raised from 0.8 to reduce divergences in curved posteriors.
+  # Target acceptance raised from 0.8 to reduce divergences in curved posteriors.
   target_accept: 0.9
+  # Chains start at N(MLE, k^2 x Laplace covariance) with this k: over-dispersed
+  # starts are what make R-hat able to detect multiple modes.
+  init_overdispersion: 2.0
   # Credible interval reported.
   ci_level: 0.95
+  # A posterior is reported without caveat only if max R-hat <= this ...
+  max_rhat: 1.01
+  # ... and there are no divergent transitions.
+  max_divergences: 0
+  # Sensitivity analyses are fitted by MLE only (Laplace intervals); the
+  # primary analysis gets MLE + NUTS.
+  sensitivity_uses_mle_only: true
 
 gamma_check:
-  # RESEARCHER: gamma derived by hand from published amyloid hazard ratios,
-  # with its uncertainty. The fit is flagged loudly if the researcher's value
-  # lies outside the posterior credible interval.
-  expected: null
-  # RESEARCHER
-  source: null
+  # Stated BEFORE any fit: manuscript/derivations/module2_gamma.md. Expected
+  # log HR_A = ln 2.43 = 0.888 (95% CI 0.322-1.449) from Ossenkoppele 2022
+  # Table 2 (A+T- vs A-T-, progression to MCI) under a proxy assumption.
+  expected_log_hr: 0.888
+  # Published 95% CI lower bound (log scale).
+  expected_log_hr_ci_lower: 0.322
+  # Published 95% CI upper bound (log scale).
+  expected_log_hr_ci_upper: 1.449
+  # Where the value comes from (extracted, unverified).
+  source: "Ossenkoppele 2022 Nat Med Table 2; data/extracted/amyloid_hr_ossenkoppele2022.csv"
 
 falsification:
-  # RESEARCHER: what counts as the model FAILING the falsification test
-  # (brief §5 (d)): the largest tolerated |log(predicted / observed)| dementia
-  # incidence in any age band. Must be fixed before the model sees the data
-  # (pre-register it); Claude does not pick it.
-  max_abs_log_ratio: null
+  # Fixed before any fit. Reference interval per incidence age band = [min,
+  # max] of the four published rates (men/women x CFAS I/II, Matthews 2016
+  # Table 1). A model FAILS if its predicted incidence of entering the
+  # dementia-threshold stage lies more than a factor of 2 outside that interval
+  # (|log ratio to the nearest end| > ln 2) in ANY band. Factor 2 because the
+  # model predicts a neuropathological stage, not a clinical diagnosis, in a
+  # different population and era; it still rejects wrong age slopes (the CFAS
+  # rates rise 7- to 12-fold from 65-69 to 85+) and order-of-magnitude errors.
+  max_abs_log_ratio: 0.6931
 
 cross_validation:
   # Folds are formed from whole age bands (brief: k-fold by age band). 5 is
   # a choice balancing bias and variance; fewer bands than folds is an error.
   k: 5
+  # Starts per fold: the full-data MLE (warm start) plus this many random
+  # starts. Warm-starting changes only which optimum the search reaches, not
+  # what is evaluated (held-out bands are never used for fitting).
+  n_random_starts: 4
+  # Model comparison margin: a variant is called better only if its summed
+  # held-out log-likelihood exceeds the next by more than this.
+  margin: 2.0

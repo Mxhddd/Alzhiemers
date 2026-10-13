@@ -19,11 +19,23 @@ full scientific brief, ground rules and build order are in
 | 0 | Scaffold and provenance | **built** |
 | 1 | Validation harness + MR validation (LDL–CAD via HMGCR) | **built, gate not yet passed** — waiting for the researcher to transcribe the published target and supply the variant tables (see below) |
 | 2 | Module 1 — drug-target Mendelian randomization (R) | **built, cannot run yet** — blocked (correctly) by the validation gate and the unfrozen pre-registration; needs downloads + researcher inputs |
-| 3 | Module 2 — Markov base-rate model (Python) | **built; validation passes** — needs `braak_counts.csv`, amyloid prevalence, incidence, stage order, step size, frozen prereg |
+| 3 | Module 2 — Markov base-rate model (Python) | **ready to run except one input**: config, derivations and pre-registration complete; full-settings dry run on simulated data in progress (results to follow). Blocked on the Braak 2011 stage-by-age table (paywalled PDF) and the researcher's freeze of `prereg/baserate.md` |
 | 4 | Module 5 — meta-analysis and triangulation (R) | **built; simulation validation passes** — published pooled estimate, hand example and `extraction.csv` from the researcher |
 | 5 | Module 4 — ODE dynamical model (Python) | **machinery built and validated on analytic test systems** — the LC model equations, parameters and hand fixed point are the researcher's (proposal in `manuscript/notes/`) |
 | 6 | Module 3 — mediation analysis (Killer 2) | **built; 4/5 validation checks pass** (published reproduction awaits researcher) — DAG draft in `prereg/mediation.DRAFT.md`; real data path fails loudly until the cohort exists |
 | 7 | Module 6 — network diffusion | **built; spin test validated on a known null** (6% false positives vs 57% for naive shuffling) — HCP connectome + ADNI tau needed |
+
+## Extracted published values (`data/extracted/`)
+
+Numbers taken from published papers by Claude live in `data/extracted/`,
+committed, one source per row (paper, table/figure, exact quantity) and a
+`verified` flag that starts `false`. `data/extracted/SOURCES.md` lists the
+papers, how each was accessed, oddities spotted in the source, and what
+could not be found. Any figure or table built on unverified values carries a
+red UNVERIFIED banner (figures) or a leading `UNVERIFIED_INPUTS` column
+(tables); the run-log footer lists them. Derivations Claude made for the
+researcher to check are in `manuscript/derivations/`, each marked as not
+independently checked.
 
 ## What the researcher must supply
 

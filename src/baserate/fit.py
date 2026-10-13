@@ -4,6 +4,14 @@ The data are cross-sectional autopsy counts: in each age band, how many
 brains were at each stage. The log-likelihood is multinomial:
     sum over groups g, stages s of  n_gs * log p_s(age_g)   (+ multinomial constant)
 with p evaluated at the band midpoint (config: solver.evaluate_at).
+
+``log_likelihood`` is the numpy reference. Fitting uses the JAX version in
+jaxlik.py (same edges, same grid, exact gradients); tests require agreement.
+
+Parameter roles (decide initial values, bounds and priors):
+  log-rate intercepts:  alpha[k], a_nu, log_mu0, log_lambda
+  age slopes (per age_scale years):  beta[k], b_nu
+  amyloid log hazard ratio:  log_hr_amyloid
 """
 
 from __future__ import annotations
@@ -15,36 +23,49 @@ from scipy.optimize import minimize
 from scipy.special import gammaln
 
 from src.baserate.data import StageCounts
+from src.baserate.jaxlik import LOG_FLOOR, make_loglik
 from src.baserate.model import InvalidParameters, StageModel
 from src.baserate.solve import stage_probabilities
 
 
+def role(name: str) -> str:
+    if name.startswith("beta[") or name == "b_nu":
+        return "slope"
+    if name == "log_hr_amyloid":
+        return "log_hr"
+    if name.startswith("alpha[") or name in ("a_nu", "log_mu0", "log_lambda"):
+        return "log_rate"
+    raise ValueError(f"no role defined for parameter {name}")
+
+
+def group_probabilities(model: StageModel, theta: np.ndarray, data: list[StageCounts], *, step: float,
+                        start_age: float, eval_mode: str = "midpoint", n_points: int = 10) -> np.ndarray:
+    """Stage probabilities per observation group (G, K), at the band midpoint
+    or averaged over the band, per eval_mode."""
+    pts = [g.eval_points(eval_mode, n_points) for g in data]
+    ages = np.concatenate([a for a, _ in pts])
+    P = stage_probabilities(model, theta, ages, step=step, start_age=start_age)
+    out, i = [], 0
+    for a, w in pts:
+        out.append(w @ P[i:i + len(a)])
+        i += len(a)
+    return np.array(out)
+
+
 def log_likelihood(model: StageModel, theta: np.ndarray, data: list[StageCounts], *,
-                   step: float, start_age: float) -> float:
+                   step: float, start_age: float, eval_mode: str = "midpoint", n_points: int = 10) -> float:
+    """Numpy reference implementation (see jaxlik.py for the floor on p)."""
     try:
-        P = stage_probabilities(model, theta, [g.midpoint for g in data], step=step, start_age=start_age)
+        P = group_probabilities(model, theta, data, step=step, start_age=start_age, eval_mode=eval_mode,
+                                n_points=n_points)
     except InvalidParameters:
         return -np.inf
     ll = 0.0
     for g, p in zip(data, P):
         pos = g.counts > 0
-        if (p[pos] <= 0).any():
-            return -np.inf
-        ll += float(np.sum(g.counts[pos] * np.log(p[pos])))
+        ll += float(np.sum(g.counts[pos] * np.log(np.maximum(p[pos], LOG_FLOOR))))
         ll += float(gammaln(g.n + 1) - np.sum(gammaln(g.counts + 1)))
     return ll
-
-
-def numerical_hessian(f, x: np.ndarray, h: float = 1e-4) -> np.ndarray:
-    """Central-difference Hessian of a scalar function."""
-    n = len(x)
-    H = np.empty((n, n))
-    for i in range(n):
-        for j in range(i, n):
-            e_i = np.eye(n)[i] * h
-            e_j = np.eye(n)[j] * h
-            H[i, j] = H[j, i] = (f(x + e_i + e_j) - f(x + e_i - e_j) - f(x - e_i + e_j) + f(x - e_i - e_j)) / (4 * h * h)
-    return H
 
 
 @dataclass
@@ -60,6 +81,7 @@ class MLEResult:
     optima_spread: float      # range of log-lik among converged starts within 2 units of the best
     n_at_best: int            # converged starts within 2 log-lik units of the best
     hessian_ok: bool
+    on_bound: list[str]       # parameters whose estimate sits on the search box
     messages: list[str]
 
     @property
@@ -67,46 +89,95 @@ class MLEResult:
         return 2 * self.n_params - 2 * self.loglik
 
 
-def initial_values(model: StageModel, rng: np.random.Generator, cfg_mle: dict) -> np.ndarray:
-    lo_a, hi_a = cfg_mle["init_alpha_range"]
-    lo_b, hi_b = cfg_mle["init_beta_range"]
-    x = {}
-    for name in model.param_names:
-        if name.startswith("beta") or name.startswith("b_"):
-            x[name] = rng.uniform(lo_b, hi_b)
-        elif name == "gamma":
-            # Symmetric around zero (no favoured sign) and inside the valid
-            # region mu0 + gamma * A >= 0 for every A in [0, 1].
-            x[name] = rng.uniform(-0.9, 0.9) * np.exp(x["log_mu0"])
+def _free(g: np.ndarray, x: np.ndarray, lo: np.ndarray, hi: np.ndarray) -> np.ndarray:
+    """Parameters not held at a bound by the gradient (minimisation)."""
+    at_lo = (x <= lo + 1e-10) & (g > 0)
+    at_hi = (x >= hi - 1e-10) & (g < 0)
+    return ~(at_lo | at_hi)
+
+
+def newton_polish(f, hess, x, lo, hi, *, steps: int):
+    """Damped Newton steps on the free parameters with the exact Hessian of
+    the negative log-likelihood. Returns (x, f(x), Newton decrement, steps).
+    The decrement 1/2 g' H^-1 g is the predicted remaining improvement in
+    log-likelihood; inf if the Hessian of the free block is not positive
+    definite (then the point is not a verified local optimum)."""
+    fx, g = f(x)
+    n = 0
+    for n in range(steps + 1):
+        free = _free(g, x, lo, hi)
+        H = -np.asarray(hess(x), dtype=float)[np.ix_(free, free)]    # Hessian of the NEGATIVE log-lik
+        try:
+            np.linalg.cholesky(H)
+        except np.linalg.LinAlgError:
+            return x, fx, np.inf, n
+        d = np.linalg.solve(H, g[free])
+        dec = 0.5 * float(g[free] @ d)
+        if dec <= 1e-12 or n == steps:
+            return x, fx, dec, n
+        t = 1.0
+        while t > 1e-6:
+            xn = x.copy()
+            xn[free] = np.clip(x[free] - t * d, lo[free], hi[free])
+            fn, gn = f(xn)
+            if fn <= fx - 1e-4 * t * float(g[free] @ d):
+                x, fx, g = xn, fn, gn
+                break
+            t /= 2
         else:
-            x[name] = rng.uniform(lo_a, hi_a)
-    return np.array([x[n] for n in model.param_names])
+            return x, fx, dec, n                                    # no further progress possible
+    return x, fx, dec, n
+
+
+def bounds_for(model: StageModel, cfg_mle: dict) -> list[tuple[float, float]]:
+    return [tuple(cfg_mle["bounds"][role(n)]) for n in model.param_names]
+
+
+def initial_values(model: StageModel, rng: np.random.Generator, cfg_mle: dict) -> np.ndarray:
+    return np.array([rng.uniform(*cfg_mle["init"][role(n)]) for n in model.param_names])
 
 
 def fit_mle(model: StageModel, data: list[StageCounts], *, step: float, start_age: float,
-            cfg_mle: dict, seed: int) -> MLEResult:
+            cfg_mle: dict, seed: int, eval_mode: str = "midpoint", n_points: int = 10,
+            extra_starts: list[np.ndarray] | None = None, n_random: int | None = None) -> MLEResult:
+    """Multi-start L-BFGS-B on exact (JAX) gradients inside the configured
+    box; SEs from the exact Hessian. An optimum on the box edge is reported."""
+    import jax
+
+    if cfg_mle["method"] != "l-bfgs-b":
+        raise ValueError(f"unknown mle.method {cfg_mle['method']!r}")
+    ll, vg = make_loglik(model, data, step=step, start_age=start_age, eval_mode=eval_mode, n_points=n_points)
+
+    def f(th):
+        v, g = vg(th)
+        v, g = float(v), np.asarray(g, dtype=float)
+        if not np.isfinite(v) or not np.all(np.isfinite(g)):
+            return 1e300, np.zeros_like(th)  # outside the finite region: reject the step
+        return -v, -g
+
     rng = np.random.default_rng(seed)
-    nll = lambda th: -log_likelihood(model, th, data, step=step, start_age=start_age)  # noqa: E731
-    results = []
-    messages = []
-    for _ in range(cfg_mle["n_starts"]):
-        x0 = initial_values(model, rng, cfg_mle)
-        if not np.isfinite(nll(x0)):
-            messages.append("start skipped: infinite likelihood at initial values")
+    box = bounds_for(model, cfg_mle)
+    lo_b = np.array([b[0] for b in box]); hi_b = np.array([b[1] for b in box])
+    hess = jax.jit(jax.hessian(ll))
+    results, messages = [], []
+    starts = list(extra_starts or []) + [initial_values(model, rng, cfg_mle)
+                                         for _ in range(cfg_mle["n_starts"] if n_random is None else n_random)]
+    for x0 in starts:
+        x0 = np.clip(np.asarray(x0, float), lo_b, hi_b)
+        r = minimize(f, x0, jac=True, method="L-BFGS-B", bounds=box,
+                     options={"maxiter": cfg_mle["maxiter"], "ftol": 1e-15, "gtol": 1e-10})
+        if not r.fun < 1e299:
+            messages.append(f"NOT CONVERGED: {r.message} (non-finite objective)")
             continue
-        if cfg_mle["method"] != "nelder-mead+l-bfgs-b":
-            raise ValueError(f"unknown mle.method {cfg_mle['method']!r}")
-        # Stage 1: Nelder-Mead tolerates the -inf region (negative rates).
-        r1 = minimize(nll, x0, method="Nelder-Mead",
-                      options={"maxiter": cfg_mle["nm_maxiter"], "xatol": 1e-6, "fatol": 1e-8})
-        # Stage 2: gradient polish from the Nelder-Mead point.
-        r = minimize(nll, r1.x, method="L-BFGS-B")
-        if not (np.isfinite(r.fun) and r.fun <= r1.fun + 1e-9):
-            r = r1
-        ok = bool(np.isfinite(r.fun) and (r.success or r1.success))
-        messages.append(f"{'ok' if ok else 'NOT CONVERGED'}: NM {r1.message}; polish {r.message}")
+        x, fx, dec, n_newton = newton_polish(f, hess, r.x, lo_b, hi_b, steps=cfg_mle["newton_steps"])
+        # Converged = the predicted remaining gain to the optimum (Newton
+        # decrement) is negligible. The optimiser's own message is not trusted:
+        # L-BFGS-B can report convergence far from an optimum.
+        ok = bool(np.isfinite(dec) and dec <= cfg_mle["max_newton_decrement"])
+        messages.append(f"{'ok' if ok else 'NOT CONVERGED'}: L-BFGS-B {r.nit} it ({r.message}); "
+                        f"{n_newton} Newton steps; remaining gain {dec:.2e} log-lik")
         if ok:
-            results.append(r)
+            results.append(type(r)(x=x, fun=fx))
     if not results:
         raise RuntimeError(f"{model.name}: no start converged ({messages[:3]})")
     best = min(results, key=lambda r: r.fun)
@@ -114,81 +185,93 @@ def fit_mle(model: StageModel, data: list[StageCounts], *, step: float, start_ag
     if len(near) < 2:
         messages.append(f"WARNING: only {len(near)} of {len(results)} converged starts reached the best optimum "
                         "(within 2 log-lik units): the optimum may not be global")
-    H = numerical_hessian(nll, best.x)
+    on_bound = [n for n, x, (lo, hi) in zip(model.param_names, best.x, box)
+                if min(x - lo, hi - x) < 1e-6 * max(1.0, hi - lo)]
+    if on_bound:
+        messages.append(f"WARNING: estimate on the search-box edge for {on_bound}: not an interior optimum")
+    H = -np.asarray(hess(best.x), dtype=float)
     try:
-        cov = np.linalg.inv(H)
-        se = np.sqrt(np.diag(cov))
-        ok = bool(np.all(np.linalg.eigvalsh(H) > 0) and np.all(np.isfinite(se)))
+        eig = np.linalg.eigvalsh(H)
+        ok = bool(np.all(eig > 0))
+        se = np.sqrt(np.diag(np.linalg.inv(H))) if ok else np.full(len(best.x), np.nan)
     except np.linalg.LinAlgError:
-        se, ok = np.full(len(best.x), np.nan), False
-    if not ok:
-        se = np.full(len(best.x), np.nan)
+        ok, se = False, np.full(len(best.x), np.nan)
     return MLEResult(model=model.name, param_names=model.param_names, theta=best.x, se=se,
                      loglik=-best.fun, n_params=len(best.x), converged_starts=len(results),
-                     n_starts=cfg_mle["n_starts"], optima_spread=float(max(near) - min(near)), n_at_best=len(near),
-                     hessian_ok=ok, messages=messages)
+                     n_starts=len(starts), optima_spread=float(max(near) - min(near)), n_at_best=len(near),
+                     hessian_ok=ok, on_bound=on_bound, messages=messages)
 
 
 def fit_bayesian(model: StageModel, data: list[StageCounts], *, step: float, start_age: float,
-                 cfg_bayes: dict, seed: int):
-    """NUTS via PyMC with a black-box likelihood (finite-difference gradient).
+                 cfg_bayes: dict, seed: int, init_theta: np.ndarray, eval_mode: str = "midpoint",
+                 n_points: int = 10):
+    """NUTS posterior (NumPyro: the same NUTS algorithm as PyMC, compiled end
+    to end in JAX together with the likelihood).
 
-    Returns (InferenceData, diagnostics) where diagnostics lists max R-hat,
-    min bulk ESS and the number of divergent transitions — always reported."""
+    Geometry: parameters differ in posterior scale by ~100x and slopes are
+    correlated with intercepts, which drives a diagonally-adapted NUTS to its
+    maximum tree depth. So the initial DENSE inverse mass matrix is the
+    Laplace covariance (inverse Hessian of the log-posterior) at `init_theta`
+    (the MLE), adaptation continues during warm-up, and chains start at
+    over-dispersed points drawn from N(MLE, (k^2) * Laplace covariance) with
+    k = cfg_bayes["init_overdispersion"] — dispersed starts keep R-hat able to
+    detect multimodality. Chains run in parallel when enough devices exist.
+
+    Returns (InferenceData, summary, diagnostics); diagnostics give max
+    R-hat, min bulk ESS, divergences and mean leapfrog steps — always reported."""
     import arviz as az
-    import pymc as pm
-    import pytensor.tensor as pt
-    from pytensor.graph import Apply, Op
+    import jax
+    import jax.numpy as jnp
+    import numpyro
+    import numpyro.distributions as dist
+    from numpyro.infer import MCMC, NUTS
 
-    def ll(th):
-        return log_likelihood(model, np.asarray(th, dtype=float), data, step=step, start_age=start_age)
+    ll, _ = make_loglik(model, data, step=step, start_age=start_age, eval_mode=eval_mode, n_points=n_points)
+    prior_of = {"log_rate": cfg_bayes["log_rate_prior"], "slope": cfg_bayes["slope_prior"],
+                "log_hr": cfg_bayes["log_hr_prior"]}
+    names = [n.replace("[", "_").replace("]", "") for n in model.param_names]
+    mu = jnp.array([prior_of[role(n)]["mu"] for n in model.param_names])
+    sd = jnp.array([prior_of[role(n)]["sigma"] for n in model.param_names])
 
-    def grad(th, h=1e-5):
-        g = np.empty(len(th))
-        for i in range(len(th)):
-            e = np.zeros(len(th)); e[i] = h
-            g[i] = (ll(th + e) - ll(th - e)) / (2 * h)
-        return g
+    def logpost(th):
+        return ll(th) + jnp.sum(dist.Normal(mu, sd).log_prob(th))
 
-    class LogLikeGrad(Op):
-        def make_node(self, theta):
-            theta = pt.as_tensor_variable(theta)
-            return Apply(self, [theta], [theta.type()])
+    H = -np.asarray(jax.hessian(logpost)(jnp.asarray(init_theta)), dtype=float)
+    try:
+        cov = np.linalg.inv(H)
+        np.linalg.cholesky(cov)
+    except np.linalg.LinAlgError as e:
+        raise RuntimeError(f"{model.name}: log-posterior Hessian at the MLE is not positive definite; "
+                           "cannot build the NUTS mass matrix") from e
 
-        def perform(self, node, inputs, outputs):
-            outputs[0][0] = grad(inputs[0])
+    def npmodel():
+        # One vector site: its dense mass matrix is unambiguous (a dict keyed by
+        # many separate sites must match NumPyro's internal site order).
+        th = numpyro.sample("theta", dist.Normal(mu, sd))
+        numpyro.factor("loglik", ll(th))
 
-    class LogLike(Op):
-        def make_node(self, theta):
-            theta = pt.as_tensor_variable(theta)
-            return Apply(self, [theta], [pt.dscalar()])
-
-        def perform(self, node, inputs, outputs):
-            outputs[0][0] = np.asarray(ll(inputs[0]))
-
-        def grad(self, inputs, g):
-            return [g[0] * LogLikeGrad()(inputs[0])]
-
-    names = model.param_names
-    with pm.Model():
-        comps = []
-        for name in names:
-            if name.startswith("beta") or name.startswith("b_"):
-                pr = cfg_bayes["beta_prior"]
-            elif name == "gamma":
-                pr = cfg_bayes["gamma_prior"]
-            else:
-                pr = cfg_bayes["alpha_prior"]
-            comps.append(pm.Normal(name.replace("[", "_").replace("]", ""), mu=pr["mu"], sigma=pr["sigma"]))
-        theta = pt.stack(comps)
-        pm.Potential("loglik", LogLike()(theta))
-        idata = pm.sample(draws=cfg_bayes["draws"], tune=cfg_bayes["tune"], chains=cfg_bayes["chains"],
-                          target_accept=cfg_bayes["target_accept"], random_seed=seed, progressbar=False,
-                          cores=1)
-    summ = az.summary(idata, hdi_prob=cfg_bayes["ci_level"])
+    chains = cfg_bayes["chains"]
+    rng = np.random.default_rng(seed)
+    k = cfg_bayes["init_overdispersion"]
+    starts = rng.multivariate_normal(init_theta, (k ** 2) * cov, size=chains)
+    kernel = NUTS(npmodel, target_accept_prob=cfg_bayes["target_accept"], dense_mass=True,
+                  inverse_mass_matrix=jnp.asarray(cov))
+    method = "parallel" if jax.local_device_count() >= chains else "sequential"
+    mc = MCMC(kernel, num_warmup=cfg_bayes["tune"], num_samples=cfg_bayes["draws"], num_chains=chains,
+              chain_method=method, progress_bar=False)
+    mc.run(jax.random.PRNGKey(seed), init_params={"theta": jnp.asarray(starts)},
+           extra_fields=("diverging", "num_steps"))
+    draws = np.asarray(mc.get_samples(group_by_chain=True)["theta"])          # (chains, draws, P)
+    extra = mc.get_extra_fields(group_by_chain=True)
+    idata = az.from_dict(posterior={nm: draws[:, :, i] for i, nm in enumerate(names)},
+                         sample_stats={"diverging": np.asarray(extra["diverging"]),
+                                       "n_steps": np.asarray(extra["num_steps"])})
+    summ = az.summary(idata, var_names=names, hdi_prob=cfg_bayes["ci_level"])
     diagnostics = {
         "max_rhat": float(summ["r_hat"].max()),
         "min_ess_bulk": float(summ["ess_bulk"].min()),
-        "divergences": int(idata.sample_stats["diverging"].sum()),
+        "divergences": int(np.asarray(extra["diverging"]).sum()),
+        "mean_leapfrog_steps": float(np.asarray(extra["num_steps"]).mean()),
+        "chain_method": method,
     }
     return idata, summ, diagnostics
