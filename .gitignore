@@ -38,3 +38,4 @@ __pycache__/
 results/dryrun/*
 results/checkpoints/*
 !results/logs/progress/
+results/osf_package/*

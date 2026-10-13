@@ -17,13 +17,16 @@ full scientific brief, ground rules and build order are in
 | Session | Module | Status |
 |---|---|---|
 | 0 | Scaffold and provenance | **built** |
-| 1 | Validation harness + MR validation (LDL–CAD via HMGCR) | **built, gate not yet passed** — waiting for the researcher to transcribe the published target and supply the variant tables (see below) |
-| 2 | Module 1 — drug-target Mendelian randomization (R) | **built, cannot run yet** — blocked (correctly) by the validation gate and the unfrozen pre-registration; needs downloads + researcher inputs |
-| 3 | Module 2 — Markov base-rate model (Python) | **stopped on a design issue — researcher's decision needed**: the amyloid-gating criterion reads age acceleration as gating (simulated proof and options in `manuscript/notes/module2_identifiability.md`); `prereg/baserate.md` is marked DO NOT FREEZE and `make validate-baserate` FAILS on purpose (new age-confound target) until it is resolved. Otherwise built: config, derivations, full-settings dry run on simulated data (primary fits, NUTS and CV complete and clean; stopped by the 2-hour job limit during the sensitivity refits). Also blocked on the Braak 2011 stage-by-age table (paywalled) |
-| 4 | Module 5 — meta-analysis and triangulation (R) | **built; simulation validation passes** — published pooled estimate, hand example and `extraction.csv` from the researcher |
-| 5 | Module 4 — ODE dynamical model (Python) | **machinery built and validated on analytic test systems** — the LC model equations, parameters and hand fixed point are the researcher's (proposal in `manuscript/notes/`) |
-| 6 | Module 3 — mediation analysis (Killer 2) | **built; 4/5 validation checks pass** (published reproduction awaits researcher) — DAG draft in `prereg/mediation.DRAFT.md`; real data path fails loudly until the cohort exists |
-| 7 | Module 6 — network diffusion | **built; spin test validated on a known null** (6% false positives vs 57% for naive shuffling) — HCP connectome + ADNI tau needed |
+| 1 | Validation harness + MR validation (LDL–CAD via HMGCR) | **built, gate not yet passed**: the published LDL–CAD estimate and variant tables are still to be extracted (Module 1 work, not yet done) |
+| 2 | Module 1 — drug-target Mendelian randomization (R) | **built; pre-registration complete** (`prereg/mr.md`: cis window ±100 kb, sensitivity ±1,000 kb; positive control per target from GWAS Catalog evidence; LGMN/SLC18A2/MAOA untestable). Cannot run: validation gate, downloads, TwoSampleMR cross-check and the ±1,000 kb sensitivity code are still to do |
+| 3 | Module 2 — Markov base-rate model (Python) | **revised (option c) and ready to freeze.** The amyloid-gating criterion was dropped, with a change log in `prereg/baserate.md`. A is age-adjusted, and its HR is "descriptive, not a test of gating". The literal A is a sensitivity analysis "confounded with age". `make validate-baserate` 13/13, with guards that fail loudly if gating is re-enabled. Staged, checkpointed run; uncertainty-aware falsification test. Blocked on the Braak 2011 stage-by-age table (publisher Cloudflare) |
+| 4 | Module 5 — meta-analysis and triangulation (R) | **extraction built from open sources; validation 4/4 PASS** (Moraros 2017 reproduced; anticholinergic control recovered); pre-registration complete. The real run is refused at the freeze gate, by design |
+| 5 | Module 4 — ODE dynamical model (Python) | **machinery built; pre-registration complete** (`prereg/dynamics.md`). The analytic fixed points are derived and machine-checked. The derivation showed the proposal's damage term made bistability impossible, so it was generalised. The LC model itself is not yet coded |
+| 6 | Module 3 — mediation analysis (Killer 2) | **built; pre-registration complete except the cohort** (DO NOT FREEZE until the researcher names it); 4/5 validation checks pass |
+| 7 | Module 6 — network diffusion | **built; spin test validated on a known null** (6% vs 57% false positives); pre-registration complete except the datasets (DO NOT FREEZE until named) |
+
+Pre-registrations: `make todo` lists which are ready to freeze. `make prereg-package`
+builds the OSF upload package. **Freezing is the researcher's step only.**
 
 ## Extracted published values (`data/extracted/`)
 
