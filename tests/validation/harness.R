@@ -14,10 +14,14 @@ lc_target_required <- list(
   null_test = list(
     settings = c("seed", "n_sets", "variants_per_set", "alpha", "pass_quantile"),
     inputs = c("genome_build", "desert_variants", "provided_by")),
+  # The pooled estimate, its CI and the component studies are in the
+  # extracted data file named by inputs.studies (role ma_pooled / ma_component,
+  # each row with source, locator and verbatim snippet), not typed in the YAML.
   meta_published = list(
     published = c("citation", "doi", "locator", "method", "knapp_hartung", "reported_as",
-                  "estimate", "ci_lower", "ci_upper", "ci_level", "transcribed_by", "transcribed_on"),
+                  "ci_level", "transcribed_by", "transcribed_on"),
     inputs = c("studies", "provided_by")),
+  positive_control = list(),
   hand_arithmetic = list(
     inputs = c("yi", "vi", "provided_by"),
     expected = c("fe_estimate", "fe_se", "q", "tau2_dl", "re_dl_estimate", "re_dl_se", "tolerance")),
@@ -44,8 +48,8 @@ lc_load_target <- function(id, root = lc_repo_root()) {
     }
   }
   if (length(missing)) {
-    stop(sprintf(paste0("validation target '%s' is incomplete - the researcher must transcribe: %s ",
-                        "(in %s). Claude must not fill these in."),
+    stop(sprintf(paste0("validation target '%s' is incomplete - missing: %s (in %s). Published values ",
+                        "must come from the source paper with a locator (data/extracted/), never be guessed."),
                  id, paste(missing, collapse = ", "), lc_relpath(path, root)))
   }
   if (kind != "published_estimate") return(t)

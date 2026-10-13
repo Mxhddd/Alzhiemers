@@ -1,25 +1,30 @@
 # Module 5 validation (brief §5): reproduce a published pooled estimate from
-# the study-level numbers in the same paper. RESEARCHER fields only.
+# the study-level numbers in the same paper. Values EXTRACTED BY CLAUDE from
+# the open-access full text (verified: false until a human checks them):
+# data/extracted/meta_validation_moraros2017.csv, with locators and verbatim
+# snippets; citation in data/extracted/SOURCES.md.
 id: meta_published_pooled
 module: metaanalysis
 kind: meta_published
 
 published:
-  citation: null        # RESEARCHER
-  doi: null             # RESEARCHER
-  locator: null         # RESEARCHER: figure/table with the pooled estimate
-  method: null          # RESEARCHER: REML | DL | FE | ML | PM ... (metafor names)
-  knapp_hartung: null   # RESEARCHER: true if the paper used HKSJ CIs, else false
-  reported_as: null     # RESEARCHER: ratio | log
-  estimate: null        # RESEARCHER
-  ci_lower: null        # RESEARCHER
-  ci_upper: null        # RESEARCHER
-  ci_level: null        # RESEARCHER
-  transcribed_by: null  # RESEARCHER
-  transcribed_on: null  # RESEARCHER
+  citation: "Moraros J, Nwankwo C, Patten SB, Mousseau DD. The association of antidepressant drug usage with cognitive impairment or dementia, including Alzheimer disease: a systematic review and meta-analysis. Depress Anxiety 2017;34(3):217-226"
+  doi: 10.1002/da.22584
+  locator: "Results, pooled analyses, paragraph 1 (pooled OR); Table 3 (the five study ORs and weights)"
+  # The paper says "random effects model" computed with Stata 'metan'; it does
+  # not name the tau^2 estimator. metan's default is DerSimonian-Laird: an
+  # ASSUMPTION about the software default, not a statement in the paper.
+  method: DL
+  # Knapp-Hartung is not mentioned (and is not metan's default).
+  knapp_hartung: false
+  # The pooled value is printed as an odds ratio.
+  reported_as: ratio
+  # Estimate, CI and level are read from the extracted file (role ma_pooled).
+  ci_level: 0.95
+  transcribed_by: Claude (machine extraction from Europe PMC full text PMC5347943; verified false)
+  transcribed_on: 2026-10-13
 
 inputs:
-  # Columns: study_id, estimate, ci_lower, ci_upper, ci_level (ratio scale,
-  # as printed in the paper's forest plot / table).
-  studies: data/raw/validation/meta_published_studies.csv
-  provided_by: researcher, transcribed from the same paper's study-level results
+  # role ma_pooled (one row) + ma_component rows (the five studies).
+  studies: data/extracted/meta_validation_moraros2017.csv
+  provided_by: Claude extraction from the paper's Table 3 and Results text

@@ -1,6 +1,8 @@
 """SIMULATED power study for Module 2's variant comparison (criterion 2).
 
-    python -m sim.baserate_power --reps 25 [--max-minutes 100]
+    python -m sim.baserate_power --pseudo-only            (once: pseudo-true values)
+    python -m sim.baserate_power --reps 20 --shard K --nshards 4 [--max-minutes 100]
+    python -m sim.baserate_power --summarise              (merge shards, write summary)
 
 Question: with the real data's structure (12 Braak-2011 stages, 10 decade
 bands, 230 brains each ≈ 2,300 brains), how often does the pre-registered
@@ -67,6 +69,7 @@ from src.common.paths import CONFIG_DIR, RESULTS_DIR
 from src.common.runlog import start_run
 
 OUT = RESULTS_DIR / "dryrun" / "power"
+POWER_STEP = 0.5
 N_PER_BAND = 230
 BANDS = [(lo, lo + 10) for lo in range(1, 101, 10)]
 
@@ -83,13 +86,21 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--reps", type=int, required=True)
+    ap.add_argument("--reps", type=int, default=0)
     ap.add_argument("--max-minutes", type=float)
+    ap.add_argument("--shard", type=int, default=0)
+    ap.add_argument("--nshards", type=int, default=1)
+    ap.add_argument("--pseudo-only", action="store_true")
+    ap.add_argument("--summarise", action="store_true")
     args = ap.parse_args(argv)
     t_start = time.time()
     cfg = load_config(CONFIG_DIR / "baserate.yaml")
     spec = ChainSpec.from_labels([str(s) for s in cfg.get("data.stage_order")], cfg.get("data.first_cortical_stage"))
-    step, start = cfg.get("solver.step_years"), cfg.get("solver.start_age")
+    # Step 0.5 y inside the power study only (the analysis uses the audited
+    # step, >= 0.125): the log-likelihood differs by ~0.001 units from a
+    # 0.05-y step on this problem (measured), negligible against the margin
+    # of 2, and it halves the cost of ~1,800 fits.
+    step, start = POWER_STEP, cfg.get("solver.start_age")
     centre, scale = cfg.get("solver.age_centre"), cfg.get("solver.age_scale")
     k, margin = cfg.get("cross_validation.k"), cfg.get("cross_validation.margin")
     mle = dict(cfg.get("mle"))
@@ -112,7 +123,7 @@ def main(argv=None) -> int:
     template = [StageCounts(float(lo), float(hi), "SIMULATED", np.zeros(len(spec.stages))) for lo, hi in BANDS]
     folds = np.array(age_band_folds(template, k))
     OUT.mkdir(parents=True, exist_ok=True)
-    reps_csv, pt_json = OUT / "baserate_power_reps.csv", OUT / "pseudo_true.json"
+    reps_csv = OUT / f"baserate_power_reps_shard{args.shard}.csv"
 
     with start_run(module="baserate_power_sim", config_path=CONFIG_DIR / "baserate.yaml", seed=cfg.get("seed"),
                    packages=["numpy", "scipy", "jax"]) as run:
@@ -133,7 +144,7 @@ def main(argv=None) -> int:
                 return -v, -g
 
             r = minimize(f, np.clip(np.asarray(x0, float), lo, hi), jac=True, method="L-BFGS-B", bounds=box,
-                         options={"maxiter": 3000, "ftol": 1e-15, "gtol": 1e-9})
+                         options={"maxiter": 3000, "ftol": 1e-12, "gtol": 1e-6})
             g = r.jac
             free = ~(((r.x <= lo + 1e-10) & (g > 0)) | ((r.x >= hi - 1e-10) & (g < 0)))
             return r.x, -r.fun, float(np.max(np.abs(g[free]))) if free.any() else 0.0
@@ -142,14 +153,18 @@ def main(argv=None) -> int:
             ll, vg, h = fam[name]
             return (lambda th: ll(th, counts, mask), lambda th: vg(th, counts, mask), lambda th: h(th, counts, mask))
 
-        pseudo = json.loads(pt_json.read_text()) if pt_json.exists() else {}
+        pseudo = {}
+        for f in sorted(OUT.glob("pseudo_true*.json")):     # merged over --pseudo-only shards
+            pseudo.update(json.loads(f.read_text()))
         done = pd.read_csv(reps_csv) if reps_csv.exists() else pd.DataFrame(columns=["truth", "rep"])
         ones = np.ones(len(BANDS))
 
         def write_summary():
-            if not reps_csv.exists():
+            shards = sorted(OUT.glob("baserate_power_reps_shard*.csv"))
+            if not shards:
                 return
-            df = pd.read_csv(reps_csv)
+            df = pd.concat([pd.read_csv(f) for f in shards], ignore_index=True)
+            df = df.sort_values(["truth", "rep"], key=lambda c: c.map(list(truths).index) if c.name == "truth" else c)
             rows = []
             for t, g in df.groupby("truth", sort=False):
                 n = len(g)
@@ -167,7 +182,14 @@ def main(argv=None) -> int:
 
         for ti, (tname, (tm, th)) in enumerate(truths.items()):
             P = stage_probabilities(tm, th, [(lo + hi) / 2 for lo, hi in BANDS], step=step, start_age=start)
+            if tname not in pseudo and args.summarise:
+                continue
+            if args.pseudo_only and ti % args.nshards != args.shard:
+                continue
             if tname not in pseudo:
+                if not args.pseudo_only:
+                    raise RuntimeError(f"no pseudo-true values for '{tname}': run with --pseudo-only first "
+                                       "(shards must not compute them concurrently)")
                 expected = (N_PER_BAND * P / P.sum(axis=1, keepdims=True))
                 pseudo[tname] = {}
                 for mname, m in models.items():
@@ -176,12 +198,17 @@ def main(argv=None) -> int:
                                 n_random=0 if m is tm else 3, extra_starts=ws, compiled=bound(mname, expected, ones))
                     pseudo[tname][mname] = f.theta.tolist()
                     run.info(f"pseudo-true {mname} under '{tname}': expected-count logLik {f.loglik:.2f}")
-                pt_json.write_text(json.dumps(pseudo, indent=1))
+                mine = {t: v for t, v in pseudo.items() if t == tname}
+                f_out = OUT / f"pseudo_true_{ti}.json"
+                f_out.write_text(json.dumps(mine, indent=1))
+            if args.pseudo_only or args.summarise:
+                continue
             for r in range(args.reps):
+                if (ti * 1000 + r) % args.nshards != args.shard:
+                    continue
                 if ((done["truth"] == tname) & (done["rep"] == r)).any():
                     continue
                 if args.max_minutes is not None and (time.time() - t_start) / 60 > args.max_minutes:
-                    write_summary()
                     run.warning(f"time budget spent: stopping before '{tname}' rep {r}; rerun to continue")
                     print("INCOMPLETE: rerun to continue", file=sys.stderr)
                     return 3
@@ -211,8 +238,8 @@ def main(argv=None) -> int:
                 pd.DataFrame([row]).to_csv(reps_csv, mode="a", header=not reps_csv.exists(), index=False)
                 done = pd.concat([done, pd.DataFrame([row])], ignore_index=True)
                 run.info(f"{tname} rep {r}: {row['verdict']} (best {row['cv_best']}), {row['seconds']:.0f} s")
-                write_summary()
-        write_summary()
+        if args.summarise:
+            write_summary()
         run.info("POWER STUDY COMPLETE")
     return 0
 

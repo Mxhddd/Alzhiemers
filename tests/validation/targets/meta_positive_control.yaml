@@ -1,0 +1,10 @@
+# Module 5 validation (brief §5: "anticholinergic burden as a positive
+# control - if the pipeline cannot recover that known association, it is
+# broken"). Runs the configured pooling on the anticholinergic use-vs-non-use
+# rows of the extraction only (not a target question), so it can gate the
+# module before any noradrenergic result exists. Pass: the pooled ratio
+# (HR/RR/IRR group) is harmful with a CI excluding 1. The OR group is
+# reported alongside.
+id: meta_positive_control
+module: metaanalysis
+kind: positive_control

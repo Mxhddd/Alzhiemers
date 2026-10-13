@@ -10,7 +10,8 @@ row <- function(...) {
                ci_upper = "1.00", ci_level = "0.95", covariates = "age;sex", brain_penetrance = "high")
   for (d in paste0("robins_d", 1:7)) base[[d]] <- "moderate"
   base <- c(base, list(source_id = "fixture", locator = "Table 1", quantity = "adjusted HR (fixture)",
-                       verbatim = "0.80 (0.64-1.00)", verified = "false", machine_rechecked = "false"))
+                       verbatim = "0.80 (0.64-1.00)", verified = "false", machine_rechecked = "false",
+                       invert_ratio = "false", include = "true", exclusion_reason = "none"))
   modifyList(base, list(...))
 }
 write_extraction <- function(rows) {
@@ -31,6 +32,7 @@ test_that("a complete extraction loads; any gap or bad label stops with the line
   expect_error(ma_load_extraction(write_extraction(list(row(verified = "yes"))), cfg), "verified must be")
   expect_error(ma_load_extraction(write_extraction(list(row(machine_rechecked = "maybe"))), cfg), "machine_rechecked")
   expect_equal(nrow(ma_load_extraction(write_extraction(list(row(robins_d1 = "not_assessed"))), cfg)), 1)
+  expect_error(ma_load_extraction(write_extraction(list(row(include = "false"))), cfg), "exclusion_reason")
 })
 
 test_that("SE is backed out of the CI on the log scale, and asymmetric CIs are refused", {
@@ -65,12 +67,14 @@ test_that("a single study is shown with its own transcribed CI, not pooled", {
 })
 
 test_that("the positive control passes only when harmful and excluding 1", {
-  mk <- function(est) data.frame(study_id = c("a", "b", "c"), drug_class = "anticholinergic",
+  mk <- function(est) data.frame(study_id = c("a", "b", "c"), drug_class = "anticholinergic", comparator_type = "non_user",
                                  yi = log(est), sei = c(0.05, 0.06, 0.07))
   expect_true(ma_positive_control(mk(c(1.3, 1.4, 1.25)), cfg)$passed)
   expect_false(ma_positive_control(mk(c(0.95, 1.05, 1.0)), cfg)$passed)
   expect_false(ma_positive_control(mk(c(0.7, 0.75, 0.8)), cfg)$passed)
   expect_match(ma_positive_control(mk(c(1.3, 1.4, 1.25))[0, ], cfg)$detail, "no 'anticholinergic' rows")
+  act <- transform(mk(c(1.3, 1.4, 1.25)), comparator_type = "active")     # active-comparator rows never count
+  expect_match(ma_positive_control(act, cfg)$detail, "no 'anticholinergic' rows")
 })
 
 test_that("triangulation puts drug use, MR and prediction on one 'lower activity' scale and keeps gaps", {
@@ -103,4 +107,14 @@ test_that("subgroup pooling runs the between-subgroup test (and matches a by-han
                       test = if (isTRUE(cfg$pooling$knapp_hartung)) "knha" else "z", control = cfg$pooling$rma_control)
   expect_equal(out$subgroup_difference_pval[1], ref$QMp, tolerance = 1e-10)
   expect_lt(out$subgroup_difference_pval[1], 0.05)
+})
+
+
+test_that("invert_ratio flips the log ratio and its interval, never the SE", {
+  x <- data.frame(study_id = c("A", "B"), estimate = c(1.25, 1.25), ci_lower = c(1.0, 1.0), ci_upper = c(1.5625, 1.5625),
+                  ci_level = 0.95, invert_ratio = c("false", "true"))
+  y <- ma_to_log_scale(x, 0.15)
+  expect_equal(y$yi, c(log(1.25), -log(1.25)))
+  expect_equal(y$sei[1], y$sei[2])
+  expect_equal(c(y$lci[2], y$uci[2]), c(-log(1.5625), -log(1.0)))
 })

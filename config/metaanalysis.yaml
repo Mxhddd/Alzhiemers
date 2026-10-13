@@ -10,9 +10,12 @@ extraction:
   # verbatim snippets per row; verified=false until a human checks each row).
   file: data/extracted/meta_extraction.csv
   # Transcribed CIs are checked for symmetry on the log scale: the estimate
-  # must sit within this fraction of the half-width from the CI midpoint.
-  # 0.15 tolerates two-decimal rounding; larger asymmetry suggests a
-  # transcription error and stops the run (listing the rows).
+  # must sit within this fraction of the half-width from the CI midpoint,
+  # PLUS the largest log-scale shift that rounding to the printed number of
+  # decimals can cause (0.5 x 10^-d / value for each of the three numbers;
+  # revised 2026-10-13: a narrow CI such as 0.71 (0.68-0.73) is symmetric
+  # before rounding but failed the plain 15% rule). Larger asymmetry suggests
+  # a transcription error and stops the run (listing the rows).
   log_symmetry_tolerance: 0.15
 
 pooling:
@@ -48,6 +51,7 @@ triangulation:
 positive_control:
   # Brief: anticholinergic burden must show its known association with
   # dementia, or the pipeline is broken. drug_class label in the extraction.
+  # Only use-vs-non-use rows (comparator_type non_user) enter it.
   drug_class: anticholinergic
   # Known direction: harmful (ratio > 1). The pooled CI must exclude 1 on this side.
   expected_direction: harmful
@@ -99,6 +103,29 @@ drug_classes:
     target: DBH
     # Inhibitor.
     action: inhibits
+  hydrophilic_beta_blocker:
+    # Atenolol, sotalol, nadolol: ADRB1 antagonists with low brain penetration
+    # (added 2026-10-13 for rows found in the literature).
+    target: ADRB1
+    # Antagonist.
+    action: inhibits
+  beta_blocker_any:
+    # Beta-blockers as a whole class (lipophilic and hydrophilic mixed); ADRB1.
+    target: ADRB1
+    # Antagonist.
+    action: inhibits
+  alpha_beta_blocker:
+    # Labetalol / carvedilol-type mixed alpha1 + beta antagonists; mapped to
+    # ADRB1 (their beta-blockade is the class-defining action). Only non-user
+    # comparisons exist, which are never triangulated.
+    target: ADRB1
+    # Antagonist.
+    action: inhibits
+  central_alpha2_agonist:
+    # Clonidine / methyldopa / guanfacine-type central alpha2 agonists: ADRA2A.
+    target: ADRA2A
+    # Agonist.
+    action: activates
   anticholinergic:
     # Positive control; no noradrenergic MR target.
     target: none
@@ -112,3 +139,7 @@ contrasts:
   - alpha1_blocker_vs_tamsulosin
   - z_drug_vs_dual_orexin_antagonist
   - atomoxetine_vs_stimulant
+  # Added 2026-10-13 (same active-comparator logic as the brief's four; found
+  # in the literature): brain-penetrant DHP calcium-channel blockers
+  # (nifedipine, felodipine, isradipine...) vs amlodipine, for CACNA1D.
+  - brain_penetrant_vs_nonpenetrant_dhp_ccb

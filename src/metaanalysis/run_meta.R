@@ -44,8 +44,14 @@ lc_with_run(if (dry) "metaanalysis_dryrun" else "metaanalysis", cfg_path, seed =
     lc_load_extracted(path, "Claude extraction from published papers", run, root)   # provenance + UNVERIFIED stamp
     x <- ma_load_extraction(path, cfg)
   }
+  # Rows the extraction itself marks include=false (with a reason) are counted
+  # and logged as drops, never silently skipped.
+  excl <- tolower(x$include) != "true"
+  for (i in which(excl)) lc_drop(run, "extraction", sprintf("%s (%s)", x$study_id[i], x$drug_class[i]), x$exclusion_reason[i])
+  x <- x[!excl, , drop = FALSE]
   x <- ma_to_log_scale(x, cfg$extraction$log_symmetry_tolerance)
-  lc_log(run, sprintf("extraction: %d rows from %d studies", nrow(x), length(unique(x$study_id))))
+  lc_log(run, sprintf("extraction: %d included rows from %d studies (%d excluded rows logged)", nrow(x),
+                      length(unique(x$study_id)), sum(excl)))
 
   # Effect measures that cannot be combined are analysed separately, never dropped.
   x$measure_group <- ifelse(x$effect_measure %in% cfg$pooling$combinable_measures, "ratio", x$effect_measure)
@@ -60,9 +66,14 @@ lc_with_run(if (dry) "metaanalysis_dryrun" else "metaanalysis", cfg_path, seed =
                       if (pc$passed) "RECOVERED" else "NOT RECOVERED", pc$detail), if (pc$passed) "INFO" else "ERROR")
   if (!pc$passed) stop("anticholinergic positive control not recovered: the pipeline is broken or the extraction is wrong; no results produced")
 
-  by_class <- do.call(rbind, lapply(split(ratio, list(ratio$drug_class, ratio$comparator_type), drop = TRUE), function(g) {
-    p <- ma_pool(g, cfg, sprintf("%s vs %s", g$drug_class[1], g$comparator_type[1]))
-    cbind(drug_class = g$drug_class[1], comparator_type = g$comparator_type[1], p)
+  # Active-comparator rows are pooled within their contrast only (pooling
+  # "vs hydrophilic beta-blocker" with "vs supplements" would mix questions).
+  ratio$pool_contrast <- ifelse(ratio$comparator_type == "active", ratio$contrast, "none")
+  by_class <- do.call(rbind, lapply(split(ratio, list(ratio$drug_class, ratio$comparator_type, ratio$pool_contrast), drop = TRUE),
+                                    function(g) {
+    p <- ma_pool(g, cfg, sprintf("%s vs %s%s", g$drug_class[1], g$comparator_type[1],
+                                 if (g$comparator_type[1] == "active") sprintf(" [%s]", g$pool_contrast[1]) else ""))
+    cbind(drug_class = g$drug_class[1], comparator_type = g$comparator_type[1], contrast = g$pool_contrast[1], p)
   }))
   write_out(by_class, "meta_pooled_by_class.csv")
   write_out(ma_subgroup(ratio[ratio$contrast %in% cfg$contrasts, , drop = FALSE], "contrast", cfg), "meta_contrasts.csv")
@@ -79,6 +90,7 @@ lc_with_run(if (dry) "metaanalysis_dryrun" else "metaanalysis", cfg_path, seed =
   loo <- do.call(rbind, lapply(names(groups), function(n) ma_leave_one_out(groups[[n]], cfg, n)))
   if (!is.null(loo)) write_out(loo, "meta_leave_one_out.csv")
   write_out(x, "meta_extraction_log_scale.csv")
+  lc_write_drop_report(run, file.path(root, "results", if (dry) "dryrun/logs" else "logs", "meta_dropped.md"))
 
   # Triangulation with Module 1 (MR); missing MR results stay as gaps.
   mr_path <- file.path(root, "results", "tables", "mr_summary.csv")
@@ -87,7 +99,8 @@ lc_with_run(if (dry) "metaanalysis_dryrun" else "metaanalysis", cfg_path, seed =
     data.frame(gene = character(), analysis = character(), is_primary = logical(), b = numeric(),
                ci_lower = numeric(), ci_upper = numeric(), exposure_source = character())
   }
-  tri_in <- by_class[by_class$comparator_type == cfg$triangulation$comparator_type, , drop = FALSE]
+  tri_in <- by_class[by_class$comparator_type == cfg$triangulation$comparator_type &
+                       (by_class$comparator_type != "active" | by_class$contrast %in% unlist(cfg$contrasts)), , drop = FALSE]
   mr_targets <- lc_read_yaml(file.path(root, "config", "mr_targets.yaml"))$targets
   write_out(ma_triangulate(tri_in, mr, mr_targets, cfg), "triangulation.csv")
 })

@@ -10,7 +10,8 @@
 .ma_required <- c("study_id", "drug_class", "drug", "comparator_type", "comparator", "contrast",
                   "outcome", "effect_measure", "estimate", "ci_lower", "ci_upper", "ci_level",
                   "covariates", "brain_penetrance", paste0("robins_d", 1:7),
-                  "source_id", "locator", "quantity", "verbatim", "verified", "machine_rechecked")
+                  "source_id", "locator", "quantity", "verbatim", "verified", "machine_rechecked",
+                  "invert_ratio", "include", "exclusion_reason")
 # not_assessed: risk of bias not yet rated (stated in the pre-registration;
 # the risk-of-bias sensitivity analysis cannot run until ratings exist).
 .robins_levels <- c("low", "moderate", "serious", "critical", "no_information", "not_assessed")
@@ -39,6 +40,9 @@ ma_load_extraction <- function(path, cfg) {
     problems <- c(problems, "duplicated (study_id, drug, comparator, outcome) rows")
   }
   num <- c("estimate", "ci_lower", "ci_upper", "ci_level")
+  # decimals as printed (for the rounding allowance of the symmetry check)
+  ndec <- function(v) ifelse(grepl(".", v, fixed = TRUE), nchar(sub("^[^.]*\\.", "", v)), 0L)
+  x$dec_est <- ndec(x$estimate); x$dec_lo <- ndec(x$ci_lower); x$dec_hi <- ndec(x$ci_upper)
   for (col in num) {
     v <- suppressWarnings(as.numeric(x[[col]]))
     bad <- which(is.na(v) & x[[col]] != "")
@@ -57,12 +61,18 @@ ma_load_extraction <- function(path, cfg) {
     for (d in paste0("robins_d", 1:7)) chk(x[[d]] %in% .robins_levels, sprintf("%s must be one of %s", d, paste(.robins_levels, collapse = "/")))
     chk(tolower(x$verified) %in% c("true", "false"), "verified must be true or false")
     chk(tolower(x$machine_rechecked) %in% c("true", "false", "discrepancy"), "machine_rechecked must be true, false or discrepancy")
+    chk(tolower(x$invert_ratio) %in% c("true", "false"), "invert_ratio must be true or false")
+    chk(tolower(x$include) %in% c("true", "false"), "include must be true or false")
+    chk((tolower(x$include) == "true") == (x$exclusion_reason == "none"), "exclusion_reason must be 'none' exactly when include is true")
   }
   if (length(problems)) stop(paste(c(sprintf("%s failed validation:", path), problems), collapse = "\n  "))
   x
 }
 
 # Log scale and SE from a transcribed CI: SE = (log U - log L) / (2 z).
+# Rows with invert_ratio = true were printed with exposure and comparator the
+# other way round (e.g. Z-drug vs DORA for the DORA class): yi -> -yi; the SE
+# is unchanged. The transcribed numbers themselves are never edited.
 ma_to_log_scale <- function(x, tol) {
   z <- stats::qnorm(1 - (1 - x$ci_level) / 2)
   lo <- log(x$ci_lower); hi <- log(x$ci_upper)
@@ -70,13 +80,24 @@ ma_to_log_scale <- function(x, tol) {
   x$sei <- (hi - lo) / (2 * z)
   half <- (hi - lo) / 2
   off <- abs(x$yi - (lo + hi) / 2)
-  bad <- which(half > 0 & off > tol * half)
+  # largest shift rounding to the printed decimals can cause (absent: 2 decimals)
+  d <- function(col, fallback = 2L) if (is.null(x[[col]])) fallback else x[[col]]
+  round_shift <- 0.5 * 10^(-d("dec_est")) / x$estimate +
+    (0.5 * 10^(-d("dec_lo")) / x$ci_lower + 0.5 * 10^(-d("dec_hi")) / x$ci_upper) / 2
+  bad <- which(half > 0 & off > tol * half + round_shift)
   if (length(bad)) {
     stop(sprintf("CI not symmetric on the log scale (tolerance %s of half-width) for: %s - check transcription",
                  tol, paste(if ("drug" %in% names(x)) sprintf("%s/%s", x$study_id[bad], x$drug[bad]) else x$study_id[bad],
                             collapse = ", ")))
   }
   if (any(x$sei <= 0)) stop("zero-width confidence interval in the extraction")
+  # log-scale interval as transcribed (used to show a single study unchanged)
+  x$lci <- lo; x$uci <- hi
+  if ("invert_ratio" %in% names(x)) {
+    inv <- tolower(x$invert_ratio) == "true"
+    x$yi[inv] <- -x$yi[inv]
+    x$lci[inv] <- -hi[inv]; x$uci[inv] <- -lo[inv]
+  }
   x
 }
 
@@ -87,8 +108,10 @@ ma_pool <- function(x, cfg, label) {
                      stringsAsFactors = FALSE)
   if (k < cfg$pooling$min_studies) {
     # A single study is shown with its own transcribed interval, not re-derived.
-    return(cbind(base, est = if (k == 1) x$yi else NA_real_, ci_lower = if (k == 1) log(x$ci_lower) else NA_real_,
-                 ci_upper = if (k == 1) log(x$ci_upper) else NA_real_, pi_lower = NA_real_, pi_upper = NA_real_,
+    lci <- if (is.null(x$lci)) log(x$ci_lower) else x$lci
+    uci <- if (is.null(x$uci)) log(x$ci_upper) else x$uci
+    return(cbind(base, est = if (k == 1) x$yi else NA_real_, ci_lower = if (k == 1) lci else NA_real_,
+                 ci_upper = if (k == 1) uci else NA_real_, pi_lower = NA_real_, pi_upper = NA_real_,
                  tau2 = NA_real_, I2 = NA_real_, Q = NA_real_, Q_pval = NA_real_, est_dl = NA_real_,
                  status = sprintf("not pooled: k = %d < %d (single-study estimate shown)", k, cfg$pooling$min_studies)))
   }
@@ -141,7 +164,7 @@ ma_leave_one_out <- function(x, cfg, label) {
 # known (harmful) side. Returns list(passed, detail).
 ma_positive_control <- function(x, cfg) {
   pc <- cfg$positive_control
-  rows <- x[x$drug_class == pc$drug_class, , drop = FALSE]
+  rows <- x[x$drug_class == pc$drug_class & x$comparator_type == "non_user", , drop = FALSE]
   if (nrow(rows) == 0) return(list(passed = FALSE, detail = sprintf("no '%s' rows in the extraction", pc$drug_class)))
   p <- ma_pool(rows, cfg, "positive_control")
   if (p$status != "pooled") return(list(passed = FALSE, detail = p$status))

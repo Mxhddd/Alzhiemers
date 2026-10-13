@@ -35,7 +35,8 @@ meta_simulate_extraction <- function(cfg, seed, k = 6) {
         robins_d1 = "not_assessed", robins_d2 = "not_assessed", robins_d3 = "not_assessed",
         robins_d4 = "not_assessed", robins_d5 = "not_assessed", robins_d6 = "not_assessed",
         robins_d7 = "not_assessed", source_id = "SIMULATED", locator = "simulated", quantity = "simulated",
-        verbatim = "simulated", verified = "false", machine_rechecked = "false", stringsAsFactors = FALSE)
+        verbatim = "simulated", verified = "false", machine_rechecked = "false", invert_ratio = "false",
+        include = "true", exclusion_reason = "none", stringsAsFactors = FALSE)
     }
   }
   do.call(rbind, rows)

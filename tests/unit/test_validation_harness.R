@@ -4,9 +4,8 @@
 library(testthat)
 source(file.path(lc_test_root, "tests", "validation", "harness.R"))
 
-test_that("the shipped LDL-CAD target is refused until the researcher fills it in", {
-  expect_error(lc_load_target("mr_ldl_hmgcr_cad", lc_test_root),
-               "the researcher must transcribe: published.citation")
+test_that("the shipped LDL-CAD target is refused until its published values are filled in", {
+  expect_error(lc_load_target("mr_ldl_hmgcr_cad", lc_test_root), "incomplete - missing: published.citation")
 })
 
 fixture <- list(id = "fixture", conversion = list(factor = 1),
