@@ -49,3 +49,27 @@ tracked in git.
   (closer to the LC→cortex transition than clinical progression): searched,
   not found in open access. The γ derivation uses ossenkoppele2022 as a proxy
   and says so.
+
+## Independent second-pass check (2026-10-13)
+
+A second reader re-read every extracted value. It saw only the source,
+the locator and a description of the quantity, never the stored numbers.
+Its readings are in `recheck/`, and `python -m src.common.apply_recheck`
+compares them with the stored values.
+
+- **Result:** 86 of 87 rows agree exactly.
+- **The one discrepancy** is the description of
+  `braak2011_abstract_totals.csv` row 8. The abstract says "4% of all
+  cases", not "percent of cases in that decade". The number agrees, and the
+  unit text now quotes the source.
+- **The `machine_rechecked` column** records the outcome per row. `verified`
+  is untouched; only a human sets it.
+
+Oddities the second reader noticed in cells NOT extracted (left as printed):
+
+- **Jansen 2015 Table 2, age 85:**
+  - Normal-cognition APOE-ε4− is printed "34.2 (27.7 41.4)", with the dash missing.
+  - MCI APOE-ε4+ is printed "86.3 (32.9-89.2)". A lower bound of 32.9 is implausible; it is probably 82.9.
+  - The footnote prints "Mo estimate" for "No estimate".
+- **Ossenkoppele 2022 Table 2:** all-cause dementia, A+T− at 80+, is printed "0.90 (0.50–15.98)". That CI does not fit the point estimate on the log scale. It is not used.
+- **Braak 2011 abstract:** two numbers are written in words ("Two thousand three hundred and thirty two"; "Fifty-eight").

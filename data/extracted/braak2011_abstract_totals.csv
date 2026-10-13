@@ -1,11 +1,11 @@
-quantity,value,unit,source_id,locator,verified
-total brains examined (ages 1-100),2332,cases,braak2011,Abstract,false
-Gallyas-negative cases,342,cases,braak2011,Abstract,false
-AT8-immunonegative after restaging (no abnormal tau),10,cases,braak2011,Abstract,false
-subcortical stages a-c (LC-predominant tau; no cortical tau),58,cases,braak2011,Abstract,false
-stage 1a (transentorhinal neurites),38,cases,braak2011,Abstract,false
-stage 1b (transentorhinal pyramidal-cell pretangles),236,cases,braak2011,Abstract,false
-cases with beta-amyloid plaques,1031,cases,braak2011,Abstract,false
-cases with beta-amyloid plaques,44.2,percent of all cases,braak2011,Abstract,false
-plaques present in the 40s,4,percent of cases in that decade,braak2011,Abstract,false
-plaques present in the tenth decade,75,percent of cases in that decade,braak2011,Abstract,false
+quantity,value,unit,source_id,locator,verified,machine_rechecked
+total brains examined (ages 1-100),2332,cases,braak2011,Abstract,false,true
+Gallyas-negative cases,342,cases,braak2011,Abstract,false,true
+AT8-immunonegative after restaging (no abnormal tau),10,cases,braak2011,Abstract,false,true
+subcortical stages a-c (LC-predominant tau; no cortical tau),58,cases,braak2011,Abstract,false,true
+stage 1a (transentorhinal neurites),38,cases,braak2011,Abstract,false,true
+stage 1b (transentorhinal pyramidal-cell pretangles),236,cases,braak2011,Abstract,false,true
+cases with beta-amyloid plaques,1031,cases,braak2011,Abstract,false,true
+cases with beta-amyloid plaques,44.2,percent of all cases,braak2011,Abstract,false,true
+plaques present in the 40s,4,"percent ('in 4% of all cases', as worded in the abstract)",braak2011,Abstract,false,discrepancy
+plaques present in the tenth decade,75,percent of cases in that decade,braak2011,Abstract,false,true

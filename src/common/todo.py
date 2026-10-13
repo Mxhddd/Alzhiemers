@@ -65,7 +65,10 @@ def main() -> int:
                 lines.append(f"  - {f.name}: EMPTY (not yet extractable — see SOURCES.md)")
             else:
                 n_unv = sum(1 for r in rows if str(r.get("verified", "")).strip().lower() != "true")
-                lines.append(f"  - {f.name}: {n_unv} of {len(rows)} rows unverified")
+                rc = [str(r.get("machine_rechecked", "")).strip().lower() for r in rows]
+                rc_txt = (f"; machine recheck: {rc.count('true')} agree, {rc.count('discrepancy')} discrepancy, "
+                          f"{rc.count('false')} not rechecked" if any(rc) else "; not machine-rechecked")
+                lines.append(f"  - {f.name}: {n_unv} of {len(rows)} rows unverified{rc_txt}")
     drafts = sorted((REPO_ROOT / "manuscript" / "derivations").glob("*.md"))
     if drafts:
         lines.append("\nDerivations to check by hand (manuscript/derivations/):")

@@ -75,9 +75,19 @@ Zheng 2021 and Kotochinsky 2025. Several are paywalled (e.g. Heath 2018, Hong 20
 - **Zhang 2026 (PMC13644072)** prints HR 0.84, 95% CI [0.84–0.84], with t = −867.9 on an IPTW pseudo-population. Excluded (E2).
 - **Liu 2020 (PMC7033580)** prints CIs that are markedly asymmetric on the log scale. Excluded (E2).
 - **Chi 2025 (PMC12695687)**: the abstract calls HR 1.55 (1.08–2.24) adjusted, but in Table 3 that value is Model 1 (univariate). Model 2 is used.
-- **Moraros 2017 (PMC5347943)** has three internal inconsistencies:
+- **Moraros 2017 (PMC5347943)** has several internal inconsistencies:
   - Cherbuin's upper CI is 7.06 in Table 3 but 7.07 in the text. Table 3 is used.
+  - Sachdev's upper CI is 1.95 in Table 3 but 1.96 in the text. Table 3 is used.
+  - Recruitment settings for Angst and Sachdev differ between the table and the text.
   - Goveas is listed in both depression subgroups.
   - The text calls Goveas 2012 an RCT, while Table 3 says prospective cohort.
 - **Desai 2025 (PMC13127832)** gives four analyses with equal stated priority. The first (as-treated) is used (rule S2).
 - **Tonegawa-Kuji 2026** prints the HR as zolpidem vs suvorexant. The pipeline inverts it for the DORA class (`invert_ratio`). The number is stored as printed.
+
+## Independent second-pass check (2026-10-13)
+
+All 43 rows (37 extraction + 6 validation) were re-read blind (see `recheck/`).
+Every number agrees with the stored value, `machine_rechecked = true` throughout.
+
+- **Beaman 2023:** the CI level is not stated in the sentence. "95%" comes from the paper's Methods and the Table 2 headers.
+- **Tonegawa-Kuji 2026:** in the xlsx, the HR columns are headed "Kaplan-Meier estimate" under a "Cox-proportional hazard model" banner. The stored values are the xlsx cell values.

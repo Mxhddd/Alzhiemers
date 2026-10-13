@@ -1,21 +1,21 @@
-age_lower,age_upper,sex,study_wave,rate_per_1000_py,ci_lower,ci_upper,source_id,locator,quantity,verified
-65,69,male,CFAS I,10.3,5.4,19.4,matthews2016,Table 1,"All-cause dementia incidence per 1,000 person-years by age at baseline interview, men, CFAS I",false
-70,74,male,CFAS I,12.9,7.0,23.8,matthews2016,Table 1,"as above, men, CFAS I",false
-75,79,male,CFAS I,20.4,7.7,54.1,matthews2016,Table 1,"as above, men, CFAS I",false
-80,84,male,CFAS I,42.4,25.2,71.3,matthews2016,Table 1,"as above, men, CFAS I",false
-85,open,male,CFAS I,71.5,36.5,140.2,matthews2016,Table 1,"as above, men, CFAS I (85+)",false
-65,69,male,CFAS II,5.0,2.5,10.2,matthews2016,Table 1,"as above, men, CFAS II",false
-70,74,male,CFAS II,8.7,5.1,15.1,matthews2016,Table 1,"as above, men, CFAS II",false
-75,79,male,CFAS II,16.7,10.5,26.4,matthews2016,Table 1,"as above, men, CFAS II",false
-80,84,male,CFAS II,24.8,15.5,39.8,matthews2016,Table 1,"as above, men, CFAS II",false
-85,open,male,CFAS II,38.0,22.5,64.2,matthews2016,Table 1,"as above, men, CFAS II (85+)",false
-65,69,female,CFAS I,6.3,3.0,13.3,matthews2016,Table 1,"as above, women, CFAS I",false
-70,74,female,CFAS I,7.4,3.8,14.8,matthews2016,Table 1,"as above, women, CFAS I",false
-75,79,female,CFAS I,17.6,10.8,28.7,matthews2016,Table 1,"as above, women, CFAS I",false
-80,84,female,CFAS I,35.6,24.0,52.8,matthews2016,Table 1,"as above, women, CFAS I",false
-85,open,female,CFAS I,59.5,40.7,87.1,matthews2016,Table 1,"as above, women, CFAS I (85+)",false
-65,69,female,CFAS II,4.6,2.2,9.6,matthews2016,Table 1,"as above, women, CFAS II",false
-70,74,female,CFAS II,6.4,3.3,12.3,matthews2016,Table 1,"as above, women, CFAS II",false
-75,79,female,CFAS II,16.1,10.0,25.8,matthews2016,Table 1,"as above, women, CFAS II",false
-80,84,female,CFAS II,39.6,28.8,54.5,matthews2016,Table 1,"as above, women, CFAS II",false
-85,open,female,CFAS II,55.3,39.0,78.3,matthews2016,Table 1,"as above, women, CFAS II (85+)",false
+age_lower,age_upper,sex,study_wave,rate_per_1000_py,ci_lower,ci_upper,source_id,locator,quantity,verified,machine_rechecked
+65,69,male,CFAS I,10.3,5.4,19.4,matthews2016,Table 1,"All-cause dementia incidence per 1,000 person-years by age at baseline interview, men, CFAS I",false,true
+70,74,male,CFAS I,12.9,7.0,23.8,matthews2016,Table 1,"as above, men, CFAS I",false,true
+75,79,male,CFAS I,20.4,7.7,54.1,matthews2016,Table 1,"as above, men, CFAS I",false,true
+80,84,male,CFAS I,42.4,25.2,71.3,matthews2016,Table 1,"as above, men, CFAS I",false,true
+85,open,male,CFAS I,71.5,36.5,140.2,matthews2016,Table 1,"as above, men, CFAS I (85+)",false,true
+65,69,male,CFAS II,5.0,2.5,10.2,matthews2016,Table 1,"as above, men, CFAS II",false,true
+70,74,male,CFAS II,8.7,5.1,15.1,matthews2016,Table 1,"as above, men, CFAS II",false,true
+75,79,male,CFAS II,16.7,10.5,26.4,matthews2016,Table 1,"as above, men, CFAS II",false,true
+80,84,male,CFAS II,24.8,15.5,39.8,matthews2016,Table 1,"as above, men, CFAS II",false,true
+85,open,male,CFAS II,38.0,22.5,64.2,matthews2016,Table 1,"as above, men, CFAS II (85+)",false,true
+65,69,female,CFAS I,6.3,3.0,13.3,matthews2016,Table 1,"as above, women, CFAS I",false,true
+70,74,female,CFAS I,7.4,3.8,14.8,matthews2016,Table 1,"as above, women, CFAS I",false,true
+75,79,female,CFAS I,17.6,10.8,28.7,matthews2016,Table 1,"as above, women, CFAS I",false,true
+80,84,female,CFAS I,35.6,24.0,52.8,matthews2016,Table 1,"as above, women, CFAS I",false,true
+85,open,female,CFAS I,59.5,40.7,87.1,matthews2016,Table 1,"as above, women, CFAS I (85+)",false,true
+65,69,female,CFAS II,4.6,2.2,9.6,matthews2016,Table 1,"as above, women, CFAS II",false,true
+70,74,female,CFAS II,6.4,3.3,12.3,matthews2016,Table 1,"as above, women, CFAS II",false,true
+75,79,female,CFAS II,16.1,10.0,25.8,matthews2016,Table 1,"as above, women, CFAS II",false,true
+80,84,female,CFAS II,39.6,28.8,54.5,matthews2016,Table 1,"as above, women, CFAS II",false,true
+85,open,female,CFAS II,55.3,39.0,78.3,matthews2016,Table 1,"as above, women, CFAS II (85+)",false,true

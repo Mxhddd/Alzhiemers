@@ -1,6 +1,6 @@
-contrast,outcome,age_group,hr,ci_lower,ci_upper,n_exposed,n_reference,adjusted_for,source_id,locator,quantity,verified
-A+T- vs A-T-,progression to MCI,all ages,2.43,1.38,4.26,292,781,"age, sex, education, cohort",ossenkoppele2022,Table 2,"Cox HR, cognitively unimpaired, A+T- vs A-T- (reference)",false
-A+T- vs A-T-,progression to MCI,50-69,0.94,0.25,3.59,75,433,"age, sex, education, cohort",ossenkoppele2022,Table 2,as above,false
-A+T- vs A-T-,progression to MCI,70-79,2.93,1.16,7.39,123,256,"age, sex, education, cohort",ossenkoppele2022,Table 2,as above,false
-A+T- vs A-T-,progression to MCI,80+,2.41,0.90,6.42,94,92,"age, sex, education, cohort",ossenkoppele2022,Table 2,as above,false
-A+T- vs A-T-,progression to all-cause dementia,all ages,1.58,0.46,5.41,292,781,"age, sex, education, cohort",ossenkoppele2022,Table 2,as above,false
+contrast,outcome,age_group,hr,ci_lower,ci_upper,n_exposed,n_reference,adjusted_for,source_id,locator,quantity,verified,machine_rechecked
+A+T- vs A-T-,progression to MCI,all ages,2.43,1.38,4.26,292,781,"age, sex, education, cohort",ossenkoppele2022,Table 2,"Cox HR, cognitively unimpaired, A+T- vs A-T- (reference)",false,true
+A+T- vs A-T-,progression to MCI,50-69,0.94,0.25,3.59,75,433,"age, sex, education, cohort",ossenkoppele2022,Table 2,as above,false,true
+A+T- vs A-T-,progression to MCI,70-79,2.93,1.16,7.39,123,256,"age, sex, education, cohort",ossenkoppele2022,Table 2,as above,false,true
+A+T- vs A-T-,progression to MCI,80+,2.41,0.90,6.42,94,92,"age, sex, education, cohort",ossenkoppele2022,Table 2,as above,false,true
+A+T- vs A-T-,progression to all-cause dementia,all ages,1.58,0.46,5.41,292,781,"age, sex, education, cohort",ossenkoppele2022,Table 2,as above,false,true

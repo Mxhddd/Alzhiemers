@@ -36,6 +36,13 @@ def load_extracted(path: Path, *, provided_by: str, run=None) -> pd.DataFrame:
     if blank.any():
         raise ValueError(f"{path}: empty cells on lines {[i + 2 for i in df.index[blank]]} — leave a value "
                          "out entirely rather than blank, or fill it")
+    if "machine_rechecked" in df.columns:
+        m = df["machine_rechecked"].str.strip().str.lower()
+        if not m.isin(["true", "false", "discrepancy"]).all():
+            raise ValueError(f"{path}: 'machine_rechecked' must be true, false or discrepancy")
+        if run is not None and (m == "discrepancy").any():
+            run.warning(f"{path.name}: {int((m == 'discrepancy').sum())} row(s) flagged 'discrepancy' by the "
+                        "independent recheck (data/extracted/recheck/recheck_log.md)")
     df["verified"] = v == "true"
     n_unv = int((~df["verified"]).sum())
     if run is not None and n_unv:
