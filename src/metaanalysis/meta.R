@@ -215,3 +215,47 @@ ma_triangulate <- function(pooled_by_class, mr_summary, mr_targets, cfg) {
   out <- do.call(rbind, rows); rownames(out) <- NULL
   out
 }
+
+# Pre-registered reading of each informative contrast (prereg/metaanalysis.md
+# §2). `pred` is the predicted side of 1 for the pooled ratio as oriented in
+# the pipeline (drug_class vs comparator, after invert_ratio): "below_1"
+# (protective), "above_1" (harmful) or "none" (exploratory, no verdict).
+# supports  = CI excludes 1 on the predicted side;
+# AGAINST   = CI excludes 1 on the other side;
+# inconclusive otherwise; "no data" if no study.
+# Reported at the 95% level and at a Bonferroni-adjusted level over the
+# contrasts that have both a prediction and data.
+ma_contrast_verdicts <- function(x, cfg, label = "primary") {
+  preds <- cfg$contrast_predictions
+  have <- names(preds)[vapply(names(preds), function(cn) preds[[cn]] != "none" && any(x$contrast == cn & x$comparator_type == "active"), logical(1))]
+  m <- max(1, length(have))
+  z_adj <- stats::qnorm(1 - 0.05 / (2 * m))
+  rows <- lapply(names(preds), function(cn) {
+    g <- x[x$contrast == cn & x$comparator_type == "active", , drop = FALSE]
+    base <- data.frame(analysis = label, contrast = cn, prediction = preds[[cn]], k = nrow(g),
+                       studies = paste(unique(g$study_id), collapse = ";"), stringsAsFactors = FALSE)
+    if (!nrow(g)) return(cbind(base, est = NA_real_, ci_lower = NA_real_, ci_upper = NA_real_, ci_lower_bonf = NA_real_,
+                               ci_upper_bonf = NA_real_, verdict = "no data", verdict_bonferroni = "no data"))
+    if (nrow(g) == 1) {
+      est <- g$yi; se <- g$sei
+    } else {
+      fit <- ma_rma(g$yi, g$sei, cfg)
+      est <- as.numeric(fit$b); se <- fit$se
+    }
+    p <- if (nrow(g) == 1) NULL else ma_rma(g$yi, g$sei, cfg)
+    lo <- if (is.null(p)) est - stats::qnorm(0.975) * se else p$ci.lb
+    hi <- if (is.null(p)) est + stats::qnorm(0.975) * se else p$ci.ub
+    crit_adj <- if (is.null(p) || !isTRUE(cfg$pooling$knapp_hartung)) z_adj else stats::qt(1 - 0.05 / (2 * m), df = p$k - 1)
+    lo_b <- est - crit_adj * se; hi_b <- est + crit_adj * se
+    rd <- function(l, h) {
+      s <- preds[[cn]]
+      if (s == "none") return("no prediction (exploratory)")
+      if ((s == "below_1" && h < 0) || (s == "above_1" && l > 0)) return("supports")
+      if ((s == "below_1" && l > 0) || (s == "above_1" && h < 0)) return("AGAINST")
+      "inconclusive"
+    }
+    cbind(base, est = est, ci_lower = lo, ci_upper = hi, ci_lower_bonf = lo_b, ci_upper_bonf = hi_b,
+          verdict = rd(lo, hi), verdict_bonferroni = rd(lo_b, hi_b))
+  })
+  do.call(rbind, rows)
+}

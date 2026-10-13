@@ -143,3 +143,33 @@ contrasts:
   # in the literature): brain-penetrant DHP calcium-channel blockers
   # (nifedipine, felodipine, isradipine...) vs amlodipine, for CACNA1D.
   - brain_penetrant_vs_nonpenetrant_dhp_ccb
+
+# Pre-registered prediction for each informative contrast (prereg §2), on the
+# pooled ratio as oriented by the pipeline (drug class vs its comparator,
+# after invert_ratio). Derived from the brief's target table: lower activity
+# of SLC6A2 / ADRB1 / ADRA1A / CACNA1D is predicted protective, so the
+# brain-penetrant or target-acting drug should show ratio < 1. HCRTR2 is
+# exploratory in the brief: no prediction, no verdict.
+contrast_predictions:
+  # Lipophilic (brain-penetrant) vs hydrophilic beta-blockers: ADRB1 protective.
+  lipophilic_vs_hydrophilic_beta_blocker: below_1
+  # Quinazoline alpha1-blockers vs tamsulosin: ADRA1A protective.
+  alpha1_blocker_vs_tamsulosin: below_1
+  # DORA vs Z-drug (Z-drug-vs-DORA rows are inverted): HCRTR2 exploratory.
+  z_drug_vs_dual_orexin_antagonist: none
+  # Atomoxetine vs stimulants: SLC6A2 lower activity protective (the
+  # stimulants also block NET but act mainly through dopamine).
+  atomoxetine_vs_stimulant: below_1
+  # Brain-penetrant DHP CCBs vs amlodipine: CACNA1D protective.
+  brain_penetrant_vs_nonpenetrant_dhp_ccb: below_1
+
+# Pre-specified sensitivity analyses of the contrast verdicts (prereg §8).
+sensitivity:
+  # Re-estimate with DerSimonian-Laird instead of REML.
+  dl_estimator: true
+  # Plain z-based CIs instead of Knapp-Hartung.
+  no_knapp_hartung: true
+  # Pool ORs together with HR/RR/IRR (rare-outcome approximation).
+  combine_or: true
+  # Put back the rows excluded under rule E1 (dementia within Parkinson's).
+  include_e1_rows: true

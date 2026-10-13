@@ -46,6 +46,7 @@ lc_with_run(if (dry) "metaanalysis_dryrun" else "metaanalysis", cfg_path, seed =
   }
   # Rows the extraction itself marks include=false (with a reason) are counted
   # and logged as drops, never silently skipped.
+  x_all <- x                                   # kept for the E1 sensitivity analysis
   excl <- tolower(x$include) != "true"
   for (i in which(excl)) lc_drop(run, "extraction", sprintf("%s (%s)", x$study_id[i], x$drug_class[i]), x$exclusion_reason[i])
   x <- x[!excl, , drop = FALSE]
@@ -76,6 +77,33 @@ lc_with_run(if (dry) "metaanalysis_dryrun" else "metaanalysis", cfg_path, seed =
     cbind(drug_class = g$drug_class[1], comparator_type = g$comparator_type[1], contrast = g$pool_contrast[1], p)
   }))
   write_out(by_class, "meta_pooled_by_class.csv")
+
+  # Pre-registered contrast verdicts (prereg §2) and their sensitivity analyses (§8).
+  verdicts <- ma_contrast_verdicts(ratio, cfg, "primary")
+  sens <- cfg$sensitivity
+  if (isTRUE(sens$dl_estimator)) {
+    c2 <- cfg; c2$pooling$method <- "DL"; verdicts <- rbind(verdicts, ma_contrast_verdicts(ratio, c2, "DerSimonian-Laird"))
+  }
+  if (isTRUE(sens$no_knapp_hartung)) {
+    c2 <- cfg; c2$pooling$knapp_hartung <- FALSE; verdicts <- rbind(verdicts, ma_contrast_verdicts(ratio, c2, "no Knapp-Hartung"))
+  }
+  if (isTRUE(sens$combine_or)) {
+    verdicts <- rbind(verdicts, ma_contrast_verdicts(x, cfg, "ORs pooled with HR/RR/IRR"))
+  }
+  if (isTRUE(sens$include_e1_rows)) {
+    e1 <- x_all[tolower(x_all$include) != "true" & startsWith(x_all$exclusion_reason, "E1"), , drop = FALSE]
+    if (nrow(e1)) {
+      e1 <- ma_to_log_scale(e1, cfg$extraction$log_symmetry_tolerance)
+      e1$measure_group <- ifelse(e1$effect_measure %in% cfg$pooling$combinable_measures, "ratio", e1$effect_measure)
+      common <- intersect(names(ratio), names(e1))
+      verdicts <- rbind(verdicts, ma_contrast_verdicts(rbind(ratio[, common], e1[e1$measure_group == "ratio", common]), cfg,
+                                                       "E1 rows (Parkinson's populations) included"))
+    }
+  }
+  write_out(verdicts, "meta_contrast_verdicts.csv")
+  for (i in which(verdicts$analysis == "primary")) {
+    lc_log(run, sprintf("PRE-REGISTERED CONTRAST %s: %s (k = %d)", verdicts$contrast[i], verdicts$verdict[i], verdicts$k[i]))
+  }
   write_out(ma_subgroup(ratio[ratio$contrast %in% cfg$contrasts, , drop = FALSE], "contrast", cfg), "meta_contrasts.csv")
   write_out(ma_subgroup(ratio, "comparator_type", cfg), "meta_by_comparator_type.csv")
   pen <- ratio[ratio$brain_penetrance != "not_applicable", , drop = FALSE]
