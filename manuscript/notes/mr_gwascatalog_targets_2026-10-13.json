@@ -1,0 +1,981 @@
+{
+ "SLC6A2": {
+  "n_assoc": 22,
+  "n_gws": 16,
+  "traits": [
+   [
+    "birth weight",
+    5,
+    3e-10,
+    "GCST008362",
+    "31043758",
+    "Warrington NM"
+   ],
+   [
+    "level of liver carboxylesterase 1 in blood",
+    2,
+    1e-31,
+    "GCST90468718",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "acute myeloid leukemia",
+    2,
+    1e-19,
+    "GCST008413",
+    "27903959",
+    "Lv H"
+   ],
+   [
+    "fetal genotype effect measurement",
+    2,
+    9e-14,
+    "GCST90275189",
+    "37798380",
+    "Beaumont RN"
+   ],
+   [
+    "placenta mass",
+    2,
+    9e-14,
+    "GCST90275189",
+    "37798380",
+    "Beaumont RN"
+   ],
+   [
+    "gut microbiome measurement",
+    2,
+    6.000000000000001e-09,
+    "GCST90569453",
+    "40187613",
+    "Stickley SA"
+   ],
+   [
+    "glioma pathogenesis-related protein 1 measurement",
+    1,
+    5.000000000000001e-15,
+    "GCST90469357",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "hyperaldosteronism",
+    1,
+    3e-12,
+    "GCST90479900",
+    "39024449",
+    "Verma A"
+   ],
+   [
+    "allergen exposure measurement",
+    1,
+    6.000000000000001e-09,
+    "GCST90569453",
+    "40187613",
+    "Stickley SA"
+   ],
+   [
+    "environmental exposure measurement",
+    1,
+    7.000000000000001e-09,
+    "GCST90569500",
+    "40187613",
+    "Stickley SA"
+   ],
+   [
+    "body height",
+    1,
+    7.000000000000001e-09,
+    "GCST90245848",
+    "36224396",
+    "Yengo L"
+   ]
+  ]
+ },
+ "ADRB1": {
+  "n_assoc": 418,
+  "n_gws": 395,
+  "traits": [
+   [
+    "systolic blood pressure",
+    43,
+    2e-46,
+    "GCST90310294",
+    "38689001",
+    "Keaton JM"
+   ],
+   [
+    "diastolic blood pressure",
+    41,
+    2e-63,
+    "GCST90310295",
+    "38689001",
+    "Keaton JM"
+   ],
+   [
+    "high density lipoprotein cholesterol measurement",
+    33,
+    3.0000000000000004e-43,
+    "GCST90239649",
+    "34887591",
+    "Graham SE"
+   ],
+   [
+    "triglyceride measurement",
+    12,
+    1e-18,
+    "GCST90468106",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "hypertensive disorder",
+    11,
+    6e-27,
+    "GCST90468135",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "body height",
+    10,
+    5e-65,
+    "GCST90245848",
+    "36224396",
+    "Yengo L"
+   ],
+   [
+    "birth weight",
+    10,
+    2e-28,
+    "GCST008362",
+    "31043758",
+    "Warrington NM"
+   ],
+   [
+    "electrocardiography",
+    10,
+    5e-10,
+    "GCST010796",
+    "32916098",
+    "Verweij N"
+   ],
+   [
+    "mean arterial pressure",
+    9,
+    1e-19,
+    "GCST90018963",
+    "34594039",
+    "Sakaue S"
+   ],
+   [
+    "blood VLDL cholesterol amount",
+    9,
+    2e-16,
+    "GCST90501286",
+    "41044249",
+    "Zoodsma M"
+   ],
+   [
+    "smoking status measurement",
+    8,
+    1e-22,
+    "GCST006188",
+    "29455858",
+    "Sung YJ"
+   ],
+   [
+    "cholesteryl ester measurement",
+    7,
+    5e-20,
+    "GCST90501296",
+    "41044249",
+    "Zoodsma M"
+   ],
+   [
+    "low density lipoprotein cholesterol measurement",
+    7,
+    6e-12,
+    "GCST010245",
+    "32203549",
+    "Richardson TG"
+   ],
+   [
+    "Phospholipids:total lipids ratio",
+    6,
+    7e-23,
+    "GCST90501191",
+    "41044249",
+    "Zoodsma M"
+   ],
+   [
+    "calcium measurement",
+    5,
+    2e-18,
+    "GCST90479529",
+    "39024449",
+    "Verma A"
+   ]
+  ]
+ },
+ "ADRA1A": {
+  "n_assoc": 35,
+  "n_gws": 13,
+  "traits": [
+   [
+    "gut microbiome measurement",
+    4,
+    1e-09,
+    "GCST90569309",
+    "40187613",
+    "Stickley SA"
+   ],
+   [
+    "breastfeeding duration",
+    4,
+    1e-09,
+    "GCST90569309",
+    "40187613",
+    "Stickley SA"
+   ],
+   [
+    "glioma pathogenesis-related protein 1 measurement",
+    2,
+    2e-33,
+    "GCST90469357",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "PHF-tau measurement",
+    2,
+    6.999999999999999e-11,
+    "GCST010340",
+    "32450446",
+    "Wang H"
+   ],
+   [
+    "levulinate 4-oxovalerate measurement",
+    1,
+    3e-11,
+    "GCST90243545",
+    "24816252",
+    "Shin SY"
+   ],
+   [
+    "X-24309 measurement",
+    1,
+    4e-11,
+    "GCST90103329",
+    "35050183",
+    "Hysi PG"
+   ],
+   [
+    "diastolic blood pressure",
+    1,
+    7.000000000000001e-09,
+    "GCST90310295",
+    "38689001",
+    "Keaton JM"
+   ],
+   [
+    "atrial fibrillation",
+    1,
+    2e-08,
+    "GCST90559230",
+    "40050429",
+    "Roselli C"
+   ],
+   [
+    "educational attainment",
+    1,
+    2e-08,
+    "GCST90105038",
+    "35361970",
+    "Okbay A"
+   ]
+  ]
+ },
+ "ADRA2A": {
+  "n_assoc": 58,
+  "n_gws": 39,
+  "traits": [
+   [
+    "glucose measurement",
+    12,
+    7e-39,
+    "GCST90468071",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "blood glucose amount",
+    8,
+    6e-61,
+    "GCST90662896",
+    "40436827",
+    "Jee YH"
+   ],
+   [
+    "Raynaud disease",
+    4,
+    4e-47,
+    "GCST90448187",
+    "39142284",
+    "Tervi A"
+   ],
+   [
+    "protein measurement",
+    3,
+    4e-10,
+    "GCST011427",
+    "32778093",
+    "He B"
+   ],
+   [
+    "type 2 diabetes mellitus",
+    2,
+    2e-15,
+    "GCST90492734",
+    "38374256",
+    "Suzuki K"
+   ],
+   [
+    "platelet aggregation",
+    2,
+    3e-12,
+    "GCST000693",
+    "20526338",
+    "Johnson AD"
+   ],
+   [
+    "glioma pathogenesis-related protein 1 measurement",
+    1,
+    1e-13,
+    "GCST90469357",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "Drugs used in diabetes use measurement",
+    1,
+    1e-11,
+    "GCST90250911",
+    "36653479",
+    "Kiiskinen T"
+   ],
+   [
+    "blood insulin amount",
+    1,
+    3e-11,
+    "GCST008674",
+    "31021400",
+    "Masotti M"
+   ],
+   [
+    "HOMA-B",
+    1,
+    3e-11,
+    "GCST008674",
+    "31021400",
+    "Masotti M"
+   ],
+   [
+    "HbA1c measurement",
+    1,
+    8e-10,
+    "GCST90019509",
+    "33462484",
+    "Sinnott-Armstrong N"
+   ],
+   [
+    "neutrophil percentage of leukocytes",
+    1,
+    1e-09,
+    "GCST90002399",
+    "32888494",
+    "Vuckovic D"
+   ],
+   [
+    "neutrophil measurement",
+    1,
+    7.000000000000001e-09,
+    "GCST90309369",
+    "38965376",
+    "Carey CE"
+   ],
+   [
+    "lymphocyte amount",
+    1,
+    7.000000000000001e-09,
+    "GCST90309369",
+    "38965376",
+    "Carey CE"
+   ],
+   [
+    "bone tissue density",
+    1,
+    7.000000000000001e-09,
+    "GCST90321121",
+    "37500982",
+    "He D"
+   ]
+  ]
+ },
+ "LGMN": {
+  "n_assoc": 55,
+  "n_gws": 53,
+  "traits": [
+   [
+    "legumain measurement",
+    10,
+    2e-298,
+    "GCST90469766",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "amount of legumain (human) in blood",
+    7,
+    2e-298,
+    "GCST90860643",
+    "42097137",
+    "Koprulu M"
+   ],
+   [
+    "protein measurement",
+    6,
+    4.999999999999999e-38,
+    "GCST90249752",
+    "34648354",
+    "Pietzner M"
+   ],
+   [
+    "eosinophil measurement",
+    4,
+    6.0000000000000005e-15,
+    "GCST90281230",
+    "37596262",
+    "Akbari P"
+   ],
+   [
+    "level of transmembrane protein 106A in blood",
+    3,
+    3e-97,
+    "GCST90470886",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "beta-mannosidase measurement",
+    2,
+    3.0000000000000003e-31,
+    "GCST90246709",
+    "34648354",
+    "Pietzner M"
+   ],
+   [
+    "sialate O-acetylesterase measurement",
+    2,
+    1e-18,
+    "GCST90249541",
+    "34648354",
+    "Pietzner M"
+   ],
+   [
+    "LGMN/TIMP1 protein level ratio in blood",
+    1,
+    1e-278,
+    "GCST90315325",
+    "38412862",
+    "Suhre K"
+   ],
+   [
+    "CD164/LGMN protein level ratio in blood",
+    1,
+    3e-262,
+    "GCST90313741",
+    "38412862",
+    "Suhre K"
+   ],
+   [
+    "LGMN/SPINT2 protein level ratio in blood",
+    1,
+    3e-119,
+    "GCST90315324",
+    "38412862",
+    "Suhre K"
+   ],
+   [
+    "acid ceramidase measurement",
+    1,
+    5e-33,
+    "GCST90468373",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "level of sialomucin core protein 24 in blood",
+    1,
+    6e-27,
+    "GCST90468602",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "urate measurement",
+    1,
+    2e-21,
+    "GCST90455669",
+    "39406924",
+    "Major TJ"
+   ],
+   [
+    "DPP7/GLB1 protein level ratio in blood",
+    1,
+    2.9999999999999997e-20,
+    "GCST90314545",
+    "38412862",
+    "Suhre K"
+   ],
+   [
+    "protrudin measurement",
+    1,
+    5e-19,
+    "GCST90249121",
+    "34648354",
+    "Pietzner M"
+   ]
+  ]
+ },
+ "SLC18A2": {
+  "n_assoc": 6,
+  "n_gws": 6,
+  "traits": [
+   [
+    "blood protein amount",
+    2,
+    8e-13,
+    "GCST90860441",
+    "42097137",
+    "Koprulu M"
+   ],
+   [
+    "glioma pathogenesis-related protein 1 measurement",
+    1,
+    6e-16,
+    "GCST90469357",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "ghrelin measurement",
+    1,
+    1e-11,
+    "GCST90860348",
+    "42097137",
+    "Koprulu M"
+   ],
+   [
+    "serum metabolite level",
+    1,
+    6e-11,
+    "GCST012020",
+    "33031748",
+    "Feofanova EV"
+   ],
+   [
+    "blood glucose amount",
+    1,
+    2e-08,
+    "GCST90278628",
+    "38116116",
+    "Chen CY"
+   ]
+  ]
+ },
+ "MAOA": {
+  "n_assoc": 1,
+  "n_gws": 0,
+  "traits": []
+ },
+ "DBH": {
+  "n_assoc": 141,
+  "n_gws": 121,
+  "traits": [
+   [
+    "dopamine beta-hydroxylase measurement",
+    23,
+    3.0000000000000004e-295,
+    "GCST90468948",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "systolic blood pressure",
+    13,
+    8e-21,
+    "GCST90310294",
+    "38689001",
+    "Keaton JM"
+   ],
+   [
+    "diastolic blood pressure",
+    10,
+    2e-35,
+    "GCST90310295",
+    "38689001",
+    "Keaton JM"
+   ],
+   [
+    "cigarettes per day measurement",
+    8,
+    4e-50,
+    "GCST90243976",
+    "36477530",
+    "Saunders GRB"
+   ],
+   [
+    "smoking cessation",
+    7,
+    9.000000000000001e-86,
+    "GCST90243988",
+    "36477530",
+    "Saunders GRB"
+   ],
+   [
+    "nicotine dependence",
+    6,
+    1e-23,
+    "GCST90708780",
+    "38632388",
+    "Toikumo S"
+   ],
+   [
+    "blood protein amount",
+    5,
+    5.999999999999999e-212,
+    "GCST90453153",
+    "39972214",
+    "Niu L"
+   ],
+   [
+    "smoking behavior trait",
+    4,
+    5.999999999999999e-21,
+    "GCST90476390",
+    "39024449",
+    "Verma A"
+   ],
+   [
+    "alkaline phosphatase measurement",
+    3,
+    2e-22,
+    "GCST90468060",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "smoking initiation",
+    2,
+    3.0000000000000002e-18,
+    "GCST90243985",
+    "36477530",
+    "Saunders GRB"
+   ],
+   [
+    "cadherin-5 measurement",
+    2,
+    2e-17,
+    "GCST90468676",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "X-13553 measurement",
+    2,
+    2e-17,
+    "GCST90140435",
+    "35347128",
+    "Yin X"
+   ],
+   [
+    "vanillylmandelate (VMA) measurement",
+    2,
+    1e-16,
+    "GCST90245477",
+    "36357675",
+    "Surendran P"
+   ],
+   [
+    "hypertensive disorder",
+    2,
+    2e-15,
+    "GCST90468135",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "level of cadherin-17 in blood serum",
+    2,
+    7e-15,
+    "GCST90468669",
+    "39789286",
+    "Loya H"
+   ]
+  ]
+ },
+ "CACNA1D": {
+  "n_assoc": 332,
+  "n_gws": 281,
+  "traits": [
+   [
+    "systolic blood pressure",
+    33,
+    2e-38,
+    "GCST90662908",
+    "40436827",
+    "Jee YH"
+   ],
+   [
+    "diastolic blood pressure",
+    33,
+    1e-32,
+    "GCST90662909",
+    "40436827",
+    "Jee YH"
+   ],
+   [
+    "interleukin 17 receptor B measurement",
+    21,
+    2.9999999999999998e-92,
+    "GCST90469563",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "body mass index",
+    17,
+    3e-16,
+    "GCST90255621",
+    "36581621",
+    "Huang J"
+   ],
+   [
+    "hypertensive disorder",
+    13,
+    1e-20,
+    "GCST90468135",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "body height",
+    9,
+    4e-53,
+    "GCST90245848",
+    "36224396",
+    "Yengo L"
+   ],
+   [
+    "mean arterial pressure",
+    8,
+    6.999999999999999e-21,
+    "GCST90018963",
+    "34594039",
+    "Sakaue S"
+   ],
+   [
+    "heart rate",
+    7,
+    1e-23,
+    "GCST90480666",
+    "39024449",
+    "Verma A"
+   ],
+   [
+    "refractive error",
+    6,
+    1e-23,
+    "GCST90841196",
+    "42009823",
+    "Cheng FF"
+   ],
+   [
+    "self reported educational attainment",
+    6,
+    2e-11,
+    "GCST006571",
+    "30038396",
+    "Lee JJ"
+   ],
+   [
+    "FEV/FVC ratio",
+    5,
+    2e-22,
+    "GCST90244094",
+    "36914875",
+    "Shrine N"
+   ],
+   [
+    "potassium measurement",
+    5,
+    2e-21,
+    "GCST90480654",
+    "39024449",
+    "Verma A"
+   ],
+   [
+    "pulse pressure measurement",
+    5,
+    4e-20,
+    "GCST007272",
+    "30578418",
+    "Giri A"
+   ],
+   [
+    "forced expiratory volume",
+    5,
+    1e-14,
+    "GCST90244092",
+    "36914875",
+    "Shrine N"
+   ],
+   [
+    "Calcium channel blocker use measurement",
+    4,
+    6.999999999999999e-21,
+    "GCST90018987",
+    "34594039",
+    "Sakaue S"
+   ]
+  ]
+ },
+ "HCRTR2": {
+  "n_assoc": 137,
+  "n_gws": 97,
+  "traits": [
+   [
+    "serum creatinine amount",
+    10,
+    2.9999999999999996e-85,
+    "GCST90662902",
+    "40436827",
+    "Jee YH"
+   ],
+   [
+    "chronotype measurement",
+    9,
+    3e-48,
+    "GCST007565",
+    "30696823",
+    "Jones SE"
+   ],
+   [
+    "body mass index",
+    9,
+    4e-18,
+    "GCST90301649",
+    "37280435",
+    "Hawkes G"
+   ],
+   [
+    "hemoglobin measurement",
+    7,
+    3.0000000000000003e-31,
+    "GCST90662903",
+    "40436827",
+    "Jee YH"
+   ],
+   [
+    "blood urea nitrogen amount",
+    6,
+    3e-51,
+    "GCST90018728",
+    "34594039",
+    "Sakaue S"
+   ],
+   [
+    "hematocrit",
+    6,
+    7.000000000000001e-32,
+    "GCST90662904",
+    "40436827",
+    "Jee YH"
+   ],
+   [
+    "hyperuricemia",
+    6,
+    4e-09,
+    "GCST90693171",
+    "40835619",
+    "Kim EY"
+   ],
+   [
+    "erythrocyte count",
+    5,
+    5e-35,
+    "GCST90662905",
+    "40436827",
+    "Jee YH"
+   ],
+   [
+    "GDNF family receptor alpha-like measurement",
+    4,
+    4e-26,
+    "GCST90469331",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "uric acid measurement",
+    4,
+    1e-21,
+    "GCST90018757",
+    "34594039",
+    "Sakaue S"
+   ],
+   [
+    "glomerular filtration rate",
+    4,
+    1e-12,
+    "GCST90479599",
+    "39024449",
+    "Verma A"
+   ],
+   [
+    "sleep duration trait",
+    4,
+    6e-11,
+    "GCST007561",
+    "30846698",
+    "Dashti HS"
+   ],
+   [
+    "abnormality of the skeletal system",
+    3,
+    4e-15,
+    "GCST90468171",
+    "39789286",
+    "Loya H"
+   ],
+   [
+    "daytime rest measurement",
+    2,
+    6e-52,
+    "GCST011494",
+    "33568662",
+    "Dashti HS"
+   ],
+   [
+    "red blood cell density",
+    2,
+    4e-15,
+    "GCST90002364",
+    "32888493",
+    "Chen MH"
+   ]
+  ]
+ }
+}

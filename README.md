@@ -90,8 +90,8 @@ cross-check against TwoSampleMR on identical inputs is pending network access.
 ## Module 1 pipeline (`make mr`, Session 2)
 
 `src/mr/run_mr.R` refuses to start unless `make validate` passed on the
-current code **and** `prereg/mr.md` is frozen (a draft is in
-`prereg/mr.DRAFT.md`). Then, per target and exposure source:
+current code **and** `prereg/mr.md` is frozen (the complete draft is
+`prereg/mr.md`, awaiting the researcher's freeze). Then, per target and exposure source:
 
 1. `mr_gene_region()` — Ensembl GRCh37 coordinates via biomaRt, release logged,
    cached in `data/interim/`.

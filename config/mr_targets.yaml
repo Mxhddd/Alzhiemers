@@ -113,6 +113,10 @@ coloc:
   # See prior_sd_quantitative.
   prior_sd_case_control: 0.2
 
+# Sensitivity analysis: every target re-run with this cis window (eQTLGen's
+# own cis definition is +/-1 Mb). Decided 2026-10-13; see window_kb above.
+window_kb_sensitivity: 1000
+
 positive_control:
   # A positive-control MR passes if p < this AND the sign matches expectation.
   # 0.05 is a choice: the control is a sanity check of instrument function,
@@ -123,9 +127,12 @@ positive_control:
 # from the brief. Expression eQTLs are oriented to the expression-INCREASING
 # allele, so "lower activity protective" means a POSITIVE MR estimate (higher
 # expression -> higher AD risk); the code derives the expected sign.
-# window_kb: cis window either side of the gene body. 100 kb is a choice
-# (common in drug-target MR); the brief asked for a per-target window, so each
-# target can be changed individually.
+# window_kb: cis window either side of the gene body. DECIDED 2026-10-13:
+# +/-100 kb primary - most cis-eQTL/pQTL effects lie within 100 kb of the gene,
+# and a narrow window keeps neighbouring genes' variants (pleiotropy) out; the
+# eQTLGen cis definition (+/-1 Mb) is the sensitivity analysis
+# (window_kb_sensitivity below). The brief asked for a per-target window, so
+# each target can be changed individually.
 # positive_control: outcome trait the instrument must move, with the expected
 # sign of the MR estimate per higher expression, and the researcher-supplied
 # summary statistics. A target with no positive control is EXCLUDED (the brief
@@ -136,8 +143,19 @@ targets:
     predicted_lower_activity: protective
     # Choice, see block comment above.
     window_kb: 100
-    # RESEARCHER: positive-control trait not specified in the brief.
-    positive_control: null
+    positive_control:
+      # Decided 2026-10-13. NET inhibition (atomoxetine) raises heart rate, so lower SLC6A2 activity -> higher HR and higher expression -> LOWER HR (sign -1). The GWAS Catalog shows no genome-wide SLC6A2-heart-rate signal (manuscript/notes/mr_positive_controls.md), so this control may fail and exclude the target - that is the gate working.
+      trait: resting_heart_rate
+      # Expected sign of the MR estimate per HIGHER expression (see the comment above).
+      expected_sign: -1
+      # Summary statistics not yet downloaded (Module 1 data step); null = control not run, target excluded.
+      file: null
+      # Column mapping for that file (Module 1 data step).
+      columns: null
+      # Trait type (decides the coloc prior and Steiger formula).
+      type: quantitative
+      # Sample size of the control GWAS (Module 1 data step).
+      n: null
   ADRB1:
     # Beta-1 adrenergic receptor — lipophilic beta-blockers.
     predicted_lower_activity: protective
@@ -161,54 +179,109 @@ targets:
     predicted_lower_activity: protective
     # Choice, see block comment above.
     window_kb: 100
-    # RESEARCHER
-    positive_control: null
+    positive_control:
+      # Decided 2026-10-13. Alpha1 blockade lowers blood pressure, so higher ADRA1A expression -> higher DBP (sign +1). GWAS Catalog: DBP at ADRA1A, p = 7e-9 (Keaton 2024, GCST90310295).
+      trait: diastolic_blood_pressure
+      # Expected sign of the MR estimate per HIGHER expression (see the comment above).
+      expected_sign: 1
+      # Summary statistics not yet downloaded (Module 1 data step); null = control not run, target excluded.
+      file: null
+      # Column mapping for that file (Module 1 data step).
+      columns: null
+      # Trait type (decides the coloc prior and Steiger formula).
+      type: quantitative
+      # Sample size of the control GWAS (Module 1 data step).
+      n: null
   ADRA2A:
     # Alpha-2A autoreceptor — guanfacine (agonist). Lower activity = loss of restraint.
     predicted_lower_activity: harmful
     # Choice, see block comment above.
     window_kb: 100
-    # RESEARCHER
-    positive_control: null
+    positive_control:
+      # Decided 2026-10-13. ADRA2A over-expression impairs insulin secretion (Rosengren 2010, Science, PMID 19965390), so higher expression -> higher glucose (sign +1). GWAS Catalog: 12 genome-wide glucose associations at ADRA2A, min p 7e-39 (GCST90468071); T2D p 2e-15 (GCST90492734).
+      trait: fasting_glucose
+      # Expected sign of the MR estimate per HIGHER expression (see the comment above).
+      expected_sign: 1
+      # Summary statistics not yet downloaded (Module 1 data step); null = control not run, target excluded.
+      file: null
+      # Column mapping for that file (Module 1 data step).
+      columns: null
+      # Trait type (decides the coloc prior and Steiger formula).
+      type: quantitative
+      # Sample size of the control GWAS (Module 1 data step).
+      n: null
   LGMN:
     # Asparagine endopeptidase (legumain) — no human drug yet.
     predicted_lower_activity: protective
     # Choice, see block comment above.
     window_kb: 100
-    # RESEARCHER
+    # UNTESTABLE (decided 2026-10-13): no trait mechanistically downstream of legumain activity has a genome-wide signal at LGMN; the only strong signals are legumain protein itself and unrelated proteins (manuscript/notes/mr_positive_controls.md). null = excluded and reported as untestable with current instruments, not as a null result.
     positive_control: null
   SLC18A2:
     # VMAT2.
     predicted_lower_activity: harmful
     # Choice, see block comment above.
     window_kb: 100
-    # RESEARCHER
+    # UNTESTABLE (decided 2026-10-13): the 6 GWAS Catalog signals at SLC18A2 (blood proteins, ghrelin, glucose) do not index VMAT2 function. null = excluded and reported as untestable, not as a null result.
     positive_control: null
   MAOA:
     # Monoamine oxidase A — X-linked; may be absent from summary files (checked and reported).
     predicted_lower_activity: protective
     # Choice, see block comment above.
     window_kb: 100
-    # RESEARCHER
+    # UNTESTABLE (decided 2026-10-13): X-linked; one GWAS Catalog association, none genome-wide. null = excluded and reported as untestable, not as a null result.
     positive_control: null
   DBH:
     # Dopamine beta-hydroxylase — disulfiram, nepicastat. Direction not pre-specified.
     predicted_lower_activity: exploratory
     # Choice, see block comment above.
     window_kb: 100
-    # RESEARCHER
-    positive_control: null
+    positive_control:
+      # Decided 2026-10-13. DBH makes noradrenaline; lower DBH -> less NE -> lower BP, so higher expression -> higher SBP (sign +1). GWAS Catalog: SBP at DBH min p 8e-21 (Keaton 2024, GCST90310294). The target's AD direction stays exploratory.
+      trait: systolic_blood_pressure
+      # Expected sign of the MR estimate per HIGHER expression (see the comment above).
+      expected_sign: 1
+      # Summary statistics not yet downloaded (Module 1 data step); null = control not run, target excluded.
+      file: null
+      # Column mapping for that file (Module 1 data step).
+      columns: null
+      # Trait type (decides the coloc prior and Steiger formula).
+      type: quantitative
+      # Sample size of the control GWAS (Module 1 data step).
+      n: null
   CACNA1D:
     # Cav1.3 — isradipine.
     predicted_lower_activity: protective
     # Choice, see block comment above.
     window_kb: 100
-    # RESEARCHER
-    positive_control: null
+    positive_control:
+      # Decided 2026-10-13. Calcium-channel blockade lowers BP, so higher Cav1.3 expression -> higher SBP (sign +1). GWAS Catalog: SBP at CACNA1D min p 2e-38 (Jee 2025, GCST90662908).
+      trait: systolic_blood_pressure
+      # Expected sign of the MR estimate per HIGHER expression (see the comment above).
+      expected_sign: 1
+      # Summary statistics not yet downloaded (Module 1 data step); null = control not run, target excluded.
+      file: null
+      # Column mapping for that file (Module 1 data step).
+      columns: null
+      # Trait type (decides the coloc prior and Steiger formula).
+      type: quantitative
+      # Sample size of the control GWAS (Module 1 data step).
+      n: null
   HCRTR2:
     # Orexin receptor 2 — suvorexant, lemborexant. Exploratory.
     predicted_lower_activity: exploratory
     # Choice, see block comment above.
     window_kb: 100
-    # RESEARCHER
-    positive_control: null
+    positive_control:
+      # Decided 2026-10-13. Orexin-receptor antagonists lengthen sleep, so higher HCRTR2 expression -> SHORTER sleep (sign -1). GWAS Catalog: sleep duration at HCRTR2 p 6e-11 (Dashti 2019, GCST007561); chronotype p 3e-48.
+      trait: sleep_duration
+      # Expected sign of the MR estimate per HIGHER expression (see the comment above).
+      expected_sign: -1
+      # Summary statistics not yet downloaded (Module 1 data step); null = control not run, target excluded.
+      file: null
+      # Column mapping for that file (Module 1 data step).
+      columns: null
+      # Trait type (decides the coloc prior and Steiger formula).
+      type: quantitative
+      # Sample size of the control GWAS (Module 1 data step).
+      n: null
