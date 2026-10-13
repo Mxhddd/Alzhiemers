@@ -62,7 +62,7 @@ in 10 decade bands would have (n × KL divergence).
 |---|---|---|---|
 | A_gated (HR 2; the dry-run world) | — | 8.27 | 35.72 |
 | B_independent | 116.19 | — | 17.06 |
-| C_multihit (2 hits) | PENDING | PENDING | — |
+| C_multihit (2 hits) | 32.90 | 6.08 | — |
 
 In the full-settings dry run (one simulated data set from the A world), the
 in-sample gap A vs B was 9.1 (log-likelihoods −166.55 vs −175.63). But
@@ -71,11 +71,15 @@ distinguishable" under the margin of 2. Held-out bands are dealt
 round-robin, so each fold must interpolate two whole decades. That loses
 most of A's in-sample advantage.
 
-Reading: criterion 2 **can** come out against A. If the truth is B, A loses
-by over 100 units. If the truth is A, it struggles to separate A from B. So it
-is capable of "against" but weak for "supports". That asymmetry is
-acceptable under the guardrail but should be stated in the
-pre-registration.
+Reading: criterion 2 **can** come out against A. If the truth is B or C, A
+loses by about 116 or 33 units in-sample, far beyond the margin of 2. If the
+truth is A, it struggles to separate A from B (8.3 in-sample, −0.43 held-out
+in the one dry-run data set). B vs C is also close when C is true (6.1). So
+the criterion is capable of "against" but weak for "supports". That
+asymmetry is acceptable under the guardrail but should be stated in the
+pre-registration. These are in-sample gaps on expected counts; held-out gaps
+are smaller, and a proper CV power study (many simulated data sets per truth)
+has not been run (about 30 min per data set at full settings).
 
 ## 4. Other dry-run observations (simulated; not caused by the issue above)
 
