@@ -28,7 +28,7 @@ RSCRIPT := Rscript
 BUILT_MODULES := mr baserate metaanalysis dynamics mediation network
 
 .PHONY: help todo setup test test-py test-r test-slow validate validate-mr validate-baserate validate-metaanalysis validate-dynamics validate-mediation validate-network check-validated provenance-check all lock \
-        freeze-prereg check-prereg clean-results check-derivations \
+        freeze-prereg check-prereg clean-results check-derivations prereg-package \
         mr baserate baserate-dryrun baserate-power mediation dynamics metaanalysis network
 
 help:
@@ -114,6 +114,10 @@ mr:
 # (the Braak 2011 stage table is still empty: needs the paper's full text).
 baserate:
 	$(PY) -m src.baserate.run_baserate
+# Package every pre-registration (+ the configs it fixes, SHA-256 manifest,
+# upload instructions) for OSF. Never freezes: freezing is the researcher's.
+prereg-package:
+	$(PY) -m src.common.prereg_package
 # Machine checks of Claude's derivations (manuscript/derivations/checks/):
 # symbolic/exact/numerical re-derivations. Machine-checked is NOT human-checked.
 check-derivations:
