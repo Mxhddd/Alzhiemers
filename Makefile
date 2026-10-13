@@ -126,9 +126,12 @@ check-derivations:
 # Full pre-registered settings: about 1.5-2 h on 4 CPU cores.
 baserate-dryrun:
 	$(PY) -m src.baserate.run_baserate --dry-run-simulated
-# SIMULATED power of the amyloid-gating criterion (true HR 1 vs 2.43).
+# SIMULATED power of criterion 2 (A vs B vs C by 5-fold CV) under five truths:
+# LC-first with c->1a age slope 0, 0.1, 0.3/decade, B, C. Resumable; for
+# parallel runs use --shard K --nshards N, then --summarise (sim/baserate_power.py).
 baserate-power:
-	$(PY) -m sim.baserate_power --reps 30
+	$(PY) -m sim.baserate_power --reps 20
+	$(PY) -m sim.baserate_power --summarise
 # Module 5. Gated on validation + frozen prereg/metaanalysis.md; the
 # anticholinergic positive control must be recovered before anything else.
 metaanalysis:

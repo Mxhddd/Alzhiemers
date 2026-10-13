@@ -183,6 +183,14 @@ gamma_check:
   expected_log_hr_ci_upper: 1.449
   # Where the value comes from (extracted, unverified).
   source: "Ossenkoppele 2022 Nat Med Table 2; data/extracted/amyloid_hr_ossenkoppele2022.csv"
+  # Decided 2026-10-13 (descriptive labelling only, no verdict depends on it):
+  # a fitted log HR interval wider than ln(100) = 4.605, i.e. spanning more
+  # than a 100-fold range of HR, is labelled "uninformative" instead of being
+  # compared with the published value. Such an interval contains no effect,
+  # the published HR 2.43 and strong protection at once, so "published value
+  # inside the interval" would read as agreement when the data say nothing.
+  # An estimate on the parameter bound is labelled "not identified".
+  uninformative_log_width: 4.605
 
 falsification:
   # Fixed before any fit. Reference interval per incidence age band = [min,

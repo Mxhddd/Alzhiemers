@@ -335,10 +335,21 @@ def cv_verdict_3way(cv_df: pd.DataFrame, margin: float, a_name: str) -> str:
     return "inconclusive (A not separated from the alternatives by the margin)"
 
 
-def expectation_comparison(interval: tuple[float, float], expected: float, exp_lo: float, exp_hi: float) -> str:
+def expectation_comparison(interval: tuple[float, float], expected: float, exp_lo: float, exp_hi: float, *,
+                           on_bound: bool = False, max_width: float | None = None) -> str:
     """Descriptive comparison of a fitted log HR interval with the published
-    expectation (manuscript/derivations/module2_gamma.md). Not a test."""
+    expectation (manuscript/derivations/module2_gamma.md). Not a test.
+    An estimate on the parameter bound, or an interval wider than `max_width`
+    on the log scale (config gamma_check.uninformative_log_width), is labelled
+    as such instead of being compared: "published value inside the interval"
+    would otherwise read as agreement when the data say nothing."""
     lo, hi = interval
+    if on_bound:
+        return "not identified: estimate on the parameter bound"
+    if not (np.isfinite(lo) and np.isfinite(hi)):
+        return "not identified: no finite standard error"
+    if max_width is not None and hi - lo > max_width:
+        return f"uninformative: interval spans more than a {np.exp(max_width):.0f}-fold range of HR"
     if lo <= expected <= hi:
         return "published value inside the interval"
     if hi < exp_lo or lo > exp_hi:
@@ -484,6 +495,7 @@ def main(argv=None) -> int:
         n_draws = cfg.get("falsification.n_draws")
         g_exp = (cfg.get("gamma_check.expected_log_hr"), cfg.get("gamma_check.expected_log_hr_ci_lower"),
                  cfg.get("gamma_check.expected_log_hr_ci_upper"))
+        g_width = cfg.get("gamma_check.uninformative_log_width")
         run.info(f"falsification tolerance |log ratio| <= {tol}; amyloid HR is reported as '{DESCRIPTIVE}' "
                  f"(published reference log HR {g_exp[0]} [{g_exp[1]}, {g_exp[2]}], {cfg.get('gamma_check.source')})")
 
@@ -592,7 +604,8 @@ def main(argv=None) -> int:
                                          "log_hr_estimate": rec["posterior"][p]["mean"], "ci_lower": ci[0],
                                          "ci_upper": ci[1], "hr_estimate": np.exp(rec["posterior"][p]["mean"]),
                                          "published_log_hr": g_exp[0],
-                                         "descriptive_comparison": expectation_comparison(ci, *g_exp)})
+                                         "descriptive_comparison": expectation_comparison(
+                                             ci, *g_exp, on_bound=p in f["on_bound"], max_width=g_width)})
                 diags.append({"model": name, "step_years": rec["step"], "error_bound_h2phi": rec["bound"],
                               "audit_max_dp": rec["audit_max_dp"], "audit_dll": rec["audit_dll"],
                               "mle_loglik": f["loglik"], "aic": f["aic"], "hessian_ok": f["hessian_ok"],
@@ -614,7 +627,8 @@ def main(argv=None) -> int:
                                      "interval_from": "MLE +/- 1.96 SE", "log_hr_estimate": f["theta"][i],
                                      "ci_lower": ci[0], "ci_upper": ci[1], "hr_estimate": np.exp(f["theta"][i]),
                                      "published_log_hr": g_exp[0],
-                                     "descriptive_comparison": expectation_comparison(ci, *g_exp)})
+                                     "descriptive_comparison": expectation_comparison(
+                                         ci, *g_exp, on_bound="log_hr_amyloid" in f["on_bound"], max_width=g_width)})
                 sens_rows.append(row)
                 fals += [dict(r, scenario=rec["scenario"], model=rec["model"], verdict=rec["verdict"])
                          for r in rec["falsification"]]
@@ -668,7 +682,7 @@ def main(argv=None) -> int:
                                                              eval_mode=primary.eval_mode, n_points=npts)])
         prev["stage"] = [stages[k] for k in prev["stage_index"]]
         run.write_table(prev, tables / "baserate_prevalence_fit.csv")
-        _figures(prim, sens, prev, models, stages, primary, tol, figures, run, a_name, literal, g_exp)
+        _figures(prim, sens, prev, models, stages, primary, tol, figures, run, a_name, literal, g_exp, dry)
         run.info("ALL STAGES COMPLETE")
     return 0
 
@@ -680,14 +694,14 @@ def _fit_dict(fit) -> dict:
             "converged_starts": fit.converged_starts, "n_starts": fit.n_starts, "messages": fit.messages}
 
 
-def _figures(prim, sens, prev, models, stages, primary, tol, figures, run, a_name, literal, g_exp):
+def _figures(prim, sens, prev, models, stages, primary, tol, figures, run, a_name, literal, g_exp, dry=False):
     apply_theme()
     cols = series_colors(len(models))
     fal = pd.DataFrame([dict(r, model=n, verdict=rec["verdict"]) for n, rec in prim.items() for r in rec["falsification"]])
     fig, ax = plt.subplots(figsize=(6.5, 4))
     env = fal.drop_duplicates("band")
     ax.vlines(env["eval_age"], env["observed_min"], env["observed_max"], color=INK["primary"], lw=3,
-              label="published range (sex x CFAS wave)")
+              label="SIMULATED target range (truth x0.8 to x1.2)" if dry else "published range (sex x CFAS wave)")
     ax.vlines(env["eval_age"], env["observed_min"] / np.exp(tol), env["observed_max"] * np.exp(tol),
               color=INK["muted"], lw=1, label="pre-set tolerance (x2)")
     for j, ((name, g), c) in enumerate(zip(fal.groupby("model", sort=False), cols)):
@@ -716,9 +730,13 @@ def _figures(prim, sens, prev, models, stages, primary, tol, figures, run, a_nam
     save_figure(fig, "baserate_prevalence_fit", run, figures_dir=figures)
 
     # Amyloid HR: every estimate labelled; the reference band is the published value (not a criterion).
+    # The x axis is fixed to log HR in [-XLIM, XLIM] (HR 0.02 to 55) so one unidentified estimate cannot
+    # squash the rest; anything beyond is drawn to the edge with an arrow and its row says why.
+    XLIM = 4.0
     rows = []
     p = prim[a_name]["posterior"]["log_hr_amyloid"]
-    rows.append((f"{a_name} (primary, NUTS 95% HDI)\n{DESCRIPTIVE}", p["mean"], p["ci_lower"], p["ci_upper"]))
+    rows.append((f"{a_name} (primary, NUTS 95% HDI)\n{DESCRIPTIVE}", p["mean"], p["ci_lower"], p["ci_upper"],
+                 "log_hr_amyloid" in prim[a_name]["fit"]["on_bound"]))
     for rec in sens.values():
         f = rec["fit"]
         if "log_hr_amyloid" in f["param_names"]:
@@ -726,17 +744,27 @@ def _figures(prim, sens, prev, models, stages, primary, tol, figures, run, a_nam
             se = f["se"][i] if f["se"][i] is not None else np.nan
             lab = DESCRIPTIVE if rec["model"] == a_name else CONFOUNDED
             rows.append((f"{rec['model']} [{rec['scenario']}] (MLE ± 1.96 SE)\n{lab}", f["theta"][i],
-                         f["theta"][i] - 1.96 * se, f["theta"][i] + 1.96 * se))
+                         f["theta"][i] - 1.96 * se, f["theta"][i] + 1.96 * se, "log_hr_amyloid" in f["on_bound"]))
     fig, ax = plt.subplots(figsize=(6.5, 0.9 + 0.75 * len(rows)))
     ax.axvspan(g_exp[1], g_exp[2], color=INK["muted"], alpha=0.2, lw=0, label="published 95% CI (Ossenkoppele 2022)")
     ax.axvline(0, color=INK["primary"], lw=0.8)
-    for y, (lab, est, lo, hi) in enumerate(rows):
+    for y, (lab, est, lo, hi, on_bound) in enumerate(rows):
         c = INK["primary"] if CONFOUNDED not in lab else INK["muted"]
-        ax.plot([lo, hi], [y, y], color=c, lw=2)
-        ax.plot([est], [y], "o", color=c)
+        if on_bound or not (np.isfinite(lo) and np.isfinite(hi)):
+            ax.annotate("not identified (estimate on parameter bound)", (0, y), xytext=(0, -9),
+                        textcoords="offset points", ha="center", fontsize=6, color=INK["muted"])
+            continue
+        lo_c, hi_c = max(lo, -XLIM), min(hi, XLIM)
+        ax.plot([lo_c, hi_c], [y, y], color=c, lw=2)
+        for edge, clipped in ((-XLIM, lo < -XLIM), (XLIM, hi > XLIM)):
+            if clipped:
+                ax.annotate("", (edge, y), xytext=(edge * 0.9, y), arrowprops=dict(arrowstyle="->", color=c, lw=1.5))
+        if -XLIM <= est <= XLIM:
+            ax.plot([est], [y], "o", color=c)
+    ax.set_xlim(-XLIM * 1.05, XLIM * 1.05)
     ax.set_yticks(range(len(rows)), [r[0] for r in rows], fontsize=7)
     ax.invert_yaxis()
-    ax.set_xlabel("log amyloid hazard ratio on the LC → cortex step")
+    ax.set_xlabel("log amyloid hazard ratio on the LC → cortex step (arrows: interval continues off scale)")
     ax.set_title(f"Amyloid HR — {DESCRIPTIVE}", fontsize=9)
     ax.legend(fontsize=7, loc="lower right")
     save_figure(fig, "baserate_amyloid_hr_descriptive", run, figures_dir=figures)
