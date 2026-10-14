@@ -9,6 +9,7 @@ source(file.path(lc_test_root, "src", "common", "provenance.R"))
 source(file.path(lc_test_root, "src", "common", "io.R"))
 source(file.path(lc_test_root, "src", "mr", "harmonise.R"))
 source(file.path(lc_test_root, "src", "mr", "estimators.R"))
+source(file.path(lc_test_root, "src", "mr", "crosscheck.R"))
 for (f in c("regions", "sumstats", "instruments", "coloc", "steiger", "targets")) {
   source(file.path(lc_test_root, "src", "mr", paste0(f, ".R")))
 }

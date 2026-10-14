@@ -48,13 +48,15 @@ mr_positive_control <- function(instruments, pc_sumstats, pc, mr_settings, p_max
   if (nrow(hz$data) == 0) {
     return(list(passed = FALSE, reason = "no instrument present in the positive-control GWAS", estimate = NULL, harmonise = hz))
   }
-  row <- mr_primary_row(mr_run(hz$data, mr_settings))
+  est <- mr_run_checked(hz$data, mr_settings)
+  row <- mr_primary_row(est)
   ok_p <- row$pval < p_max
   ok_sign <- sign(row$b) == pc$expected_sign
   reason <- if (ok_p && ok_sign) "passed" else
     sprintf("failed: %s estimate %.3g (p = %.2g); needs p < %g and sign %+d",
             row$method, row$b, row$pval, p_max, pc$expected_sign)
-  list(passed = ok_p && ok_sign, reason = reason, estimate = row, harmonise = hz)
+  list(passed = ok_p && ok_sign, reason = reason, estimate = row, harmonise = hz,
+       crosscheck = attr(est, "crosscheck"))
 }
 
 # Concordance of the primary estimate with the pre-registered prediction.
@@ -103,7 +105,7 @@ mr_analyse_target <- function(gene, tcfg, source_name, region, io, cfg, mr_setti
   hz <- mr_harmonise(inst$data, out$data, mr_settings$harmonise$palindrome_maf_max)
   for (i in seq_len(nrow(hz$dropped))) drop("harmonise", sprintf("%s %s", gene, hz$dropped$SNP[i]), hz$dropped$reason[i])
   if (nrow(hz$data) == 0) return(excluded("no instrument present in the outcome after harmonisation"))
-  est <- mr_run(hz$data, mr_settings)
+  est <- mr_run_checked(hz$data, mr_settings)
   primary <- mr_primary_row(est)
 
   # ---- Colocalisation over the whole cis window ----
@@ -137,13 +139,16 @@ mr_analyse_target <- function(gene, tcfg, source_name, region, io, cfg, mr_setti
 
   # ---- Sensitivity (proxy-free outcome) and replication (FinnGen) ----
   extra <- list()
+  cc_parts <- list(positive_control = data.frame(analysis = "positive_control", pc_res$crosscheck),
+                   main = data.frame(analysis = "main", attr(est, "crosscheck")))
   for (which in c("proxy_free", "replication")) {
     ss <- io$outcome(which, region)
     if (is.null(ss)) { log(sprintf("%s [%s] %s: not run (no file supplied)", gene, source_name, which)); next }
     hz2 <- mr_harmonise(inst$data, ss$data, mr_settings$harmonise$palindrome_maf_max)
     for (i in seq_len(nrow(hz2$dropped))) drop(sprintf("harmonise_%s", which), sprintf("%s %s", gene, hz2$dropped$SNP[i]), hz2$dropped$reason[i])
     if (nrow(hz2$data) == 0) { drop(which, gene, "no instrument present after harmonisation"); next }
-    e2 <- mr_run(hz2$data, mr_settings)
+    e2 <- mr_run_checked(hz2$data, mr_settings)
+    cc_parts[[which]] <- data.frame(analysis = which, attr(e2, "crosscheck"))
     p2 <- mr_primary_row(e2)
     extra[[which]] <- data.frame(base, p2[, c("method", "nsnp", "b", "se", "ci_lower", "ci_upper", "pval", "Q", "Q_pval", "status")],
                                  is_primary = TRUE,
@@ -155,7 +160,9 @@ mr_analyse_target <- function(gene, tcfg, source_name, region, io, cfg, mr_setti
     for (col in setdiff(names(all_rows), names(e))) e[[col]] <- NA
     all_rows <- rbind(all_rows, e[, names(all_rows)])
   }
-  list(rows = all_rows)
+  cc <- do.call(rbind, cc_parts)
+  list(rows = all_rows, crosscheck = data.frame(gene = gene, exposure_source = source_name, cc,
+                                                stringsAsFactors = FALSE))
 }
 
 # Stack per-target results whose columns differ (excluded targets carry few).

@@ -38,6 +38,20 @@ weighted_median:
   # as in Bowden 2016 / TwoSampleMR weighted_median.
   weights: second_order
 
+crosscheck:
+  # Pre-registered cross-check against TwoSampleMR (prereg/mr.md step 4),
+  # tolerances decided 2026-10-14. The formulas are identical, so b, se, p, Q
+  # and the Egger intercept may differ only by floating-point noise:
+  abs_tol: 1.0e-10
+  rel_tol: 1.0e-8
+  # The weighted-median SE is a bootstrap SD, and TwoSampleMR draws its
+  # bootstrap samples in a different order. With n_boot = 1000, each SD has a
+  # relative Monte Carlo SE of about 1 / sqrt(2 * 999) = 2.2%, so the
+  # difference of two independent ones is about 3.2%. 0.15 is about 4.7 such
+  # SEs, so a false "disagree" has probability < 1e-5 per comparison. A real
+  # formula difference (e.g. first- vs second-order weights) shows in the point
+  # estimate, which must agree to rel_tol.
+  wm_se_rel_tol: 0.15
 wald_ratio:
   # First-order SE (se_out / |beta_exp|), as in TwoSampleMR mr_wald_ratio.
   # Ignores exposure uncertainty; acceptable when instruments are strong

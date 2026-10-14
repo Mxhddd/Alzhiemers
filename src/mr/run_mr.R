@@ -9,7 +9,7 @@
 options(warn = 2)  # fail loudly: every warning is an error
 source("src/common/provenance.R")
 source("src/common/io.R")
-for (f in c("harmonise", "estimators", "regions", "sumstats", "instruments", "coloc", "steiger", "targets")) {
+for (f in c("harmonise", "estimators", "crosscheck", "regions", "sumstats", "instruments", "coloc", "steiger", "targets")) {
   source(file.path("src", "mr", paste0(f, ".R")))
 }
 
@@ -57,11 +57,12 @@ io <- list(
 )
 
 lc_with_run("mr", cfg_path, seed = cfg$seed,
-            packages = c("data.table", "biomaRt", "yaml", "digest"),
+            packages = c("data.table", "biomaRt", "yaml", "digest", "TwoSampleMR"),
             preregistration = prereg, body = function(run) {
   drop <- function(stage, item, reason) lc_drop(run, stage = stage, item = item, reason = reason)
   logf <- function(msg) lc_log(run, msg)
   parts <- list()
+  cc_parts <- list()
   for (gene in names(cfg$targets)) {
     tcfg <- cfg$targets[[gene]]
     region <- mr_gene_region(gene, tcfg$window_kb, run = run, root = root)
@@ -75,6 +76,7 @@ lc_with_run("mr", cfg_path, seed = cfg$seed,
       }
       res <- mr_analyse_target(gene, tcfg, s, region, io, cfg, mr_settings, drop, logf)
       parts[[length(parts) + 1]] <- res$rows
+      if (!is.null(res$crosscheck)) cc_parts[[length(cc_parts) + 1]] <- res$crosscheck
     }
   }
   summary <- mr_bind_rows(parts)
@@ -82,5 +84,14 @@ lc_with_run("mr", cfg_path, seed = cfg$seed,
   dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)
   utils::write.csv(summary, out, row.names = FALSE)
   lc_record_output(run, out)
+  # Pre-registered cross-check against TwoSampleMR: every comparison, agreeing or not
+  cc_out <- file.path(root, "results", "tables", "mr_crosscheck_twosamplemr.csv")
+  cc_all <- if (length(cc_parts)) do.call(rbind, cc_parts) else data.frame()
+  utils::write.csv(cc_all, cc_out, row.names = FALSE)
+  lc_record_output(run, cc_out)
+  if (nrow(cc_all) && any(!cc_all$agree)) {
+    lc_log(run, level = "WARNING", sprintf("%d base-R vs TwoSampleMR comparison(s) disagree; the TwoSampleMR value was used (%s)",
+                         sum(!cc_all$agree), cc_out))
+  }
   lc_write_drop_report(run, file.path(root, "results", "logs", "mr_dropped.md"))
 })
