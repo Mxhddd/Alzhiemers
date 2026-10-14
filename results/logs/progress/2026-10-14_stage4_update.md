@@ -47,3 +47,12 @@ Done 2026-10-14.
   - Estimators and harmonisation agree on simulated data.
   - The GWAS data step is deferred (open, reachable).
 - **Modules 3 and 6:** simulated skeletons; Module 6 re-validated 6/6; Module 3 4/5 (published example).
+- **Module 2 dry run on the revised design** (simulated, smoke settings), all stages in one pass:
+  - primary CV: A −592.0, B −602.7, C −619.9 → supports;
+  - whole-band sensitivity: supports;
+  - 0 of 30 fold fits unverified.
+- **OSF package** `results/osf_package/20261014_dbc4335.zip` (git-ignored).
+  - Changed since 20261013_f1fea88: baserate.md, config/baserate.yaml,
+    metaanalysis.md, mr.md, config/mr_methods.yaml (listed in
+    CHANGES_SINCE_20261013_f1fea88.md inside the package).
+  - Not frozen.
