@@ -23,9 +23,14 @@ def test_shipped_extracted_files_carry_sources_and_unverified_flags():
         assert len(df) > 0 and run.marks, name     # all currently unverified -> run marked
 
 
-def test_empty_braak_counts_file_is_refused_not_imputed():
+def test_empty_counts_file_is_refused_not_imputed(tmp_path, monkeypatch):
+    # (until 2026-10-14 the real Braak counts file was itself empty and served as this test's input)
+    import src.common.extracted as ex
+    monkeypatch.setattr(ex, "analysis_input", lambda p, provided_by: p)
+    p = tmp_path / "braak2011_stage_counts.csv"
+    p.write_text("age_lower,age_upper,stage,n,source_id,locator,verified\n")
     with pytest.raises(ValueError, match="no rows"):
-        load_extracted(REPO_ROOT / "data/extracted/braak2011_stage_counts.csv", provided_by="test")
+        load_extracted(p, provided_by="test")
 
 
 def test_missing_provenance_columns_are_refused(tmp_path, monkeypatch):

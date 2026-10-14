@@ -43,6 +43,7 @@ crosscheck:
   # tolerances decided 2026-10-14. The formulas are identical, so b, se, p, Q
   # and the Egger intercept may differ only by floating-point noise:
   abs_tol: 1.0e-10
+  # Relative tolerance for the same quantities (the looser of the two applies).
   rel_tol: 1.0e-8
   # The weighted-median SE is a bootstrap SD, and TwoSampleMR draws its
   # bootstrap samples in a different order. With n_boot = 1000, each SD has a
