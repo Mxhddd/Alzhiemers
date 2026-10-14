@@ -315,3 +315,49 @@ def test_batched_jax_incidence_matches_predict_incidence(which):
     got = np.asarray(make_incidence_batch(m, ages, threshold=3, step=0.5, start_age=0)(draws))
     want = np.array([predict_incidence(m, d, ages, threshold=3, step=0.5, start_age=0) for d in draws])
     np.testing.assert_allclose(got, want, rtol=1e-10, atol=1e-14)
+
+
+def test_braak2011_supplement_files_load_and_pass_the_prefit_consistency_check():
+    """The extracted Braak 2011 inputs (SDC 1 stage counts, SDC 2 amyloid phases) load
+    and reproduce the abstract totals and each other's band totals (prereg §3). Loading
+    and checking only; nothing is fitted."""
+    from src.baserate.data import load_amyloid_phase_counts
+    from src.baserate.run_baserate import check_braak_totals
+    from src.common.config import load_config
+    from src.common.paths import CONFIG_DIR, REPO_ROOT
+
+    class Run:
+        def info(self, *a): pass
+        def warning(self, *a): pass
+        def mark_unverified(self, *a): pass
+
+    cfg = load_config(CONFIG_DIR / "baserate.yaml")
+    stages = [str(s) for s in cfg.get("data.stage_order")]
+    data = load_braak_counts(REPO_ROOT / cfg.get("data.braak_counts"), stages, upper_inclusive=True, run=Run())
+    amy = load_amyloid_phase_counts(REPO_ROOT / cfg.get("data.amyloid_prevalence"), upper_inclusive=True,
+                                    min_phase=int(cfg.get("data.amyloid_positive_min_phase")), run=Run())
+    assert len(data) == 10 and sum(g.n for g in data) == 2332
+    assert [(g.age_lower, g.age_upper) for g in data] == [(lo, lo + 10) for lo in range(1, 101, 10)]
+    assert [(lo, hi) for lo, hi, *_ in amy] == [(lo, lo + 10) for lo in range(1, 101, 10)]
+    assert all(0.0 <= p <= 1.0 for _, _, p, _, _ in amy)
+    check_braak_totals(data, stages, Run(), amyloid=amy)          # raises on any mismatch
+
+
+def test_prefit_consistency_check_stops_on_a_band_total_mismatch():
+    from src.baserate.run_baserate import check_braak_totals
+
+    class Run:
+        def info(self, *a): pass
+        def warning(self, *a): pass
+        def mark_unverified(self, *a): pass
+
+    stages = ["0", "a", "b", "c", "1a", "1b", "I", "II", "III", "IV", "V", "VI"]
+    # one band reproducing the abstract totals exactly
+    counts = np.array([10, 40, 12, 6, 38, 236, 589, 497, 491, 191, 138, 84])
+    data = [StageCounts(1.0, 101.0, "x", counts)]
+    good = [(1.0, 101.0, 1031 / 2332, 1031, 2332)]
+    check_braak_totals(data, stages, Run(), amyloid=good)
+    with pytest.raises(ValueError, match="amyloid table"):
+        check_braak_totals(data, stages, Run(), amyloid=[(1.0, 101.0, 0.5, 1031, 2331)])
+    with pytest.raises(ValueError, match="plaque cases"):
+        check_braak_totals(data, stages, Run(), amyloid=[(1.0, 101.0, 0.5, 1030, 2332)])

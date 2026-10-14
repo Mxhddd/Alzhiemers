@@ -62,10 +62,12 @@ def _numeric(df: pd.DataFrame, cols: list[str], path) -> pd.DataFrame:
 
 def load_braak_counts(path: Path, stage_order: list[str], *, upper_inclusive: bool, run=None) -> list[StageCounts]:
     need = ["age_lower", "age_upper", "stage", "n", "source_id", "locator", "verified"]
+    optional = {"quantity", "machine_rechecked", "age_label_printed"}      # provenance only, never used
     df = load_extracted(Path(path), provided_by="extracted from Braak et al. 2011 (see data/extracted/SOURCES.md)",
                         run=run)
-    if list(df.columns) != need:
-        raise ValueError(f"{path}: columns must be exactly {need}, found {list(df.columns)}")
+    if list(df.columns[:len(need)]) != need or not set(df.columns[len(need):]) <= optional:
+        raise ValueError(f"{path}: columns must be {need} followed by any of {sorted(optional)}, "
+                         f"found {list(df.columns)}")
     df = _numeric(df, ["age_lower", "age_upper", "n"], path)
     if ((df["n"] < 0) | (df["n"] != np.floor(df["n"]))).any():
         raise ValueError(f"{path}: n must be non-negative integers")
@@ -100,6 +102,30 @@ def load_amyloid_bands(path: Path, *, upper_inclusive: bool, run=None) -> list[t
         raise ValueError(f"{path}: prevalence must be a proportion in [0, 1]")
     hi = df["age_upper"] + (1 if upper_inclusive else 0)
     return list(zip(df["age_lower"].astype(float), hi.astype(float), df["prevalence"].astype(float)))
+
+
+def load_amyloid_phase_counts(path: Path, *, upper_inclusive: bool, min_phase: int,
+                              run=None) -> list[tuple[float, float, float, int, int]]:
+    """Braak 2011 Supplementary Table 2 (amyloid phase 0-4 by age band, long
+    format: one printed cell per row) -> (lower, upper_exclusive, prevalence,
+    n_positive, n_total) per band, where positive = phase >= min_phase. Uses
+    only the printed counts (measure 'n'); the band total must equal the sum
+    of the phase counts, else the loader stops."""
+    df = load_extracted(Path(path), provided_by="extracted from Braak et al. 2011, SDC 2", run=run)
+    need = {"age_lower", "age_upper", "age_label_printed", "amyloid_phase", "measure", "value"}
+    if not need <= set(df.columns):
+        raise ValueError(f"{path}: needs columns {sorted(need)}")
+    d = df[(df["measure"] == "n") & (df["age_label_printed"] != "column header")].copy()
+    d = _numeric(d, ["age_lower", "age_upper", "value"], path)
+    out = []
+    for (lo, hi), g in d.groupby(["age_lower", "age_upper"], sort=True):
+        ph = {r["amyloid_phase"]: int(r["value"]) for _, r in g.iterrows()}
+        phases = sorted(k for k in ph if k.startswith("Phase "))
+        if "Total" not in ph or sum(ph[k] for k in phases) != ph["Total"]:
+            raise ValueError(f"{path}: band {lo}-{hi}: phase counts do not sum to the printed total")
+        pos = sum(ph[k] for k in phases if int(k.split()[-1]) >= min_phase)
+        out.append((float(lo), float(hi) + (1 if upper_inclusive else 0), pos / ph["Total"], pos, ph["Total"]))
+    return out
 
 
 def jansen_bands(path: Path, run=None) -> list[tuple[float, float, float]]:

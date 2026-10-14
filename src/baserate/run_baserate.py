@@ -47,7 +47,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from src.baserate.data import StageCounts, jansen_bands, load_amyloid_bands, load_braak_counts, load_incidence
+from src.baserate.data import (StageCounts, jansen_bands, load_amyloid_phase_counts, load_braak_counts,
+                               load_incidence)
 from src.baserate.fit import fit_bayesian, fit_mle, group_probabilities
 from src.baserate.jaxlik import make_incidence_batch
 from src.baserate.model import AGated, AGatedAge, BIndependent, ChainSpec, CMultiHit, StepFunction
@@ -113,9 +114,12 @@ BRAAK_TOTALS = {  # quantity in braak2011_abstract_totals.csv -> stages it sums 
 }
 
 
-def check_braak_totals(data: list[StageCounts], stages: list[str], run) -> None:
-    """The extracted stage table must reproduce the abstract's totals exactly
-    (pre-registration §3); any mismatch stops the analysis."""
+def check_braak_totals(data: list[StageCounts], stages: list[str], run, amyloid=None) -> None:
+    """The extracted stage table must reproduce the abstract's totals exactly,
+    the amyloid table must give the abstract's plaque total, and every band
+    total must agree between the two tables (pre-registration §3); any
+    mismatch stops the analysis. `amyloid`: load_amyloid_phase_counts rows
+    with min_phase = 1."""
     from src.common.extracted import load_extracted
 
     tot = load_extracted(REPO_ROOT / "data/extracted/braak2011_abstract_totals.csv",
@@ -127,6 +131,15 @@ def check_braak_totals(data: list[StageCounts], stages: list[str], run) -> None:
         got = int(counts.sum()) if st is None else int(sum(counts[stages.index(x)] for x in st))
         if got != want:
             problems.append(f"{q}: table {got} vs abstract {want}")
+    if amyloid is not None:
+        plaques = int(float(tot.loc[(tot["quantity"] == "cases with beta-amyloid plaques")
+                                    & (tot["unit"] == "cases"), "value"].iloc[0]))
+        if sum(r[3] for r in amyloid) != plaques:
+            problems.append(f"plaque cases: amyloid table {sum(r[3] for r in amyloid)} vs abstract {plaques}")
+        band_n = {(g.age_lower, g.age_upper): g.n for g in data}
+        for lo, hi, _, _, n in amyloid:
+            if band_n.get((lo, hi)) != n:
+                problems.append(f"band {lo}-{hi}: stage table {band_n.get((lo, hi))} vs amyloid table {n} brains")
     if problems:
         raise ValueError("Braak 2011 stage table does not reproduce the abstract: " + "; ".join(problems))
     run.info("Braak 2011 stage table reproduces all abstract totals")
@@ -138,8 +151,11 @@ def real_inputs(cfg, run) -> Inputs:
     files = [REPO_ROOT / cfg.get(k) for k in ("data.braak_counts", "data.amyloid_prevalence",
                                               "data.amyloid_prevalence_sensitivity", "data.dementia_incidence")]
     data = load_braak_counts(files[0], stages, upper_inclusive=inc, run=run)
-    check_braak_totals(data, stages, run)
-    primary = StepFunction(load_amyloid_bands(files[1], upper_inclusive=inc, run=run))
+    min_phase = int(cfg.get("data.amyloid_positive_min_phase"))
+    amy_rows = load_amyloid_phase_counts(files[1], upper_inclusive=inc, min_phase=min_phase, run=run)
+    check_braak_totals(data, stages, run, amyloid=load_amyloid_phase_counts(files[1], upper_inclusive=inc,
+                                                                            min_phase=1, run=None))
+    primary = StepFunction([(lo, hi, p) for lo, hi, p, _, _ in amy_rows])
     sens = splice_amyloid(primary, jansen_bands(files[2], run=run))
     incidence = load_incidence(files[3], open_band_age=cfg.get("data.open_band_evaluation_age"), run=run)
     return Inputs(data, {"primary": primary, "sensitivity": sens}, incidence, _open_lower(files[3]),

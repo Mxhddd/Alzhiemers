@@ -8,8 +8,9 @@
 seed: 20261016
 
 data:
-  # Braak et al. 2011 stage counts by age band (extracted; currently EMPTY —
-  # the paper's full text is paywalled, see data/extracted/SOURCES.md).
+  # Braak et al. 2011 stage counts by age band: Supplemental Digital Content 1
+  # (Supplementary Table 1), 12 stages x 10 age bands, 2,332 brains. Extracted
+  # 2026-10-14 by src/extraction/braak2011.py (verified: false).
   braak_counts: data/extracted/braak2011_stage_counts.csv
   # Stage scheme of Braak et al. 2011 (and Braak & Del Tredici 2011): no
   # AT8 tau ("0"), subcortical pretangle stages a-c (LC first), cortical
@@ -24,9 +25,15 @@ data:
   # bounds (e.g. 61-70); band [lo, hi] is treated as the interval [lo, hi + 1).
   upper_inclusive: true
   # Primary amyloid curve A(t): plaque prevalence by decade in the SAME autopsy
-  # cohort (Braak 2011) — the population the stage counts come from. EMPTY
-  # until the full text is available.
-  amyloid_prevalence: data/extracted/braak2011_amyloid_by_age.csv
+  # cohort (Braak 2011, Supplemental Digital Content 2: amyloid phase 0-4 by
+  # age band) — the population the stage counts come from. A(t) only feeds the
+  # descriptive HR (criterion 1 is dropped).
+  amyloid_prevalence: data/extracted/braak2011_sdc2_amyloid_by_age.csv
+  # A brain counts as amyloid-positive from this phase on. Decided 2026-10-14:
+  # phase >= 1 ("any plaque"), the paper's own definition ("1,031 (44.2%) had
+  # beta-amyloid plaques" = 2,332 minus phase 0). Not a close call for any
+  # verdict (A(t) enters only the descriptive HR), so no sensitivity analysis.
+  amyloid_positive_min_phase: 1
   # Sensitivity amyloid curve: Jansen 2015 modelled prevalence in cognitively
   # normal people (biomarker-defined; excludes dementia, so it understates
   # population prevalence at old ages). Point estimates at ages 50..90 are
