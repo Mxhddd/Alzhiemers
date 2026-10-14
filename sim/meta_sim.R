@@ -14,7 +14,8 @@ meta_simulate_extraction <- function(cfg, seed, k = 6) {
   contrast_of <- c(lipophilic_beta_blocker = "lipophilic_vs_hydrophilic_beta_blocker",
                    alpha1_blocker = "alpha1_blocker_vs_tamsulosin",
                    dual_orexin_antagonist = "z_drug_vs_dual_orexin_antagonist",
-                   atomoxetine = "atomoxetine_vs_stimulant")
+                   atomoxetine = "atomoxetine_vs_stimulant",
+                   dhp_calcium_channel_blocker = "brain_penetrant_vs_nonpenetrant_dhp_ccb")
   rows <- list()
   for (cls in names(cfg$drug_classes)) {
     truth <- if (cls == cfg$positive_control$drug_class) 0.25 else 0

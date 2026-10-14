@@ -12,6 +12,7 @@ to run until this file is frozen and its validation passes.
 | Date | Change |
 |---|---|
 | 2026-10-13 | Complete draft. Replaces `mr.DRAFT.md`. Decisions filled in: cis window, positive control per target (and three targets declared untestable), multiple testing, replication and proxy-free sensitivity, TwoSampleMR cross-check. |
+| 2026-10-14 | **Cross-check (step 4) made operational.** "Disagree" now has a fixed definition (`config/mr_methods.yaml` `crosscheck`). b, SE, p, Q and the Egger intercept must match TwoSampleMR within floating-point noise (absolute 10⁻¹⁰ or relative 10⁻⁸). The weighted-median SE and p must match within 15% relative, because TwoSampleMR draws its bootstrap samples in a different order. Every comparison is written to `results/tables/mr_crosscheck_twosamplemr.csv`, whether it agrees or not. Before any real data: on simulated data, the base-R ports agree with TwoSampleMR 0.7.12 for all four estimators (analytic quantities to < 10⁻¹²). Harmonisation of 400 simulated variants keeps the same variants with identical aligned effects (`tests/unit/test_mr_crosscheck.R`). | TwoSampleMR became installable (Posit Package Manager binaries, r-universe). A cross-check needs a stated tolerance, or "however small" would make every bootstrap SE a disagreement. |
 
 ## 1. Hypothesis under test
 
