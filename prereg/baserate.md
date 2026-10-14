@@ -56,7 +56,18 @@ which it never sees?
    Operating characteristics, measured on simulated data before any real
    fit (`sim/baserate_power.py`; results in
    `manuscript/notes/module2_identifiability.md`), are reported with the
-   result: {{POWER_SENTENCE}}
+   result. In 100 simulated data sets of the real size (20 per world; light
+   single-start fits, step 0.5 years):
+   * when LC-first is true, with an age slope on the LC → cortex step of 0,
+     0.1 or 0.3 per decade and no amyloid effect, the verdict was "supports"
+     in 57 of 60 (95%; Wilson 95% CI 86–98%) and "against" in 1 of 60
+     (1.7%; 0.3–8.9%);
+   * when B is true, "against" in 20 of 20;
+   * when C is true, "against" in 16 of 20 and inconclusive in 4. "Supports"
+     never occurred when B or C was true (0 of 40; upper 95% bound 8.8%).
+
+   These numbers describe the simulated worlds, which are built around the
+   dry-run parameter values. They are not guarantees for the real data.
 3. **Falsification (§6):** a variant whose predicted incidence fails the test
    is rejected whatever criterion 2 says. If every variant fails, the
    framework itself is inadequate.

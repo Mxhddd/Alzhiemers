@@ -53,6 +53,8 @@ about 13% of the time.
 
 ## 3. Can cross-validation (criterion 2) discriminate? (`python -m sim.baserate_discrimination`)
 
+> Superseded by §6 (the power study, 2026-10-14). Kept for the record.
+
 The truth is each variant in turn. The table gives the in-sample
 log-likelihood gap between the true variant and each wrong one, fitted to
 expected counts. That gap is the *average* evidence a study of 2,300 brains
@@ -95,7 +97,7 @@ has not been run (about 30 min per data set at full settings).
   misspecified likelihood in this world. The run stopped (2-hour background
   limit) before B and C were refitted, so whether they fail too is unknown.
 
-## 5. Options (decision needed)
+## 5. Options (decided 2026-10-13: option (c))
 
 **(a) Age-adjusted gating.** h(t) = exp(α + β (t − 50)/10) · (1 + (HR_A − 1) A(t)).
 HR_A is then identified only by the part of A(t)'s shape that a log-linear
@@ -135,3 +137,85 @@ It uses a 3-stage truth with no amyloid effect, an LC → cortex age slope of
 0.3 per decade, and 3,000 brains per band. Variant A returns log HR_A = 2.12
 (SE 0.08), so `make validate-baserate` now FAILS, and
 `make baserate` refuses to run on real data.
+
+## 6. Power study of criterion 2 (2026-10-14, `sim/baserate_power.py`)
+
+**Design.** 100 simulated data sets of the real size: 12 stages, 10 decade
+bands, 230 brains each. Twenty per world:
+
+* LC-first true, no amyloid effect, LC → cortex age slope 0, 0.1 or 0.3 per
+  decade (the null scenarios required by the revision);
+* B true;
+* C true (2 hits).
+
+Each data set is analysed as criterion 2 prescribes, with two shortcuts for
+speed:
+
+* single warm-started fits;
+* step 0.5 years.
+
+**First design (cross-validation with whole age bands held out)** — results
+archived in `results/dryrun/power/whole_band_design/`:
+
+| truth | supports | against | inconclusive |
+|---|---|---|---|
+| LC-first, slope 0 | 17 | 1 | 2 |
+| LC-first, slope 0.1 | 17 | 2 | 1 |
+| LC-first, slope 0.3 | 19 | 1 | 0 |
+| B | 0 | 20 | 0 |
+| C | 0 | 18 | 2 |
+
+Two of the four false "against" verdicts had implausibly large gaps (A
+behind by 62 and 24 units in an A world). `sim/baserate_power_refit.py`
+refitted them with the analysis's own multi-start settings. The diagnosis:
+
+* In the fold that holds out the 91–100 band, stage VI is absent from the
+  training data. Every model puts its V → VI rate on the search-box bound
+  and predicts the 27 stage-VI brains at about 10⁻¹². That band costs about
+  −730 log-likelihood units for every model.
+* The verdict then turns on numerical detail. The multi-start refit of one
+  replicate scored −856 / −883 / −876 for A / B / C, which reads "supports";
+  the power study's single-start fit had read "against".
+* In 2 of 4 refitted replicates, one fold fit had no start passing the
+  convergence test, and the code stopped. The pre-registration says such
+  fits are "reported as such".
+* The fourth replicate (slope 0.3, rep 8) was a genuine false "against": B
+  fits better than the true A even with multi-start fits (−229.8 vs −238.8).
+
+**Revision.** Criterion 2 now uses cross-validation over brains within age
+bands. Whole-band CV is kept as sensitivity analysis 7. Unverifiable fold
+fits are flagged, not fatal. See the prereg change log.
+
+**Revised design, same 100 simulated worlds:**
+
+| truth | supports | against | inconclusive |
+|---|---|---|---|
+| LC-first, slope 0 | 19 | 0 | 1 |
+| LC-first, slope 0.1 | 19 | 0 | 1 |
+| LC-first, slope 0.3 | 19 | 1 | 0 |
+| B | 0 | 20 | 0 |
+| C | 0 | 16 | 4 |
+
+**Answer to "can the variant comparison discriminate?"** Yes, in these
+simulated worlds, with known error rates.
+
+* LC-first true: "supports" in 57 of 60 (95%, Wilson 95% CI 86–98%);
+  "against" in 1 of 60 (1.7%, 0.3–8.9%). The single false "against" is the
+  genuine case above.
+* B true: "against" in 20 of 20.
+* C true: "against" in 16 of 20, inconclusive in 4.
+* "Supports" never appeared when B or C was true: 0 of 40, upper 95% bound
+  8.8%.
+
+The age slope on the LC → cortex step (0 to 0.3 per decade) does not erode
+"supports", because variant A carries its own age slope.
+
+**What Module 2 can and cannot claim.**
+
+* It **can** say which of three model classes best explains the stage-by-age
+  distribution, with the error rates above, plus the incidence screen.
+* It **cannot** speak to amyloid gating (section 1).
+* It **cannot** distinguish LC-first from other models outside these three
+  classes.
+* The worlds are built around the dry-run parameter values; real data could
+  be harder.

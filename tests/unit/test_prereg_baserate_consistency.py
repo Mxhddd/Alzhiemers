@@ -87,6 +87,7 @@ def test_fitted_variants_are_the_three_in_the_document():
         assert v in DOC
 
 
-def test_document_carries_no_freeze_block_and_no_pending_inputs():
+def test_document_carries_no_freeze_block_no_pending_inputs_and_no_unfilled_placeholders():
     assert "DO NOT FREEZE" not in DOC
     assert "pending" not in DOC.lower()
+    assert "{{" not in DOC and "}}" not in DOC
