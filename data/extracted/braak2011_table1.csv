@@ -1,54 +1,54 @@
 age_label_printed,age_lower,age_upper,sex,measure,value,source_id,locator,quantity,verified,machine_rechecked
-1-10,1,10,female,n,3,braak2011,Table 1,"Number of brains, female, age category 1-10 y",false,false
-1-10,1,10,female,pct,37.5,braak2011,Table 1,"Percent of the age category's brains that are female, age category 1-10 y",false,false
-1-10,1,10,male,n,5,braak2011,Table 1,"Number of brains, male, age category 1-10 y",false,false
-1-10,1,10,male,pct,62.5,braak2011,Table 1,"Percent of the age category's brains that are male, age category 1-10 y",false,false
-1-10,1,10,total,n,8,braak2011,Table 1,"Number of brains, total, age category 1-10 y",false,false
-11-20,11,20,female,n,5,braak2011,Table 1,"Number of brains, female, age category 11-20 y",false,false
-11-20,11,20,female,pct,20.8,braak2011,Table 1,"Percent of the age category's brains that are female, age category 11-20 y",false,false
-11-20,11,20,male,n,19,braak2011,Table 1,"Number of brains, male, age category 11-20 y",false,false
-11-20,11,20,male,pct,79.2,braak2011,Table 1,"Percent of the age category's brains that are male, age category 11-20 y",false,false
-11-20,11,20,total,n,24,braak2011,Table 1,"Number of brains, total, age category 11-20 y",false,false
-21-30,21,30,female,n,28,braak2011,Table 1,"Number of brains, female, age category 21-30 y",false,false
-21-30,21,30,female,pct,45.9,braak2011,Table 1,"Percent of the age category's brains that are female, age category 21-30 y",false,false
-21-30,21,30,male,n,33,braak2011,Table 1,"Number of brains, male, age category 21-30 y",false,false
-21-30,21,30,male,pct,54.1,braak2011,Table 1,"Percent of the age category's brains that are male, age category 21-30 y",false,false
-21-30,21,30,total,n,61,braak2011,Table 1,"Number of brains, total, age category 21-30 y",false,false
-31-40,31,40,female,n,47,braak2011,Table 1,"Number of brains, female, age category 31-40 y",false,false
-31-40,31,40,female,pct,47.0,braak2011,Table 1,"Percent of the age category's brains that are female, age category 31-40 y",false,false
-31-40,31,40,male,n,53,braak2011,Table 1,"Number of brains, male, age category 31-40 y",false,false
-31-40,31,40,male,pct,53.0,braak2011,Table 1,"Percent of the age category's brains that are male, age category 31-40 y",false,false
-31-40,31,40,total,n,100,braak2011,Table 1,"Number of brains, total, age category 31-40 y",false,false
-41-50,41,50,female,n,90,braak2011,Table 1,"Number of brains, female, age category 41-50 y",false,false
-41-50,41,50,female,pct,47.9,braak2011,Table 1,"Percent of the age category's brains that are female, age category 41-50 y",false,false
-41-50,41,50,male,n,98,braak2011,Table 1,"Number of brains, male, age category 41-50 y",false,false
-41-50,41,50,male,pct,52.1,braak2011,Table 1,"Percent of the age category's brains that are male, age category 41-50 y",false,false
-41-50,41,50,total,n,188,braak2011,Table 1,"Number of brains, total, age category 41-50 y",false,false
-51-60,51,60,female,n,112,braak2011,Table 1,"Number of brains, female, age category 51-60 y",false,false
-51-60,51,60,female,pct,33.9,braak2011,Table 1,"Percent of the age category's brains that are female, age category 51-60 y",false,false
-51-60,51,60,male,n,218,braak2011,Table 1,"Number of brains, male, age category 51-60 y",false,false
-51-60,51,60,male,pct,66.1,braak2011,Table 1,"Percent of the age category's brains that are male, age category 51-60 y",false,false
-51-60,51,60,total,n,330,braak2011,Table 1,"Number of brains, total, age category 51-60 y",false,false
-61-70,61,70,female,n,182,braak2011,Table 1,"Number of brains, female, age category 61-70 y",false,false
-61-70,61,70,female,pct,37.0,braak2011,Table 1,"Percent of the age category's brains that are female, age category 61-70 y",false,false
-61-70,61,70,male,n,310,braak2011,Table 1,"Number of brains, male, age category 61-70 y",false,false
-61-70,61,70,male,pct,63.0,braak2011,Table 1,"Percent of the age category's brains that are male, age category 61-70 y",false,false
-61-70,61,70,total,n,492,braak2011,Table 1,"Number of brains, total, age category 61-70 y",false,false
-71-80,71,80,female,n,276,braak2011,Table 1,"Number of brains, female, age category 71-80 y",false,false
-71-80,71,80,female,pct,48.4,braak2011,Table 1,"Percent of the age category's brains that are female, age category 71-80 y",false,false
-71-80,71,80,male,n,294,braak2011,Table 1,"Number of brains, male, age category 71-80 y",false,false
-71-80,71,80,male,pct,51.6,braak2011,Table 1,"Percent of the age category's brains that are male, age category 71-80 y",false,false
-71-80,71,80,total,n,570,braak2011,Table 1,"Number of brains, total, age category 71-80 y",false,false
-81-90,81,90,female,n,259,braak2011,Table 1,"Number of brains, female, age category 81-90 y",false,false
-81-90,81,90,female,pct,53.5,braak2011,Table 1,"Percent of the age category's brains that are female, age category 81-90 y",false,false
-81-90,81,90,male,n,225,braak2011,Table 1,"Number of brains, male, age category 81-90 y",false,false
-81-90,81,90,male,pct,46.5,braak2011,Table 1,"Percent of the age category's brains that are male, age category 81-90 y",false,false
-81-90,81,90,total,n,484,braak2011,Table 1,"Number of brains, total, age category 81-90 y",false,false
-91-100,91,100,female,n,47,braak2011,Table 1,"Number of brains, female, age category 91-100 y",false,false
-91-100,91,100,female,pct,62.7,braak2011,Table 1,"Percent of the age category's brains that are female, age category 91-100 y",false,false
-91-100,91,100,male,n,28,braak2011,Table 1,"Number of brains, male, age category 91-100 y",false,false
-91-100,91,100,male,pct,37.3,braak2011,Table 1,"Percent of the age category's brains that are male, age category 91-100 y",false,false
-91-100,91,100,total,n,75,braak2011,Table 1,"Number of brains, total, age category 91-100 y",false,false
-column header,1,100,female,n,1049,braak2011,"Table 1, column header","Number of brains, female, all ages (column header n)",false,false
-column header,1,100,male,n,1283,braak2011,"Table 1, column header","Number of brains, male, all ages (column header n)",false,false
-column header,1,100,total,n,2332,braak2011,"Table 1, column header","Number of brains, total, all ages (column header n)",false,false
+1-10,1,10,female,n,3,braak2011,Table 1,"Number of brains, female, age category 1-10 y",false,true
+1-10,1,10,female,pct,37.5,braak2011,Table 1,"Percent of the age category's brains that are female, age category 1-10 y",false,true
+1-10,1,10,male,n,5,braak2011,Table 1,"Number of brains, male, age category 1-10 y",false,true
+1-10,1,10,male,pct,62.5,braak2011,Table 1,"Percent of the age category's brains that are male, age category 1-10 y",false,true
+1-10,1,10,total,n,8,braak2011,Table 1,"Number of brains, total, age category 1-10 y",false,true
+11-20,11,20,female,n,5,braak2011,Table 1,"Number of brains, female, age category 11-20 y",false,true
+11-20,11,20,female,pct,20.8,braak2011,Table 1,"Percent of the age category's brains that are female, age category 11-20 y",false,true
+11-20,11,20,male,n,19,braak2011,Table 1,"Number of brains, male, age category 11-20 y",false,true
+11-20,11,20,male,pct,79.2,braak2011,Table 1,"Percent of the age category's brains that are male, age category 11-20 y",false,true
+11-20,11,20,total,n,24,braak2011,Table 1,"Number of brains, total, age category 11-20 y",false,true
+21-30,21,30,female,n,28,braak2011,Table 1,"Number of brains, female, age category 21-30 y",false,true
+21-30,21,30,female,pct,45.9,braak2011,Table 1,"Percent of the age category's brains that are female, age category 21-30 y",false,true
+21-30,21,30,male,n,33,braak2011,Table 1,"Number of brains, male, age category 21-30 y",false,true
+21-30,21,30,male,pct,54.1,braak2011,Table 1,"Percent of the age category's brains that are male, age category 21-30 y",false,true
+21-30,21,30,total,n,61,braak2011,Table 1,"Number of brains, total, age category 21-30 y",false,true
+31-40,31,40,female,n,47,braak2011,Table 1,"Number of brains, female, age category 31-40 y",false,true
+31-40,31,40,female,pct,47.0,braak2011,Table 1,"Percent of the age category's brains that are female, age category 31-40 y",false,true
+31-40,31,40,male,n,53,braak2011,Table 1,"Number of brains, male, age category 31-40 y",false,true
+31-40,31,40,male,pct,53.0,braak2011,Table 1,"Percent of the age category's brains that are male, age category 31-40 y",false,true
+31-40,31,40,total,n,100,braak2011,Table 1,"Number of brains, total, age category 31-40 y",false,true
+41-50,41,50,female,n,90,braak2011,Table 1,"Number of brains, female, age category 41-50 y",false,true
+41-50,41,50,female,pct,47.9,braak2011,Table 1,"Percent of the age category's brains that are female, age category 41-50 y",false,true
+41-50,41,50,male,n,98,braak2011,Table 1,"Number of brains, male, age category 41-50 y",false,true
+41-50,41,50,male,pct,52.1,braak2011,Table 1,"Percent of the age category's brains that are male, age category 41-50 y",false,true
+41-50,41,50,total,n,188,braak2011,Table 1,"Number of brains, total, age category 41-50 y",false,true
+51-60,51,60,female,n,112,braak2011,Table 1,"Number of brains, female, age category 51-60 y",false,true
+51-60,51,60,female,pct,33.9,braak2011,Table 1,"Percent of the age category's brains that are female, age category 51-60 y",false,true
+51-60,51,60,male,n,218,braak2011,Table 1,"Number of brains, male, age category 51-60 y",false,true
+51-60,51,60,male,pct,66.1,braak2011,Table 1,"Percent of the age category's brains that are male, age category 51-60 y",false,true
+51-60,51,60,total,n,330,braak2011,Table 1,"Number of brains, total, age category 51-60 y",false,true
+61-70,61,70,female,n,182,braak2011,Table 1,"Number of brains, female, age category 61-70 y",false,true
+61-70,61,70,female,pct,37.0,braak2011,Table 1,"Percent of the age category's brains that are female, age category 61-70 y",false,true
+61-70,61,70,male,n,310,braak2011,Table 1,"Number of brains, male, age category 61-70 y",false,true
+61-70,61,70,male,pct,63.0,braak2011,Table 1,"Percent of the age category's brains that are male, age category 61-70 y",false,true
+61-70,61,70,total,n,492,braak2011,Table 1,"Number of brains, total, age category 61-70 y",false,true
+71-80,71,80,female,n,276,braak2011,Table 1,"Number of brains, female, age category 71-80 y",false,true
+71-80,71,80,female,pct,48.4,braak2011,Table 1,"Percent of the age category's brains that are female, age category 71-80 y",false,true
+71-80,71,80,male,n,294,braak2011,Table 1,"Number of brains, male, age category 71-80 y",false,true
+71-80,71,80,male,pct,51.6,braak2011,Table 1,"Percent of the age category's brains that are male, age category 71-80 y",false,true
+71-80,71,80,total,n,570,braak2011,Table 1,"Number of brains, total, age category 71-80 y",false,true
+81-90,81,90,female,n,259,braak2011,Table 1,"Number of brains, female, age category 81-90 y",false,true
+81-90,81,90,female,pct,53.5,braak2011,Table 1,"Percent of the age category's brains that are female, age category 81-90 y",false,true
+81-90,81,90,male,n,225,braak2011,Table 1,"Number of brains, male, age category 81-90 y",false,true
+81-90,81,90,male,pct,46.5,braak2011,Table 1,"Percent of the age category's brains that are male, age category 81-90 y",false,true
+81-90,81,90,total,n,484,braak2011,Table 1,"Number of brains, total, age category 81-90 y",false,true
+91-100,91,100,female,n,47,braak2011,Table 1,"Number of brains, female, age category 91-100 y",false,true
+91-100,91,100,female,pct,62.7,braak2011,Table 1,"Percent of the age category's brains that are female, age category 91-100 y",false,true
+91-100,91,100,male,n,28,braak2011,Table 1,"Number of brains, male, age category 91-100 y",false,true
+91-100,91,100,male,pct,37.3,braak2011,Table 1,"Percent of the age category's brains that are male, age category 91-100 y",false,true
+91-100,91,100,total,n,75,braak2011,Table 1,"Number of brains, total, age category 91-100 y",false,true
+column header,1,100,female,n,1049,braak2011,"Table 1, column header","Number of brains, female, all ages (column header n)",false,true
+column header,1,100,male,n,1283,braak2011,"Table 1, column header","Number of brains, male, all ages (column header n)",false,true
+column header,1,100,total,n,2332,braak2011,"Table 1, column header","Number of brains, total, all ages (column header n)",false,true

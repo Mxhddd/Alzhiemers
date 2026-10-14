@@ -1,133 +1,133 @@
 age_label_printed,age_lower,age_upper,amyloid_phase,measure,value,source_id,locator,quantity,verified,machine_rechecked
-column header,1,100,Phase 0,n,1301,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header",Number of brains in amyloid Phase 0,false,false
-column header,1,100,Phase 0,pct,55.8,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header","Percent of all 2,332 of brains in amyloid Phase 0",false,false
-column header,1,100,Phase 1,n,350,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header",Number of brains in amyloid Phase 1,false,false
-column header,1,100,Phase 1,pct,15.0,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header","Percent of all 2,332 of brains in amyloid Phase 1",false,false
-column header,1,100,Phase 2,n,418,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header",Number of brains in amyloid Phase 2,false,false
-column header,1,100,Phase 2,pct,17.9,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header","Percent of all 2,332 of brains in amyloid Phase 2",false,false
-column header,1,100,Phase 3,n,177,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header",Number of brains in amyloid Phase 3,false,false
-column header,1,100,Phase 3,pct,7.6,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header","Percent of all 2,332 of brains in amyloid Phase 3",false,false
-column header,1,100,Phase 4,n,86,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header",Number of brains in amyloid Phase 4,false,false
-column header,1,100,Phase 4,pct,3.7,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header","Percent of all 2,332 of brains in amyloid Phase 4",false,false
-column header,1,100,Total,n,2332,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header",Number of brains in amyloid Total,false,false
-column header,1,100,Total,pct,100,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header","Percent of all 2,332 of brains in amyloid Total",false,false
-01-10,1,10,Phase 0,n,8,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 01-10 y",false,false
-01-10,1,10,Phase 0,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 01-10 y",false,false
-01-10,1,10,Phase 1,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 01-10 y",false,false
-01-10,1,10,Phase 1,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 01-10 y",false,false
-01-10,1,10,Phase 2,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 01-10 y",false,false
-01-10,1,10,Phase 2,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 01-10 y",false,false
-01-10,1,10,Phase 3,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 01-10 y",false,false
-01-10,1,10,Phase 3,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 01-10 y",false,false
-01-10,1,10,Phase 4,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 01-10 y",false,false
-01-10,1,10,Phase 4,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 01-10 y",false,false
-01-10,1,10,Total,n,8,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 01-10 y",false,false
-01-10,1,10,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 01-10 y",false,false
-11-20,11,20,Phase 0,n,23,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 11-20 y",false,false
-11-20,11,20,Phase 0,pct,95.8,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 11-20 y",false,false
-11-20,11,20,Phase 1,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 11-20 y",false,false
-11-20,11,20,Phase 1,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 11-20 y",false,false
-11-20,11,20,Phase 2,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 11-20 y",false,false
-11-20,11,20,Phase 2,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 11-20 y",false,false
-11-20,11,20,Phase 3,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 11-20 y",false,false
-11-20,11,20,Phase 3,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 11-20 y",false,false
-11-20,11,20,Phase 4,n,1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 11-20 y",false,false
-11-20,11,20,Phase 4,pct,4.2,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 11-20 y",false,false
-11-20,11,20,Total,n,24,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 11-20 y",false,false
-11-20,11,20,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 11-20 y",false,false
-21-30,21,30,Phase 0,n,61,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 21-30 y",false,false
-21-30,21,30,Phase 0,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 21-30 y",false,false
-21-30,21,30,Phase 1,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 21-30 y",false,false
-21-30,21,30,Phase 1,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 21-30 y",false,false
-21-30,21,30,Phase 2,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 21-30 y",false,false
-21-30,21,30,Phase 2,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 21-30 y",false,false
-21-30,21,30,Phase 3,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 21-30 y",false,false
-21-30,21,30,Phase 3,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 21-30 y",false,false
-21-30,21,30,Phase 4,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 21-30 y",false,false
-21-30,21,30,Phase 4,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 21-30 y",false,false
-21-30,21,30,Total,n,61,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 21-30 y",false,false
-21-30,21,30,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 21-30 y",false,false
-31-40,31,40,Phase 0,n,96,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 31-40 y",false,false
-31-40,31,40,Phase 0,pct,96,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 31-40 y",false,false
-31-40,31,40,Phase 1,n,2,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 31-40 y",false,false
-31-40,31,40,Phase 1,pct,2,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 31-40 y",false,false
-31-40,31,40,Phase 2,n,1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 31-40 y",false,false
-31-40,31,40,Phase 2,pct,1.0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 31-40 y",false,false
-31-40,31,40,Phase 3,n,1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 31-40 y",false,false
-31-40,31,40,Phase 3,pct,1.0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 31-40 y",false,false
-31-40,31,40,Phase 4,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 31-40 y",false,false
-31-40,31,40,Phase 4,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 31-40 y",false,false
-31-40,31,40,Total,n,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 31-40 y",false,false
-31-40,31,40,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 31-40 y",false,false
-41-50,41,50,Phase 0,n,168,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 41-50 y",false,false
-41-50,41,50,Phase 0,pct,89.4,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 41-50 y",false,false
-41-50,41,50,Phase 1,n,11,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 41-50 y",false,false
-41-50,41,50,Phase 1,pct,5.9,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 41-50 y",false,false
-41-50,41,50,Phase 2,n,5,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 41-50 y",false,false
-41-50,41,50,Phase 2,pct,2.7,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 41-50 y",false,false
-41-50,41,50,Phase 3,n,2,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 41-50 y",false,false
-41-50,41,50,Phase 3,pct,1.1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 41-50 y",false,false
-41-50,41,50,Phase 4,n,2,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 41-50 y",false,false
-41-50,41,50,Phase 4,pct,1.1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 41-50 y",false,false
-41-50,41,50,Total,n,188,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 41-50 y",false,false
-41-50,41,50,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 41-50 y",false,false
-51-60,51,60,Phase 0,n,249,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 51-60 y",false,false
-51-60,51,60,Phase 0,pct,75.5,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 51-60 y",false,false
-51-60,51,60,Phase 1,n,43,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 51-60 y",false,false
-51-60,51,60,Phase 1,pct,13.0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 51-60 y",false,false
-51-60,51,60,Phase 2,n,28,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 51-60 y",false,false
-51-60,51,60,Phase 2,pct,8.5,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 51-60 y",false,false
-51-60,51,60,Phase 3,n,7,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 51-60 y",false,false
-51-60,51,60,Phase 3,pct,2.1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 51-60 y",false,false
-51-60,51,60,Phase 4,n,3,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 51-60 y",false,false
-51-60,51,60,Phase 4,pct,0.9,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 51-60 y",false,false
-51-60,51,60,Total,n,330,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 51-60 y",false,false
-51-60,51,60,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 51-60 y",false,false
-61-70,61,70,Phase 0,n,311,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 61-70 y",false,false
-61-70,61,70,Phase 0,pct,63.2,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 61-70 y",false,false
-61-70,61,70,Phase 1,n,89,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 61-70 y",false,false
-61-70,61,70,Phase 1,pct,18.1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 61-70 y",false,false
-61-70,61,70,Phase 2,n,64,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 61-70 y",false,false
-61-70,61,70,Phase 2,pct,13.0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 61-70 y",false,false
-61-70,61,70,Phase 3,n,20,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 61-70 y",false,false
-61-70,61,70,Phase 3,pct,4.1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 61-70 y",false,false
-61-70,61,70,Phase 4,n,8,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 61-70 y",false,false
-61-70,61,70,Phase 4,pct,1.6,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 61-70 y",false,false
-61-70,61,70,Total,n,492,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 61-70 y",false,false
-61-70,61,70,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 61-70 y",false,false
-71-80,71,80,Phase 0,n,238,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 71-80 y",false,false
-71-80,71,80,Phase 0,pct,41.8,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 71-80 y",false,false
-71-80,71,80,Phase 1,n,107,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 71-80 y",false,false
-71-80,71,80,Phase 1,pct,18.8,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 71-80 y",false,false
-71-80,71,80,Phase 2,n,149,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 71-80 y",false,false
-71-80,71,80,Phase 2,pct,26.1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 71-80 y",false,false
-71-80,71,80,Phase 3,n,53,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 71-80 y",false,false
-71-80,71,80,Phase 3,pct,9.3,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 71-80 y",false,false
-71-80,71,80,Phase 4,n,23,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 71-80 y",false,false
-71-80,71,80,Phase 4,pct,4.0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 71-80 y",false,false
-71-80,71,80,Total,n,570,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 71-80 y",false,false
-71-80,71,80,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 71-80 y",false,false
-81-90,81,90,Phase 0,n,128,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 81-90 y",false,false
-81-90,81,90,Phase 0,pct,26.4,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 81-90 y",false,false
-81-90,81,90,Phase 1,n,88,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 81-90 y",false,false
-81-90,81,90,Phase 1,pct,18.2,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 81-90 y",false,false
-81-90,81,90,Phase 2,n,151,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 81-90 y",false,false
-81-90,81,90,Phase 2,pct,31.2,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 81-90 y",false,false
-81-90,81,90,Phase 3,n,74,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 81-90 y",false,false
-81-90,81,90,Phase 3,pct,15.3,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 81-90 y",false,false
-81-90,81,90,Phase 4,n,43,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 81-90 y",false,false
-81-90,81,90,Phase 4,pct,8.9,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 81-90 y",false,false
-81-90,81,90,Total,n,484,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 81-90 y",false,false
-81-90,81,90,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 81-90 y",false,false
-91-100,91,100,Phase 0,n,19,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 91-100 y",false,false
-91-100,91,100,Phase 0,pct,25.3,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 91-100 y",false,false
-91-100,91,100,Phase 1,n,10,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 91-100 y",false,false
-91-100,91,100,Phase 1,pct,13.3,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 91-100 y",false,false
-91-100,91,100,Phase 2,n,20,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 91-100 y",false,false
-91-100,91,100,Phase 2,pct,26.7,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 91-100 y",false,false
-91-100,91,100,Phase 3,n,20,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 91-100 y",false,false
-91-100,91,100,Phase 3,pct,26.7,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 91-100 y",false,false
-91-100,91,100,Phase 4,n,6,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 91-100 y",false,false
-91-100,91,100,Phase 4,pct,8.0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 91-100 y",false,false
-91-100,91,100,Total,n,75,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 91-100 y",false,false
-91-100,91,100,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 91-100 y",false,false
+column header,1,100,Phase 0,n,1301,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header",Number of brains in amyloid Phase 0,false,true
+column header,1,100,Phase 0,pct,55.8,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header","Percent of all 2,332 of brains in amyloid Phase 0",false,true
+column header,1,100,Phase 1,n,350,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header",Number of brains in amyloid Phase 1,false,true
+column header,1,100,Phase 1,pct,15.0,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header","Percent of all 2,332 of brains in amyloid Phase 1",false,true
+column header,1,100,Phase 2,n,418,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header",Number of brains in amyloid Phase 2,false,true
+column header,1,100,Phase 2,pct,17.9,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header","Percent of all 2,332 of brains in amyloid Phase 2",false,true
+column header,1,100,Phase 3,n,177,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header",Number of brains in amyloid Phase 3,false,true
+column header,1,100,Phase 3,pct,7.6,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header","Percent of all 2,332 of brains in amyloid Phase 3",false,true
+column header,1,100,Phase 4,n,86,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header",Number of brains in amyloid Phase 4,false,true
+column header,1,100,Phase 4,pct,3.7,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header","Percent of all 2,332 of brains in amyloid Phase 4",false,true
+column header,1,100,Total,n,2332,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header",Number of brains in amyloid Total,false,true
+column header,1,100,Total,pct,100,braak2011,"Supplemental Digital Content 2 (Supplementary Table 2), column header","Percent of all 2,332 of brains in amyloid Total",false,true
+01-10,1,10,Phase 0,n,8,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 01-10 y",false,true
+01-10,1,10,Phase 0,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 01-10 y",false,true
+01-10,1,10,Phase 1,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 01-10 y",false,true
+01-10,1,10,Phase 1,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 01-10 y",false,true
+01-10,1,10,Phase 2,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 01-10 y",false,true
+01-10,1,10,Phase 2,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 01-10 y",false,true
+01-10,1,10,Phase 3,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 01-10 y",false,true
+01-10,1,10,Phase 3,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 01-10 y",false,true
+01-10,1,10,Phase 4,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 01-10 y",false,true
+01-10,1,10,Phase 4,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 01-10 y",false,true
+01-10,1,10,Total,n,8,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 01-10 y",false,true
+01-10,1,10,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 01-10 y",false,true
+11-20,11,20,Phase 0,n,23,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 11-20 y",false,true
+11-20,11,20,Phase 0,pct,95.8,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 11-20 y",false,true
+11-20,11,20,Phase 1,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 11-20 y",false,true
+11-20,11,20,Phase 1,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 11-20 y",false,true
+11-20,11,20,Phase 2,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 11-20 y",false,true
+11-20,11,20,Phase 2,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 11-20 y",false,true
+11-20,11,20,Phase 3,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 11-20 y",false,true
+11-20,11,20,Phase 3,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 11-20 y",false,true
+11-20,11,20,Phase 4,n,1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 11-20 y",false,true
+11-20,11,20,Phase 4,pct,4.2,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 11-20 y",false,true
+11-20,11,20,Total,n,24,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 11-20 y",false,true
+11-20,11,20,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 11-20 y",false,true
+21-30,21,30,Phase 0,n,61,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 21-30 y",false,true
+21-30,21,30,Phase 0,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 21-30 y",false,true
+21-30,21,30,Phase 1,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 21-30 y",false,true
+21-30,21,30,Phase 1,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 21-30 y",false,true
+21-30,21,30,Phase 2,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 21-30 y",false,true
+21-30,21,30,Phase 2,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 21-30 y",false,true
+21-30,21,30,Phase 3,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 21-30 y",false,true
+21-30,21,30,Phase 3,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 21-30 y",false,true
+21-30,21,30,Phase 4,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 21-30 y",false,true
+21-30,21,30,Phase 4,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 21-30 y",false,true
+21-30,21,30,Total,n,61,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 21-30 y",false,true
+21-30,21,30,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 21-30 y",false,true
+31-40,31,40,Phase 0,n,96,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 31-40 y",false,true
+31-40,31,40,Phase 0,pct,96,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 31-40 y",false,true
+31-40,31,40,Phase 1,n,2,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 31-40 y",false,true
+31-40,31,40,Phase 1,pct,2,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 31-40 y",false,true
+31-40,31,40,Phase 2,n,1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 31-40 y",false,true
+31-40,31,40,Phase 2,pct,1.0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 31-40 y",false,true
+31-40,31,40,Phase 3,n,1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 31-40 y",false,true
+31-40,31,40,Phase 3,pct,1.0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 31-40 y",false,true
+31-40,31,40,Phase 4,n,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 31-40 y",false,true
+31-40,31,40,Phase 4,pct,0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 31-40 y",false,true
+31-40,31,40,Total,n,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 31-40 y",false,true
+31-40,31,40,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 31-40 y",false,true
+41-50,41,50,Phase 0,n,168,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 41-50 y",false,true
+41-50,41,50,Phase 0,pct,89.4,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 41-50 y",false,true
+41-50,41,50,Phase 1,n,11,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 41-50 y",false,true
+41-50,41,50,Phase 1,pct,5.9,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 41-50 y",false,true
+41-50,41,50,Phase 2,n,5,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 41-50 y",false,true
+41-50,41,50,Phase 2,pct,2.7,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 41-50 y",false,true
+41-50,41,50,Phase 3,n,2,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 41-50 y",false,true
+41-50,41,50,Phase 3,pct,1.1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 41-50 y",false,true
+41-50,41,50,Phase 4,n,2,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 41-50 y",false,true
+41-50,41,50,Phase 4,pct,1.1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 41-50 y",false,true
+41-50,41,50,Total,n,188,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 41-50 y",false,true
+41-50,41,50,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 41-50 y",false,true
+51-60,51,60,Phase 0,n,249,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 51-60 y",false,true
+51-60,51,60,Phase 0,pct,75.5,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 51-60 y",false,true
+51-60,51,60,Phase 1,n,43,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 51-60 y",false,true
+51-60,51,60,Phase 1,pct,13.0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 51-60 y",false,true
+51-60,51,60,Phase 2,n,28,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 51-60 y",false,true
+51-60,51,60,Phase 2,pct,8.5,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 51-60 y",false,true
+51-60,51,60,Phase 3,n,7,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 51-60 y",false,true
+51-60,51,60,Phase 3,pct,2.1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 51-60 y",false,true
+51-60,51,60,Phase 4,n,3,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 51-60 y",false,true
+51-60,51,60,Phase 4,pct,0.9,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 51-60 y",false,true
+51-60,51,60,Total,n,330,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 51-60 y",false,true
+51-60,51,60,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 51-60 y",false,true
+61-70,61,70,Phase 0,n,311,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 61-70 y",false,true
+61-70,61,70,Phase 0,pct,63.2,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 61-70 y",false,true
+61-70,61,70,Phase 1,n,89,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 61-70 y",false,true
+61-70,61,70,Phase 1,pct,18.1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 61-70 y",false,true
+61-70,61,70,Phase 2,n,64,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 61-70 y",false,true
+61-70,61,70,Phase 2,pct,13.0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 61-70 y",false,true
+61-70,61,70,Phase 3,n,20,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 61-70 y",false,true
+61-70,61,70,Phase 3,pct,4.1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 61-70 y",false,true
+61-70,61,70,Phase 4,n,8,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 61-70 y",false,true
+61-70,61,70,Phase 4,pct,1.6,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 61-70 y",false,true
+61-70,61,70,Total,n,492,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 61-70 y",false,true
+61-70,61,70,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 61-70 y",false,true
+71-80,71,80,Phase 0,n,238,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 71-80 y",false,true
+71-80,71,80,Phase 0,pct,41.8,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 71-80 y",false,true
+71-80,71,80,Phase 1,n,107,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 71-80 y",false,true
+71-80,71,80,Phase 1,pct,18.8,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 71-80 y",false,true
+71-80,71,80,Phase 2,n,149,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 71-80 y",false,true
+71-80,71,80,Phase 2,pct,26.1,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 71-80 y",false,true
+71-80,71,80,Phase 3,n,53,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 71-80 y",false,true
+71-80,71,80,Phase 3,pct,9.3,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 71-80 y",false,true
+71-80,71,80,Phase 4,n,23,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 71-80 y",false,true
+71-80,71,80,Phase 4,pct,4.0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 71-80 y",false,true
+71-80,71,80,Total,n,570,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 71-80 y",false,true
+71-80,71,80,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 71-80 y",false,true
+81-90,81,90,Phase 0,n,128,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 81-90 y",false,true
+81-90,81,90,Phase 0,pct,26.4,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 81-90 y",false,true
+81-90,81,90,Phase 1,n,88,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 81-90 y",false,true
+81-90,81,90,Phase 1,pct,18.2,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 81-90 y",false,true
+81-90,81,90,Phase 2,n,151,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 81-90 y",false,true
+81-90,81,90,Phase 2,pct,31.2,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 81-90 y",false,true
+81-90,81,90,Phase 3,n,74,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 81-90 y",false,true
+81-90,81,90,Phase 3,pct,15.3,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 81-90 y",false,true
+81-90,81,90,Phase 4,n,43,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 81-90 y",false,true
+81-90,81,90,Phase 4,pct,8.9,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 81-90 y",false,true
+81-90,81,90,Total,n,484,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 81-90 y",false,true
+81-90,81,90,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 81-90 y",false,true
+91-100,91,100,Phase 0,n,19,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 0, age category 91-100 y",false,true
+91-100,91,100,Phase 0,pct,25.3,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 0, age category 91-100 y",false,true
+91-100,91,100,Phase 1,n,10,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 1, age category 91-100 y",false,true
+91-100,91,100,Phase 1,pct,13.3,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 1, age category 91-100 y",false,true
+91-100,91,100,Phase 2,n,20,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 2, age category 91-100 y",false,true
+91-100,91,100,Phase 2,pct,26.7,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 2, age category 91-100 y",false,true
+91-100,91,100,Phase 3,n,20,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 3, age category 91-100 y",false,true
+91-100,91,100,Phase 3,pct,26.7,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 3, age category 91-100 y",false,true
+91-100,91,100,Phase 4,n,6,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Phase 4, age category 91-100 y",false,true
+91-100,91,100,Phase 4,pct,8.0,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Phase 4, age category 91-100 y",false,true
+91-100,91,100,Total,n,75,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Number of brains in amyloid Total, age category 91-100 y",false,true
+91-100,91,100,Total,pct,100,braak2011,Supplemental Digital Content 2 (Supplementary Table 2),"Row percent of brains in amyloid Total, age category 91-100 y",false,true

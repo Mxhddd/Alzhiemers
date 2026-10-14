@@ -1,0 +1,12 @@
+age_label,female_n,female_pct,male_n,male_pct,total_n,note
+1–10,3,37.5,5,62.5,8,
+11–20,5,20.8,19,79.2,24,
+21–30,28,45.9,33,54.1,61,
+31–40,47,47.0,53,53.0,100,
+41–50,90,47.9,98,52.1,188,
+51–60,112,33.9,218,66.1,330,
+61–70,182,37.0,310,63.0,492,
+71–80,276,48.4,294,51.6,570,
+81–90,259,53.5,225,46.5,484,
+91–100,47,62.7,28,37.3,75,
+column header,1049,NOT_PRINTED,1283,NOT_PRINTED,2332,"headers printed as 'Females (n = 1,049)', 'Males (n =1,283)' (no space after =), 'Total (n = 2,332)'; age labels use en dash as printed"

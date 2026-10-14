@@ -17,7 +17,7 @@ tracked in git.
 | matthews2016 | Matthews FE, Stephan BC, Robinson L, et al. A two decade dementia incidence comparison from the Cognitive Function and Ageing Studies I and II. *Nat Commun* 2016;7:11398. doi:10.1038/ncomms11398. PMID 27092707, PMC4838896 | Europe PMC full-text XML (open access) |
 | jansen2015 | Jansen WJ, Ossenkoppele R, Knol DL, et al. Prevalence of cerebral amyloid pathology in persons without dementia: a meta-analysis. *JAMA* 2015;313(19):1924–1938. doi:10.1001/jama.2015.4668. PMID 25988462, PMC4486209 | NCBI E-utilities PMC XML (author manuscript) |
 | ossenkoppele2022 | Ossenkoppele R, Pichet Binette A, Groot C, et al. Amyloid and tau PET-positive cognitively unimpaired individuals are at high risk for future cognitive decline. *Nat Med* 2022;28(11):2381–2387. doi:10.1038/s41591-022-02049-x. PMID 36357681, PMC9671808 | Europe PMC full-text XML (open access) |
-| braak2011 | Braak H, Thal DR, Ghebremedhin E, Del Tredici K. Stages of the pathologic process in Alzheimer disease: age categories from 1 to 100 years. *J Neuropathol Exp Neurol* 2011;70(11):960–969. doi:10.1097/NEN.0b013e318232a379. PMID 22002422 | **Abstract only** (PubMed). Full text is paywalled and the publisher site blocks automated access |
+| braak2011 | Braak H, Thal DR, Ghebremedhin E, Del Tredici K. Stages of the pathologic process in Alzheimer disease: age categories from 1 to 100 years. *J Neuropathol Exp Neurol* 2011;70(11):960–969. doi:10.1097/NEN.0b013e318232a379. PMID 22002422 | **Full text PDF supplied by the researcher on 2026-10-13**, saved as `data/raw/papers/braak2011.pdf` (sha256 9bc53256…f2bd2). **Supplemental Digital Content 1 and 2** were downloaded on 2026-10-13 from the publisher's open permalinks https://links.lww.com/NEN/A273 and https://links.lww.com/NEN/A274 (HTTP 200, no login, no bot check). Saved as `braak2011_sdc1.doc` (sha256 fdccf6bc…2b256c) and `braak2011_sdc2.doc` (sha256 44b988b7…7466). The earlier abstract-only extraction is kept in `braak2011_abstract_totals.csv` |
 
 ## Notes for the verifier
 
@@ -35,16 +35,59 @@ tracked in git.
   of **Table 1** the "Progression to MCI" percentages for A−T− and A+T−
   appear swapped relative to the Results text (text: 26/781 = 3.3% for
   A−T−, 26/292 = 8.9% for A+T−). Table 1 was not used.
-- **braak2011**: only abstract totals are extracted (used as consistency
-  checks: the full stage-by-age table must reproduce them).
+- **braak2011** (full extraction 2026-10-13, `python -m src.extraction.braak2011`):
+  - `braak2011_table1.csv`: Table 1, sex by age category (53 cells).
+  - `braak2011_table2.csv`: Table 2, amyloid phase 0–4 by AT8 stage group
+    (0, a–c, 1a–1b, I … VI), n and row %, plus the column headers (120 cells).
+    There is no age dimension.
+  - `braak2011_text_counts.csv`: every count printed in the Results and
+    Discussion text, the Figure 1 panel titles and the totals above the
+    Figure 2 bars (51 rows). Bar heights were not read.
+  - `braak2011_stage_counts.csv`: **Supplementary Table 1**, the 12 AT8 stages
+    (0, a, b, c, 1a, 1b, I–VI) by 10 age categories (120 counts). This is
+    Module 2's input. SDC 1 prints the first age category as "00-10"; the
+    paper's Table 1 prints "1–10" and the cohort is aged 1–100, so the band
+    is stored as 1–10 (`age_label_printed` keeps "00-10").
+  - `braak2011_sdc1_groups.csv`: SDC 1 grouped columns and printed row
+    percentages, plus its total row (144 cells).
+  - `braak2011_sdc2_amyloid_by_age.csv`: **Supplementary Table 2**, amyloid
+    phase 0–4 by age category, n and row % (132 cells). Module 2's A(t) is
+    derived from it in code.
+  - `braak2011_sum_checks.md`: 51 consistency checks. **All 43 count checks
+    pass**: rows and columns sum to the printed totals, and the totals agree
+    across Table 1, Table 2, both supplements and the text. Two checks of
+    printed percentages or prose numbers show the **source disagreeing with
+    itself**:
+    - SDC 1 prints 34.3% for 21/61 (34.4%), age 21–30, stages a–c.
+    - The Discussion says "52 cases … (pretangle Stage 'a')". The Results
+      and SDC 1 give 40 stage-a cases; 52 = stage a + stage b. The 52 is
+      stored as printed and not used.
+  - **Per-brain amyloid by tau stage by age is not in the paper or its
+    supplements.** Table 2 crosses amyloid with tau stage without age. SDC 1
+    crosses tau stage with age without amyloid. SDC 2 crosses amyloid with
+    age without tau stage. Figure 3 plots tau stage against age and amyloid
+    against age in separate panels, which cannot be linked per brain. Three
+    two-way tables do not determine the three-way table.
+  - **Blind second reading (2026-10-14):** a separate agent read rendered page
+    images of the paper and both supplements, never the stored values or the
+    text layer, and transcribed every table, text count and figure label.
+    `python -m src.extraction.recheck_braak2011` compared all of them:
+    **620 of 620 values agree**, so `machine_rechecked` is true on every row
+    (log: `recheck/braak2011/recheck_log.md`). `verified` stays false.
+    The second reader independently found the same two inconsistencies (34.3%
+    and the Discussion's "52"). It also noted three wording points that change
+    no number:
+    - the Results say 1b cases are "designated in Table 2", but Table 2 has
+      only a combined 1a–1b row (the 236 is in SDC 1);
+    - the Discussion's 1,291 "pretangle or early NFT stages without plaques"
+      is phase 0 minus the 10 no-change cases, which also includes phase-0
+      brains at stages III–V;
+    - the Results cite "Fig. 1A", but Figure 1 has no panel letters.
 
 ## Not found / blocked
 
-- **Braak 2011 stage counts by age** (`braak2011_stage_counts.csv` is empty):
-  the per-decade × per-stage counts are in the paywalled full text.
-  Needed: the PDF, placed at `data/raw/papers/braak2011.pdf` (git-ignored).
-- **Braak 2011 amyloid-plaque prevalence by decade** (same cohort; primary
-  A(t) for model A): same PDF.
+- ~~Braak 2011 stage counts by age~~ and ~~amyloid by age~~: resolved
+  2026-10-13 from the paper's open supplements (above).
 - **An amyloid-stratified hazard ratio for incident tau-PET positivity**
   (closer to the LC→cortex transition than clinical progression): searched,
   not found in open access. The γ derivation uses ossenkoppele2022 as a proxy

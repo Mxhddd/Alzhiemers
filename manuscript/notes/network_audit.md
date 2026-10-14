@@ -77,6 +77,8 @@ script.
 | molgenis26.gcc.rug.nl | eQTLGen downloads | 200 | |
 | storage.googleapis.com | FinnGen R10 public summary statistics | 200 | The manifest is `R10_manifest.tsv`. A first guess at the file name gave 404 from Google (host reachable) |
 | api.semanticscholar.org | literature metadata | 200 | Unauthenticated, rate-limited |
+| packagemanager.posit.co (p3m.dev) | CRAN as prebuilt Linux binaries for Ubuntu noble | 200 | Tested 2026-10-14. Used to install R packages without compiling |
+| links.lww.com, cdn-links.lww.com | Supplemental Digital Content of LWW journals | 200 | Tested 2026-10-14 for the Braak 2011 supplements; no bot check on the permalinks (unlike journals.lww.com) |
 
 ## Consequences for the modules
 
