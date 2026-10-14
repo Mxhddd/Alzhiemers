@@ -19,6 +19,7 @@ association, not a question this module asks.
 | Date | Change |
 |---|---|
 | 2026-10-13 | First complete draft. |
+| 2026-10-14 | **Known property of the verdict rule, measured before any real pooling (no method change).** The dry run on simulated null data (every true ratio 1) produced one AGAINST at the 95% level (DHP CCB contrast; inconclusive at the Bonferroni level). A calibration simulation followed (`sim/meta_verdict_calibration.R`; 4,000 data sets per cell; k = 2–10 studies; τ = 0 or 0.1). Under the null, REML with Knapp–Hartung gives a false AGAINST in **2.2–3.5%** of contrasts (nominal 2.5%), and excludes 1 on either side in 4.7–6.9%. The z interval reaches 4.4% and 8.8% with heterogeneity. The ad hoc Knapp–Hartung variant gives 0–2.0%, too conservative at k ≤ 6. **Knapp–Hartung is kept as pre-specified.** Consequence, stated now: with 4 predicted contrasts and no true effect, "any contrast AGAINST at 95%" fires in roughly 10–13% of worlds (1 − (1 − 0.025…0.035)⁴). That is why the Bonferroni-level verdict is always reported alongside. | Measured on simulated data only. The real noradrenergic contrasts have not been pooled. |
 
 ## 1. Question
 
@@ -58,6 +59,11 @@ AGAINST at the 95% level. Whether it survives the Bonferroni level is
 reported alongside. **It counts in its favour** only if every predicted
 contrast with data is "supports" and none is AGAINST. A set of
 inconclusive contrasts is reported as no evidence either way.
+
+Known false-alarm rate of this rule (change log, 2026-10-14): with no true
+effect, a single contrast comes out AGAINST in about 2–3.5% of data sets, and
+"any of the 4 predicted contrasts AGAINST" in about 10–13%. An AGAINST
+verdict that does not survive the Bonferroni level is reported as such.
 
 Expected limitation, stated now: several contrasts have one or two studies
 (atomoxetine vs stimulants has none in open access). Many verdicts will be
