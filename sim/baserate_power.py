@@ -17,10 +17,12 @@ src/baserate/run_baserate.py::SIM_TRUTH):
   * B (independent cortical entry; common entry rate at age 50 equal to the
     LC-first world's, slope 0.1/decade);
   * C (2 hits, log rate -3.5).
-For every truth, each data set is analysed exactly as criterion 2 prescribes:
-A (age-adjusted), B and C are fitted, 5-fold CV by whole age band (bands
-dealt round-robin), summed held-out log-likelihood, margin 2, three-way
-verdict (src.baserate.run_baserate.cv_verdict_3way).
+For every truth, each data set is analysed exactly as criterion 2 prescribes
+(revised 2026-10-14): A (age-adjusted), B and C are fitted, 5-fold CV over
+brains within age bands (src.baserate.predict.brain_split, the configured split
+seed), summed held-out log-likelihood, margin 2, three-way verdict
+(src.baserate.run_baserate.cv_verdict_3way). The first design (whole age bands
+held out) is archived in results/dryrun/power/whole_band_design/.
 
 Simplifications (stated, not hidden):
   * full-data fits start from each model's pseudo-true value for that truth
@@ -61,7 +63,7 @@ from scipy.optimize import minimize
 from src.baserate.fit import bounds_for, fit_mle
 from src.baserate.jaxlik import make_loglik_family
 from src.baserate.model import AGatedAge, BIndependent, ChainSpec, CMultiHit
-from src.baserate.predict import age_band_folds
+from src.baserate.predict import brain_split
 from src.baserate.run_baserate import SIM_TRUTH, cv_verdict_3way, simulated_inputs
 from src.baserate.solve import stage_probabilities
 from src.common.config import load_config
@@ -121,7 +123,6 @@ def main(argv=None) -> int:
         "C multi-hit (2 hits)": (C, theta_for(C, {"log_lambda": -3.5})),
     }
     template = [StageCounts(float(lo), float(hi), "SIMULATED", np.zeros(len(spec.stages))) for lo, hi in BANDS]
-    folds = np.array(age_band_folds(template, k))
     OUT.mkdir(parents=True, exist_ok=True)
     reps_csv = OUT / f"baserate_power_reps_shard{args.shard}.csv"
 
@@ -216,17 +217,19 @@ def main(argv=None) -> int:
                 data = simulate_counts(tm, th, BANDS, N_PER_BAND, step=step, start_age=start,
                                        seed=100_000 + 1_000 * ti + r)
                 counts = np.array([g.counts for g in data], dtype=float)
-                row = {"truth": tname, "rep": r}
+                row = {"truth": tname, "rep": r, "cv_scheme": "brains_within_band"}
                 worst = 0.0
+                splits = brain_split(data, k, cfg.get("cross_validation.split_seed"))
                 for mname, m in models.items():
                     th_full, ll_full, pg = light_fit(m, mname, counts, ones, pseudo[tname][mname])
                     worst = max(worst, pg)
                     held = 0.0
-                    for f in range(k):
-                        train = (folds != f).astype(float)
-                        th_f, _, pg = light_fit(m, mname, counts, train, th_full)
+                    for train_g, test_g in splits:
+                        train_c = np.array([g.counts for g in train_g], dtype=float)
+                        test_c = np.array([g.counts for g in test_g], dtype=float)
+                        th_f, _, pg = light_fit(m, mname, train_c, ones, th_full)
                         worst = max(worst, pg)
-                        held += float(fam[mname][0](th_f, counts, 1.0 - train))
+                        held += float(fam[mname][0](th_f, test_c, ones))
                     row[f"full_{mname}"] = ll_full
                     row[f"cv_{mname}"] = held
                 row["max_projected_gradient"] = worst

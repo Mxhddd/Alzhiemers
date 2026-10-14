@@ -518,6 +518,7 @@ def main(argv=None) -> int:
         models = build_models(spec, primary, inputs, centre, scale, variants)
         prim: dict[str, dict] = {}
         cvrec: dict[str, dict] = {}
+        cvsens: dict[str, dict] = {}
         sens: dict[str, dict] = {}
         flags = {"cv_done": False}
 
@@ -568,15 +569,18 @@ def main(argv=None) -> int:
                     "posterior": post, "nuts": {**diag, "posterior_clean": clean},
                     "falsification": tab.to_dict("records"), "verdict": verdict}
 
-        def cv_stage(name):
+        def cv_stage(name, scheme):
             # the step the primary fit's audit settled on (prereg §4), not the default
             r = compare_models([models[name]], inputs.data, k=cfg.get("cross_validation.k"), step=prim[name]["step"],
                                start_age=start, cfg_mle=cfg.get("mle"), seed=seed, eval_mode=primary.eval_mode,
                                n_points=npts, warm_starts={name: np.array(prim[name]["fit"]["theta"])},
-                               n_random=cfg.get("cross_validation.n_random_starts"))[0]
-            run.info(f"cross-validation {name}: held-out logLik {r['cv_heldout_loglik']:.2f}")
-            return {"model": name, "cv_heldout_loglik": r["cv_heldout_loglik"], "k": r["k"],
-                    "per_fold": r["per_fold"]}
+                               n_random=cfg.get("cross_validation.n_random_starts"), scheme=scheme,
+                               split_seed=cfg.get("cross_validation.split_seed"))[0]
+            (run.info if r["unverified_folds"] == 0 else run.warning)(
+                f"cross-validation ({scheme}) {name}: held-out logLik {r['cv_heldout_loglik']:.2f}; "
+                f"folds without a verified fit: {r['unverified_folds']} of {r['k']}")
+            return {"model": name, "cv_heldout_loglik": r["cv_heldout_loglik"], "k": r["k"], "scheme": scheme,
+                    "unverified_folds": r["unverified_folds"], "per_fold": r["per_fold"]}
 
         def sens_stage(sc, name):
             m = build_model(spec, name, sc, inputs, centre, scale)
@@ -655,9 +659,15 @@ def main(argv=None) -> int:
             if flags["cv_done"]:
                 cv_df = pd.DataFrame([{k: v for k, v in r.items() if k != "per_fold"} for r in cvrec.values()]
                                      ).sort_values("cv_heldout_loglik", ascending=False)
-                out.append((cv_df.to_dict("records"), "baserate_cv.csv"))
-                crit.append({"criterion": "2: variant comparison (5-fold CV by age band)",
+                cv_rows = cv_df.to_dict("records")
+                crit.append({"criterion": "2: variant comparison (5-fold CV over brains within age bands)",
                              "verdict": cv_verdict_3way(cv_df, cfg.get("cross_validation.margin"), a_name)})
+                if len(cvsens) == len(cvrec):
+                    sdf = pd.DataFrame([{k: v for k, v in r.items() if k != "per_fold"} for r in cvsens.values()])
+                    cv_rows += sdf.to_dict("records")
+                    crit.append({"criterion": "2, sensitivity: whole-age-band CV",
+                                 "verdict": cv_verdict_3way(sdf, cfg.get("cross_validation.margin"), a_name)})
+                out.append((cv_rows, "baserate_cv.csv"))
             for name, rec in prim.items():
                 crit.append({"criterion": f"falsification: {name} (primary)", "verdict": rec["verdict"]})
             crit.append({"criterion": "1: amyloid gating", "verdict": "NOT TESTED (dropped 2026-10-13: no per-brain "
@@ -672,8 +682,9 @@ def main(argv=None) -> int:
             for name in variants:
                 prim[name] = stage(f"primary/{name}", lambda name=name: primary_fit(name))
                 flush_tables()
+            scheme = cfg.get("cross_validation.scheme")
             for name in variants:
-                cvrec[name] = stage(f"cv/{name}", lambda name=name: cv_stage(name))
+                cvrec[name] = stage(f"cv/{name}", lambda name=name: cv_stage(name, scheme))
             flags["cv_done"] = True
             flush_tables()
             cv_df = pd.DataFrame([{k: v for k, v in r.items() if k != "per_fold"} for r in cvrec.values()])
@@ -684,6 +695,10 @@ def main(argv=None) -> int:
                     sens[f"{sc.name}/{name}"] = stage(f"sensitivity/{sc.name}/{name}",
                                                       lambda sc=sc, name=name: sens_stage(sc, name))
                     flush_tables()
+            s_scheme = cfg.get("cross_validation.scheme_sensitivity")
+            for name in variants:
+                cvsens[name] = stage(f"sensitivity/cv_{s_scheme}/{name}", lambda name=name: cv_stage(name, s_scheme))
+                flush_tables()
         except OutOfTime as e:
             flush_tables()
             run.warning(f"time budget of {args.max_minutes} min spent: stopping before stage {e}; "

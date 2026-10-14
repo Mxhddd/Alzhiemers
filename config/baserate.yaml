@@ -222,12 +222,29 @@ falsification:
   n_draws: 200
 
 cross_validation:
-  # Folds are formed from whole age bands (brief: k-fold by age band). 5 is
-  # a choice balancing bias and variance; fewer bands than folds is an error.
+  # Number of folds: 5, a choice balancing bias and variance.
   k: 5
+  # How folds are formed (brief: "k-fold cross-validation by age band"; both
+  # readings are run). DECIDED 2026-10-14 on simulated data only (prereg
+  # change log): primary = brains dealt at random to the k folds WITHIN every
+  # age band (stratified by band; src/baserate/predict.py::brain_split), so
+  # every training set covers every band and every stage. The first design,
+  # whole age bands held out (round-robin), failed in the power study. A stage
+  # seen only in the held-out band (e.g. stage VI only at 91-100) gets
+  # probability ~1e-12 from every model, and the comparison is then decided by
+  # numerical noise in that band (up to ~700 log-lik units). It is kept as the
+  # sensitivity analysis below.
+  scheme: brains_within_band
+  # Sensitivity: whole age bands held out (the first design).
+  scheme_sensitivity: whole_age_band
+  # Seed for dealing brains to folds (fixed before any real fit).
+  split_seed: 20261014
   # Starts per fold: the full-data MLE (warm start) plus this many random
   # starts. Warm-starting changes only which optimum the search reaches, not
-  # what is evaluated (held-out bands are never used for fitting).
+  # what is evaluated (held-out brains are never used for fitting). A fold fit
+  # where no start passes the convergence test (a training subset can leave a
+  # direction flat) uses the best start by training log-likelihood and is
+  # counted and reported as unverified; the run does not stop.
   n_random_starts: 4
   # Model comparison margin: a variant is called better only if its summed
   # held-out log-likelihood exceeds the next by more than this.

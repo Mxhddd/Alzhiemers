@@ -84,6 +84,7 @@ class MLEResult:
     on_bound: list[str]       # parameters whose estimate sits on the search box
     messages: list[str]
     cov: np.ndarray | None = None   # inverse observed information (None if the Hessian is not positive definite)
+    verified: bool = True           # False: no start met the convergence test (allow_unverified fits only)
 
     @property
     def aic(self) -> float:
@@ -141,9 +142,13 @@ def initial_values(model: StageModel, rng: np.random.Generator, cfg_mle: dict) -
 def fit_mle(model: StageModel, data: list[StageCounts], *, step: float, start_age: float,
             cfg_mle: dict, seed: int, eval_mode: str = "midpoint", n_points: int = 10,
             extra_starts: list[np.ndarray] | None = None, n_random: int | None = None,
-            compiled: tuple | None = None) -> MLEResult:
+            compiled: tuple | None = None, allow_unverified: bool = False) -> MLEResult:
     """Multi-start L-BFGS-B on exact (JAX) gradients inside the configured
     box; SEs from the exact Hessian. An optimum on the box edge is reported.
+    allow_unverified: if no start passes the convergence test, return the
+    best finite start (by log-likelihood) with verified=False instead of
+    raising. Used only for cross-validation folds, where a training subset
+    can leave a direction flat (prereg §5); the flag is reported.
     `compiled` = (loglik, value_and_grad, hessian) functions of theta only,
     already bound to `data` (e.g. from jaxlik.make_loglik_family); default:
     compile them here."""
@@ -167,7 +172,7 @@ def fit_mle(model: StageModel, data: list[StageCounts], *, step: float, start_ag
     rng = np.random.default_rng(seed)
     box = bounds_for(model, cfg_mle)
     lo_b = np.array([b[0] for b in box]); hi_b = np.array([b[1] for b in box])
-    results, messages = [], []
+    results, messages, unverified = [], [], []
     starts = list(extra_starts or []) + [initial_values(model, rng, cfg_mle)
                                          for _ in range(cfg_mle["n_starts"] if n_random is None else n_random)]
     for x0 in starts:
@@ -186,8 +191,14 @@ def fit_mle(model: StageModel, data: list[StageCounts], *, step: float, start_ag
                         f"{n_newton} Newton steps; remaining gain {dec:.2e} log-lik")
         if ok:
             results.append(type(r)(x=x, fun=fx))
+        elif np.isfinite(fx):
+            unverified.append(type(r)(x=x, fun=fx))
+    verified = bool(results)
     if not results:
-        raise RuntimeError(f"{model.name}: no start converged ({messages[:3]})")
+        if not (allow_unverified and unverified):
+            raise RuntimeError(f"{model.name}: no start converged ({messages[:3]})")
+        results = unverified
+        messages.append("WARNING: no start passed the convergence test; the best finite start is used (verified = False)")
     best = min(results, key=lambda r: r.fun)
     near = [r.fun for r in results if r.fun - best.fun < 2]
     if len(near) < 2:
@@ -212,7 +223,7 @@ def fit_mle(model: StageModel, data: list[StageCounts], *, step: float, start_ag
     return MLEResult(model=model.name, param_names=model.param_names, theta=best.x, se=se,
                      loglik=-best.fun, n_params=len(best.x), converged_starts=len(results),
                      n_starts=len(starts), optima_spread=float(max(near) - min(near)), n_at_best=len(near),
-                     hessian_ok=ok, on_bound=on_bound, messages=messages, cov=cov)
+                     hessian_ok=ok, on_bound=on_bound, messages=messages, cov=cov, verified=verified)
 
 
 def fit_bayesian(model: StageModel, data: list[StageCounts], *, step: float, start_age: float,

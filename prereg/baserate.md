@@ -19,6 +19,7 @@ draft made before any real data were fitted, not a post-hoc change.
 | 2026-10-13 | **Falsification test made uncertainty-aware (§6).** A variant now fails only if the whole 95% interval of its predicted incidence is outside the acceptance region, not just its point estimate. Bands too uncertain to fail are reported as uninformative, and the point-estimate verdict is still reported. The factor-of-2 tolerance and the envelope are unchanged. | In the simulated dry run, the point-estimate rule rejected the *true* model. Stage V is almost never observed before age 70, so the IV → V rate at young ages is estimated with very large error (log-rate SE 1.7), and a noisy point prediction in the youngest band (0.03 vs 0.14 per 1,000 person-years) failed the test. A test that rejects the truth through estimation noise is miscalibrated. Decided on simulated data only, before any real fit. |
 | 2026-10-13 | **Criterion 1 (amyloid gating) dropped.** Variant A is now the age-adjusted LC-first model. Its amyloid hazard ratio is reported as *descriptive, not a test of gating*. The brief's literal variant A is kept only as a sensitivity analysis labelled *confounded with age*. Decided by the researcher (option (c) of `manuscript/notes/module2_identifiability.md`). | The autopsy stage counts carry no per-brain amyloid status, so the population amyloid curve A(t) enters only as a function of age. In simulation, with no amyloid effect at all, the literal variant A reported HR_A = 2.22 (log-scale 95% CI 0.28–1.31) when the LC → cortex step speeds up by 0.1 per decade, and 7.58 at 0.3 per decade. The criterion would have read ageing as gating and could essentially only come out in favour of the hypothesis. |
 | 2026-10-13 | **Descriptive amyloid HR labels (§7).** An estimate on its parameter bound is labelled *not identified*. An interval spanning more than a 100-fold range of HR (log width > 4.605, `gamma_check.uninformative_log_width`) is labelled *uninformative* instead of being compared with the published value. | In the dry run, the Jansen sensitivity estimate sat on its bound (log HR −5, interval ±47), yet the table said "published value inside the interval". That reads as agreement when the data say nothing. Labelling only; no verdict uses these numbers. |
+| 2026-10-14 | **Criterion 2: cross-validation over brains within age bands instead of whole age bands; fold fits that cannot be verified no longer stop the run.** Whole-band CV is kept as sensitivity analysis 7. | Found by the power study, on simulated data only. With whole bands held out, a stage seen in only one band (stage VI only at ages 91–100 in the simulated world) is absent from that fold's training data. Every model then gives it a probability near 10⁻¹² (one band: about −730 log-likelihood units), and the verdict is decided by numerical detail in that band. Refitting such a replicate with the full multi-start procedure flipped it from AGAINST to supports. In 2 of 4 refitted replicates, a fold fit had no start passing the convergence test (a flat direction in the training subset), and the code stopped instead of "reporting as such" (§5). With brains dealt to folds within each band, every training set covers every band and, in practice, every stage. "Cross-validation by age band" (brief) is read as stratified by band. |
 | 2026-10-14 | **Data section (§3) filled from the paper's own supplements.** The stage-by-age counts are in Supplemental Digital Content 1 (Supplementary Table 1). Amyloid phase by age is in SDC 2. Both are openly downloadable from the publisher. A(t) is defined as the share of brains in amyloid phase 1–4 (any plaque) per age band. The pre-fit consistency check now also requires the band totals to match Table 1, and the plaque total to match the abstract (1,031). | The full text and supplements became available (researcher-supplied PDF; open supplement permalinks). "Any plaque" matches the abstract's definition ("1,031 (44.2%) had β-amyloid plaques"). Extracted with `verified: false`; 43/43 count consistency checks pass (`data/extracted/braak2011_sum_checks.md`). No model has been fitted to these counts. |
 
 **Module 2 does not test amyloid gating.** The stage-by-age counts carry no
@@ -46,17 +47,16 @@ which it never sees?
 1. *(Dropped 2026-10-13 — see the change log. Amyloid gating is not tested
    here.)*
 2. **Which variant explains the stage distribution (5-fold cross-validation
-   by whole age band, held-out multinomial log-likelihood):**
+   over brains within age bands, held-out multinomial log-likelihood):**
    * *supports LC first* — A beats both B and C by more than 2 held-out
      log-likelihood units;
    * *against LC first* — B or C beats A by more than 2 units;
    * *inconclusive* — anything else; reported as uninformative.
 
-   Known asymmetry, measured on simulated data before any real fit
-   (`sim/baserate_power.py`; results in
-   `manuscript/notes/module2_identifiability.md`): with ~2,300 brains, B or
-   C worlds are much easier to tell from A than A worlds are from B. The
-   power of each outcome is reported with the result.
+   Operating characteristics, measured on simulated data before any real
+   fit (`sim/baserate_power.py`; results in
+   `manuscript/notes/module2_identifiability.md`), are reported with the
+   result: {{POWER_SENTENCE}}
 3. **Falsification (§6):** a variant whose predicted incidence fails the test
    is rejected whatever criterion 2 says. If every variant fails, the
    framework itself is inadequate.
@@ -136,9 +136,14 @@ the fit repeated.
   * A posterior is reported without caveat only if max R-hat ≤ 1.01 and
     there are zero divergences.
 * **Model comparison.**
-  * 5-fold cross-validation by whole age band; bands are dealt round-robin
-    by age.
+  * 5-fold cross-validation over brains, stratified by age band: within
+    every age band, the brains are shuffled with a fixed seed (20261014)
+    and dealt to the 5 folds in turn. Every fold is fitted to 4/5 of every
+    band and scored on the held-out 1/5.
   * Each fold starts from the full-data MLE plus 4 random starts.
+  * A fold fit in which no start passes the convergence test uses the best
+    start by training log-likelihood. It is counted and reported as
+    unverified; the run does not stop.
   * Margin: 2 log-likelihood units.
 
 ## 6. Falsification test (fixed before any real fit)
@@ -187,9 +192,12 @@ interval spanning more than a 100-fold range of HR is labelled *uninformative*
 5. Variant A with the Jansen 2015 amyloid curve (Braak-cohort values outside
    ages 47.5–92.5).
 6. The brief's literal variant A, labelled *confounded with age*.
+7. Criterion 2 with whole age bands held out (round-robin), the first
+   design. It is reported with its known weakness (change log): a stage
+   seen only in a held-out band gets near-zero probability from every model.
 
-A conclusion in §2 is called robust only if it holds in 1–5 (6 is shown for
-transparency, not used for robustness).
+A conclusion in §2 is called robust only if it holds in 1–5 (6 and 7 are
+shown for transparency, not used for robustness).
 
 ## 9. Known limitations, stated in advance
 

@@ -361,3 +361,36 @@ def test_prefit_consistency_check_stops_on_a_band_total_mismatch():
         check_braak_totals(data, stages, Run(), amyloid=[(1.0, 101.0, 0.5, 1031, 2331)])
     with pytest.raises(ValueError, match="plaque cases"):
         check_braak_totals(data, stages, Run(), amyloid=[(1.0, 101.0, 0.5, 1030, 2332)])
+
+
+def test_brain_split_partitions_every_band_and_keeps_every_stage_in_training():
+    from src.baserate.predict import brain_split
+    rng = np.random.default_rng(3)
+    data = [StageCounts(float(lo), float(lo + 10), "x", rng.integers(0, 40, 12)) for lo in range(1, 101, 10)]
+    data[9] = StageCounts(91.0, 101.0, "x", np.array([0] * 11 + [27]))        # a stage seen in ONE band only
+    splits = brain_split(data, 5, seed=1)
+    for i, g in enumerate(data):
+        test_sum = sum(t[i].counts for _, t in splits)
+        assert np.array_equal(test_sum, g.counts)                              # held-out parts partition the band
+        sizes = [t[i].counts.sum() for _, t in splits]
+        assert max(sizes) - min(sizes) <= 1                                    # balanced within the band
+        for tr, te in splits:
+            assert np.array_equal(tr[i].counts + te[i].counts, g.counts)
+    for tr, _ in splits:                                                       # the single-band stage is in training
+        assert sum(g.counts[11] for g in tr) > 0
+    assert all(np.array_equal(a[0][0].counts, b[0][0].counts)
+               for a, b in zip(splits, brain_split(data, 5, seed=1)))          # fixed seed -> same split
+
+
+def test_fit_mle_falls_back_to_the_best_start_only_when_allowed(monkeypatch):
+    import src.baserate.fit as fitmod
+    m = Sequential(ChainSpec.from_labels(["0", "a", "b"], "b"), 50.0, 10.0)
+    g = [StageCounts(float(lo), float(lo + 10), "x", np.array([30, 20, 10])) for lo in (41, 51, 61)]
+    cfg = {"method": "l-bfgs-b", "n_starts": 2, "maxiter": 200, "newton_steps": 3, "max_newton_decrement": 1e-3,
+           "init": {"log_rate": [-4, -2], "slope": [-0.1, 0.1]}, "bounds": {"log_rate": [-20, 2], "slope": [-2, 2]}}
+    monkeypatch.setattr(fitmod, "newton_polish", lambda f, h, x, lo, hi, steps: (x, f(x)[0], np.inf, 0))
+    with pytest.raises(RuntimeError, match="no start converged"):
+        fitmod.fit_mle(m, g, step=0.5, start_age=1.0, cfg_mle=cfg, seed=1)
+    r = fitmod.fit_mle(m, g, step=0.5, start_age=1.0, cfg_mle=cfg, seed=1, allow_unverified=True)
+    assert r.verified is False and np.isfinite(r.loglik)
+    assert any("verified = False" in msg for msg in r.messages)

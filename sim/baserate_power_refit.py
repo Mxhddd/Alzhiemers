@@ -1,5 +1,9 @@
 """SIMULATED: refit chosen power-study replicates with the analysis's own multi-start settings.
 
+Diagnostic for the FIRST cross-validation design (whole age bands held out),
+whose results are archived in results/dryrun/power/whole_band_design/. It found
+the stage-only-in-the-held-out-band failure that led to the 2026-10-14 revision.
+
     python -m sim.baserate_power_refit "LC-first, no amyloid, c->1a slope 0" 19
 
 The power study (sim/baserate_power.py) fits each replicate with one warm-started
@@ -85,11 +89,11 @@ def main(truth_name: str, rep: int) -> int:
         print(f"{name}: full {full.loglik:.2f} (converged starts {full.converged_starts}), held-out {held:.2f}", flush=True)
     cv_df = pd.DataFrame({"model": list(models), "cv_heldout_loglik": [out["models"][n]["cv_heldout_loglik"] for n in models]})
     out["verdict_multistart"] = cv_verdict_3way(cv_df, margin, "A_gated_age")
-    reps = pd.concat([pd.read_csv(p) for p in OUT.glob("baserate_power_reps_shard*.csv")])
+    reps = pd.concat([pd.read_csv(p) for p in (OUT / "whole_band_design").glob("baserate_power_reps_shard*.csv")])
     old = reps[(reps["truth"] == truth_name) & (reps["rep"] == rep)].iloc[0]
     out["verdict_power_study"] = old["verdict"]
     out["power_study_cv"] = {n: float(old[f"cv_{n}"]) for n in models}
-    (OUT / f"refit_{ti}_{rep}.json").write_text(json.dumps(out, indent=1, default=float))
+    (OUT / "whole_band_design" / f"refit_{ti}_{rep}.json").write_text(json.dumps(out, indent=1, default=float))
     print(f"power study: {old['verdict']} | multi-start refit: {out['verdict_multistart']}")
     return 0
 

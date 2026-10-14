@@ -65,26 +65,63 @@ def age_band_folds(data: list[StageCounts], k: int) -> list[int]:
     return [fold_of[(g.age_lower, g.age_upper)] for g in data]
 
 
+def brain_split(data: list[StageCounts], k: int, seed: int) -> list[tuple[list[StageCounts], list[StageCounts]]]:
+    """Cross-validation over brains, stratified by age band (prereg §2, revised
+    2026-10-14). Within every band, the band's brains are shuffled with a fixed
+    seed and dealt to the k folds in turn, so fold sizes differ by at most one
+    brain per band. Returns [(training groups, held-out groups)] per fold. Every
+    training set contains every age band and, unless a stage has fewer brains
+    than folds, every stage."""
+    rng = np.random.default_rng(seed)
+    per_group = []
+    for g in data:
+        labels = np.repeat(np.arange(len(g.counts)), np.asarray(g.counts, dtype=int))
+        rng.shuffle(labels)
+        fc = np.zeros((k, len(g.counts)), dtype=int)
+        np.add.at(fc, (np.arange(len(labels)) % k, labels), 1)
+        per_group.append(fc)
+    out = []
+    for f in range(k):
+        test = [StageCounts(g.age_lower, g.age_upper, g.source, fc[f]) for g, fc in zip(data, per_group)]
+        train = [StageCounts(g.age_lower, g.age_upper, g.source, np.asarray(g.counts, dtype=int) - fc[f])
+                 for g, fc in zip(data, per_group)]
+        out.append((train, test))
+    return out
+
+
 def compare_models(models: list[StageModel], data: list[StageCounts], *, k: int, step: float,
                    start_age: float, cfg_mle: dict, seed: int, eval_mode: str = "midpoint",
-                   n_points: int = 10, warm_starts: dict | None = None, n_random: int | None = None) -> list[dict]:
+                   n_points: int = 10, warm_starts: dict | None = None, n_random: int | None = None,
+                   scheme: str = "brains_within_band", split_seed: int | None = None) -> list[dict]:
     """k-fold cross-validated held-out log-likelihood per model (higher is better).
-    warm_starts: {model name: theta} added as a start in every fold (the
-    full-data MLE); n_random: number of additional random starts per fold."""
-    folds = age_band_folds(data, k)
+    scheme: "brains_within_band" (primary, brain_split) or "whole_age_band"
+    (sensitivity: whole bands held out, age_band_folds). warm_starts: {model
+    name: theta} added as a start in every fold (the full-data MLE); n_random:
+    number of additional random starts per fold. A fold fit with no start
+    passing the convergence test uses the best start and is counted in
+    `unverified_folds` (prereg §5), never silently."""
+    if scheme == "brains_within_band":
+        splits = brain_split(data, k, seed if split_seed is None else split_seed)
+    elif scheme == "whole_age_band":
+        folds = age_band_folds(data, k)
+        splits = [([g for g, fo in zip(data, folds) if fo != f], [g for g, fo in zip(data, folds) if fo == f])
+                  for f in range(k)]
+    else:
+        raise ValueError(f"unknown cross-validation scheme {scheme!r}")
     out = []
     for m in models:
         held = 0.0
-        per_fold = []
-        for f in range(k):
-            train = [g for g, fo in zip(data, folds) if fo != f]
-            test = [g for g, fo in zip(data, folds) if fo == f]
+        per_fold, unverified = [], 0
+        for f, (train, test) in enumerate(splits):
             ws = [warm_starts[m.name]] if warm_starts and m.name in warm_starts else None
             fit = fit_mle(m, train, step=step, start_age=start_age, cfg_mle=cfg_mle, seed=seed + f,
-                          eval_mode=eval_mode, n_points=n_points, extra_starts=ws, n_random=n_random)
+                          eval_mode=eval_mode, n_points=n_points, extra_starts=ws, n_random=n_random,
+                          allow_unverified=True)
+            unverified += int(not fit.verified)
             ll = log_likelihood(m, fit.theta, test, step=step, start_age=start_age, eval_mode=eval_mode,
                                 n_points=n_points)
             per_fold.append(ll)
             held += ll
-        out.append({"model": m.name, "cv_heldout_loglik": held, "per_fold": per_fold, "k": k})
+        out.append({"model": m.name, "cv_heldout_loglik": held, "per_fold": per_fold, "k": k,
+                    "scheme": scheme, "unverified_folds": unverified})
     return out
