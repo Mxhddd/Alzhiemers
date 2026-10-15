@@ -28,7 +28,7 @@ RSCRIPT := Rscript
 BUILT_MODULES := mr baserate metaanalysis dynamics mediation network
 
 .PHONY: help todo setup test test-py test-r test-slow validate validate-mr validate-baserate validate-metaanalysis validate-dynamics validate-mediation validate-network check-validated provenance-check all lock \
-        freeze-prereg check-prereg clean-results check-derivations prereg-package \
+        freeze-prereg check-prereg clean-results check-derivations prereg-package verification-checklist apply-verification \
         mr baserate baserate-dryrun baserate-power mediation dynamics metaanalysis network
 
 help:
@@ -118,6 +118,14 @@ baserate:
 # upload instructions) for OSF. Never freezes: freezing is the researcher's.
 prereg-package:
 	$(PY) -m src.common.prereg_package
+# Printable checklist + tick sheets for the researcher's verification of
+# braak2011_stage_counts.csv and meta_extraction.csv. The tick script sets
+# verified: true only for ticked rows (dry run unless APPLY=1). Researcher only.
+verification-checklist:
+	$(PY) -m src.extraction.verification checklist
+apply-verification:
+	@test -n "$(TICKS)" || { echo "usage: make apply-verification TICKS=data/extracted/verification/ticks_<file>.csv [APPLY=1]"; exit 2; }
+	$(PY) -m src.extraction.verification apply $(TICKS) $(if $(APPLY),--apply,)
 # Machine checks of Claude's derivations (manuscript/derivations/checks/):
 # symbolic/exact/numerical re-derivations. Machine-checked is NOT human-checked.
 check-derivations:
