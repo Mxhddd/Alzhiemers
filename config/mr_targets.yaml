@@ -447,8 +447,17 @@ targets:
       # study named in the 2026-10-13 decision; UK Biobank imputed data, GRCh37).
       # Cis-region subset by src/mr/prepare_inputs.py (file has rsIDs).
       file: data/interim/mr/positive_controls/sleep_duration_cisregions.tsv
-      # Our names -> headers (Dashti README; filled after download - see module1_data_step.md).
-      columns: null
+      # Our names -> headers (Dashti_30846698_fullUKBB_Sleepduration_summary_stats_README.txt).
+      columns:
+        SNP: SNP  # README: rsid (or chr:pos where no rsid; those cannot match eQTLGen rsIDs)
+        chrom: CHR  # README: GRCh37
+        pos: BP  # README: GRCh37 - hg19
+        effect_allele: ALLELE1  # README: effect allele
+        other_allele: ALLELE0  # README: reference allele
+        eaf: A1FREQ  # README: frequency of the effect allele
+        beta: BETA_SLEEPDURATION  # README: hours per effect allele
+        se: SE_SLEEPDURATION  # README
+        p: P_SLEEPDURATION  # README
       # Trait type (decides the coloc prior and Steiger formula).
       type: quantitative
       # GWAS Catalog REST API v2, GCST007561: "446,118 European ancestry individuals".

@@ -34,7 +34,7 @@ ldl <- list(
 cad <- list(
   file = "data/interim/mr/positive_controls/coronary_artery_disease_cisregions.tsv",  # CARDIoGRAMplusC4D 1000G (GCST003116), hg19
   columns = list(SNP = "markername", chrom = "chrom_grch37", pos = "pos_grch37", effect_allele = "effect_allele",
-                 other_allele = "noneffect_allele", eaf = "effect_allele_freq", beta = "beta", se = "se_dcl", p = "p_dcl"))
+                 other_allele = "noneffect_allele", eaf = "effect_allele_freq", beta = "beta", se = "se_dgc", p = "p_dgc"))  # headers per the file (README cad.add.readme)
 window_kb <- 100  # the Module 1 primary cis window
 
 lc_with_run("mr_pipeline_check_hmgcr", cfg_path, seed = cfg$seed,
@@ -45,6 +45,13 @@ lc_with_run("mr_pipeline_check_hmgcr", cfg_path, seed = cfg$seed,
   o <- mr_read_sumstats(cad$file, cad$columns, cfg$genome_build, "Module 1 data step (CAD)", region, NULL, root)
   for (i in seq_len(nrow(e$dropped))) lc_drop(run, "exposure_read", e$dropped$SNP[i], e$dropped$reason[i])
   for (i in seq_len(nrow(o$dropped))) lc_drop(run, "outcome_read", o$dropped$SNP[i], o$dropped$reason[i])
+  # The CAD file codes some indels with non-nucleotide letters (e.g. I/D);
+  # mr_harmonise() refuses any allele outside A/C/G/T, so such rows are dropped
+  # here, each logged (they cannot be harmonised with an rsID-keyed SNV anyway).
+  acgt <- grepl("^[ACGT]+$", o$data$effect_allele) & grepl("^[ACGT]+$", o$data$other_allele)
+  for (s in o$data$SNP[!acgt]) lc_drop(run, "outcome_alleles", s, "allele code outside A/C/G/T")
+  o$data <- o$data[acgt, , drop = FALSE]
+  attr(o$data, "genome_build") <- cfg$genome_build
   inst <- mr_build_instruments(e$data, cfg$instruments, mr_plink_r2_fun(file.path(root, cfg$instruments$ld_reference_bfile)))
   for (i in seq_len(nrow(inst$dropped))) lc_drop(run, "instruments", inst$dropped$SNP[i], inst$dropped$reason[i])
   lc_log(run, sprintf("HMGCR LDL instruments: %s", paste(inst$data$SNP, collapse = ", ")))
