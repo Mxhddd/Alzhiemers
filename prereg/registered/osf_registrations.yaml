@@ -1,0 +1,41 @@
+# The documents registered on OSF, as fetched from the OSF API on 2026-10-15
+# (api.osf.io/v2/registrations/<id>/ and its osfstorage file listing).
+# The PDFs in this folder are byte-identical copies of the attached files: the
+# sha256 below is the one OSF itself reports, and tests/unit/test_prereg_registered.py
+# checks the local copies against it.
+#
+# The registered PDFs are printed documents with no text layer. prereg/<module>.md
+# is a faithful transcription of the registered text (read from the page
+# images), and is the file `make freeze-prereg` hashes. Transcription only:
+# no registered word, number or rule was changed.
+baserate:
+  osf_url: https://osf.io/xb7fy/
+  title: "Pre-registered base-rate model of tau stage progression from the locus coeruleus (LC-First, Module 2)"
+  date_registered_utc: "2026-10-14T16:04:26"
+  registration_supplement: OSF Preregistration
+  public: true
+  withdrawn: false
+  file: baserate_osf-xb7fy.pdf
+  osf_file_name: BaseRate.pdf
+  osf_file_path: "/Archive of OSF Storage/BaseRate.pdf"
+  bytes: 3516697
+  sha256: d09cd2f7683768e81899002b6117cd7b07f287d08d604ee63c17a0f9e2393e7d
+  transcription: prereg/baserate.md
+metaanalysis:
+  osf_url: https://osf.io/9kb4w/
+  title: "Pre-registered meta-analysis of noradrenergic drug classes and dementia (LC-First, Module 5)"
+  date_registered_utc: "2026-10-14T18:43:10"
+  registration_supplement: OSF Preregistration
+  public: true
+  withdrawn: false
+  file: metaanalysis_osf-9kb4w.pdf
+  osf_file_name: MetaAnalysis.pdf
+  osf_file_path: "/Archive of OSF Storage/MetaAnalysis.pdf"
+  bytes: 2414790
+  sha256: efda6152e17a8ab40f16d28ac6eb529e2f8c05087e51ca4c6ba8af6fc26d79a2
+  transcription: prereg/metaanalysis.md
+  # 9kb4w also carries a copy of BaseRate.pdf, byte-identical to the file
+  # registered under xb7fy (same sha256 d09cd2f7…). It does not change what
+  # 9kb4w registers for Module 5.
+  also_attached:
+    - {osf_file_name: BaseRate.pdf, sha256: d09cd2f7683768e81899002b6117cd7b07f287d08d604ee63c17a0f9e2393e7d}
