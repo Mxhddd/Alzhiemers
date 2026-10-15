@@ -1,0 +1,6 @@
+# Written by `python -m src.common.prereg freeze`. Do not edit by hand.
+name: metaanalysis
+document: metaanalysis.md
+sha256: 5692da9d8d58487778312b567cadf4f0cf21e0eab1ba07f75ea80622849522a4
+frozen_at_utc: '2026-10-15T10:05:02.078038Z'
+osf_url: https://osf.io/9kb4w/

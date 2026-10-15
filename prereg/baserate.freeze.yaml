@@ -1,0 +1,6 @@
+# Written by `python -m src.common.prereg freeze`. Do not edit by hand.
+name: baserate
+document: baserate.md
+sha256: 92f6cf66bb6071633835d8b847ad082b98f6edeb2ddd744c6f21ecc0de1b81df
+frozen_at_utc: '2026-10-15T10:05:01.957178Z'
+osf_url: https://osf.io/xb7fy/
