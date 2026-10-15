@@ -17,46 +17,109 @@ genome_build: GRCh37
 outcome:
   # Bellenguez et al. 2022, stage 1 discovery (includes UK Biobank proxy cases).
   gwas_catalog_id: GCST90027158
-  # RESEARCHER: path under data/raw/ after download (see `make mr-download-help`).
+  # Data step 2026-10-15: downloaded, QUARANTINED and NOT READ, to
+  # data/raw/mr/quarantine_outcome/GCST90027158/GCST90027158_buildGRCh38.tsv.gz
+  # (sha256 in data/raw/mr/MANIFEST.tsv). The GWAS Catalog file is on GRCh38
+  # (file name and its -meta.yaml "genome_assembly: GRCh38"), NOT GRCh37 as
+  # brief §5 assumed, so it must be lifted to GRCh37 (src/mr/liftover.py)
+  # before use - and lifting means reading its rows, which must wait until
+  # prereg/mr.md is frozen. Left null so nothing can read it before then.
   file: null
-  # RESEARCHER: map our names -> the file's column headers (loader checks each).
-  columns: null
+  # Our names -> the file's headers, from its header line only (2026-10-15).
+  # variant_id holds rsIDs per the GWAS-SSF convention (not checked: rows unread).
+  columns:
+    SNP: variant_id  # rsID (harmonisation key)
+    chrom: chromosome  # GRCh38 in the raw file; GRCh37 after liftover
+    pos: base_pair_location  # GRCh38 in the raw file; GRCh37 after liftover
+    effect_allele: effect_allele  # file header
+    other_allele: other_allele  # file header
+    eaf: effect_allele_frequency  # file header
+    beta: beta  # log-OR (file header)
+    se: standard_error  # file header
+    p: p_value  # file header
   # Outcome type decides the coloc prior and the Steiger r^2 formula.
   type: case_control
-  # RESEARCHER: total cases and controls (for Steiger r^2 and coloc).
-  n_cases: null
-  # RESEARCHER
-  n_controls: null
-  # Sensitivity analysis without UK Biobank proxy cases (brief §5). RESEARCHER:
-  # a proxy-free summary-statistics file if one exists; null = analysis is
-  # reported as "not run: no proxy-free file supplied".
+  # GWAS Catalog REST API v2, study GCST90027158 (2026-10-15): "39,106 European
+  # ancestry clinically diagnosed cases, 46,828 European ancestry proxy cases,
+  # 401,577 European ancestry controls"; 39,106 + 46,828 = 85,934 (all cases
+  # in the stage-1 file, proxy cases included). Total 487,511 matches the
+  # file's -meta.yaml sample_size.
+  n_cases: 85934
+  # Same source as n_cases.
+  n_controls: 401577
+  # Sensitivity analysis without UK Biobank proxy cases (brief §5). Data step
+  # 2026-10-15: Kunkle et al. 2019 stage 1 (GCST007511, clinically diagnosed,
+  # 21,982 cases / 41,944 controls per GWAS Catalog API) is downloaded and
+  # QUARANTINED, not read, at
+  # data/raw/mr/quarantine_outcome/GCST007511/Kunkle_etal_Stage1_results.txt.
+  # Its header (line 1 only) is "Chromosome Position MarkerName Effect_allele
+  # Non_Effect_allele Beta SE Pvalue": no allele-frequency column, and run_mr.R
+  # reads it with outcome.columns above, which do not match. It needs a
+  # reformatted copy with an EAF (e.g. from 1000G EUR) - row-level work that
+  # must wait for the freeze. Left null = "not run: no proxy-free file supplied".
   proxy_free_file: null
 
 # FinnGen public Alzheimer's endpoint for replication. RESEARCHER: endpoint
 # name, release and file; null = replication reported as not run.
 replication:
-  # RESEARCHER: e.g. a FinnGen release and endpoint code
-  finngen_endpoint: null
-  # RESEARCHER
+  # prereg/mr.md §4 names G6_ALZHEIMER; FinnGen R10 has it (manifest read
+  # 2026-10-15), so no endpoint substitution. R10 was the release the data-step
+  # brief named. NOTE for the researcher: prereg §4 says "the FinnGen public
+  # release current at run time", and on 2026-10-15 that is R13
+  # (finngen_R13_manifest.tsv: G6_ALZHEIMER 16,652 cases / 483,534 controls).
+  # Switching to R13 is a one-line change here plus a download; not done.
+  finngen_endpoint: R10 G6_ALZHEIMER
+  # Data step 2026-10-15: downloaded and QUARANTINED, NOT READ, at
+  # data/raw/mr/quarantine_outcome/finngen_R10_G6_ALZHEIMER/finngen_R10_G6_ALZHEIMER.gz.
+  # FinnGen R10 is GRCh38: needs liftover to GRCh37 (src/mr/liftover.py), which
+  # reads rows and so must wait until prereg/mr.md is frozen. Null until then.
   file: null
-  # RESEARCHER
-  columns: null
-  # RESEARCHER
-  n_cases: null
-  # RESEARCHER
-  n_controls: null
+  # From the file's header line only (2026-10-15): "#chrom pos ref alt rsids
+  # nearest_genes pval mlogp beta sebeta af_alt af_alt_cases af_alt_controls".
+  # FinnGen's beta and af are for the alt allele.
+  columns:
+    SNP: rsids  # rsID (can hold several comma-separated ids; check after the freeze)
+    # GRCh38 in the raw file; GRCh37 after liftover (header really is "#chrom")
+    chrom: "#chrom"
+    pos: pos  # GRCh38 in the raw file; GRCh37 after liftover
+    effect_allele: alt  # FinnGen effects are for the alt allele
+    other_allele: ref  # reference allele
+    eaf: af_alt  # alt-allele frequency
+    beta: beta  # log-OR for alt
+    se: sebeta  # file header
+    p: pval  # file header
+  # FinnGen R10 manifest (data/raw/mr/finngen_r10/R10_manifest.tsv), row G6_ALZHEIMER: num_cases 10520.
+  n_cases: 10520
+  # Same manifest row: num_controls 401661.
+  n_controls: 401661
 
 exposures:
   eqtlgen:
     # Blood cis-eQTLs (eQTLGen). Z-scores only: beta and SE are derived from
     # Z, allele frequency and N (Zhu et al. 2016) in fetch_exposure().
     tissue: blood
-    # RESEARCHER: path under data/raw/
-    file: null
-    # RESEARCHER: separate allele-frequency file eQTLGen distributes
-    allele_frequency_file: null
-    # RESEARCHER: column mapping (loader checks every name exists)
-    columns: null
+    # Data step 2026-10-15. Derived by src/mr/prepare_inputs.py from the eQTLGen
+    # full cis-eQTL file (data/raw/mr/eqtlgen/2019-12-11-cis-eQTLsFDR-ProbeLevel-
+    # CohortInfoRemoved-BonferroniAdded.txt.gz, molgenis26.gcc.rug.nl, 3.9 GB):
+    # all rows for the target genes (+ HMGCR), original columns kept, with the
+    # assessed-allele frequency joined from allele_frequency_file. eQTLGen
+    # tested 19,250 blood-expressed autosomal genes: SLC6A2, ADRA1A, MAOA and
+    # HCRTR2 are NOT among them (checked by symbol and Ensembl ID).
+    file: data/interim/mr/eqtlgen_cis_targets_with_eaf.tsv
+    # eQTLGen 2018-07-18 AF file (AlleleB = assessed allele; AF from all cohorts except FHS, per its README).
+    allele_frequency_file: data/raw/mr/eqtlgen/2018-07-18_SNP_AF_for_AlleleB_combined_allele_counts_and_MAF_pos_added.txt.gz
+    # Our names -> headers (eQTLGen README_cis; AssessedAllele_freq is added by prepare_inputs.py).
+    columns:
+      SNP: SNP  # rsID
+      chrom: SNPChr  # hg19 (README; prepare_inputs.py checks it equals the AF file's hg19_chr/pos)
+      pos: SNPPos  # hg19
+      effect_allele: AssessedAllele  # "the Z-score refers to this allele" (README)
+      other_allele: OtherAllele  # README
+      eaf: AssessedAllele_freq  # joined from allele_frequency_file by rsID with an allele check
+      z: Zscore  # beta/SE derived from Z, eaf and N in sumstats.R (Zhu 2016)
+      "n": NrSamples  # per SNP-gene pair. Key quoted: R yaml reads a bare `n` key as FALSE (YAML 1.1 boolean)
+      p: Pvalue  # README
+      gene: GeneSymbol  # HGNC symbol (Ensembl v71 per README)
     # Must match genome_build above.
     build: GRCh37
   metabrain:
@@ -91,9 +154,13 @@ instruments:
   ld_r2_max: 0.001
   # Brief §5: LD clumping window, kb.
   ld_window_kb: 10000
-  # RESEARCHER: PLINK binary fileset (without extension) of the LD reference
-  # panel, e.g. 1000 Genomes EUR on GRCh37. Needed for clumping.
-  ld_reference_bfile: null
+  # PLINK binary fileset (without extension) of the LD reference panel. Data
+  # step 2026-10-15: 1000 Genomes Phase 3 EUR (503 samples, GRCh37, bi-allelic
+  # SNPs, rsIDs; 22,665,064 variants), the "European" reference of MAGMA
+  # (cncr.nl/research/magma; g1000_eur.zip). Chosen because the MRC-IEU
+  # 1kg.v3 file (fileserve.mrcieu.ac.uk) failed TLS (expired certificate) and
+  # plain HTTP is refused by the proxy; this is the same 1000G Phase 3 EUR data.
+  ld_reference_bfile: data/raw/mr/ld_1kg_eur/g1000_eur
 
 coloc:
   # Brief §5: colocalisation supported if PP4 >= this.
@@ -148,14 +215,31 @@ targets:
       trait: resting_heart_rate
       # Expected sign of the MR estimate per HIGHER expression (see the comment above).
       expected_sign: -1
-      # Summary statistics not yet downloaded (Module 1 data step); null = control not run, target excluded.
-      file: null
-      # Column mapping for that file (Module 1 data step).
-      columns: null
-      # Trait type (decides the coloc prior and Steiger formula).
+      # Data step 2026-10-15. Zhu et al. 2019 (PMID 30940143), UK Biobank
+      # BOLT-LMM, mean resting heart rate, GWAS Catalog GCST007609 (GRCh37 per its
+      # readme). Chosen: the only European resting-heart-rate GWAS with full
+      # summary statistics on the GWAS Catalog on GRCh37 (the MVP heart-rate
+      # files GCST90476338 etc. are larger-N but GRCh38; eQTLGen-era HRgene 2016
+      # has no Catalog file). Cis-region subset by src/mr/prepare_inputs.py:
+      # rsIDs from 1000G EUR (chr, pos, alleles), and the A1 frequency oriented
+      # from the file's MAF with the 1000G EUR frequency (palindromic variants:
+      # NA, dropped).
+      file: data/interim/mr/positive_controls/resting_heart_rate_cisregions.tsv
+      # Our names -> headers (GCST007609 readme.txt: A1 = effect allele, BETA in bpm).
+      columns:
+        SNP: rsid_mapped  # added by prepare_inputs.py
+        chrom: chrom_grch37  # = CHR (hg19)
+        pos: pos_grch37  # = BP (hg19)
+        effect_allele: A1  # readme: effect allele
+        other_allele: A0  # readme: reference allele
+        eaf: eaf_oriented  # A1 frequency from MAF, see above
+        beta: BETA  # readme: effect estimate
+        se: SE  # readme
+        p: P  # readme
+      # Resting heart rate is quantitative.
       type: quantitative
-      # Sample size of the control GWAS (Module 1 data step).
-      n: null
+      # GWAS Catalog REST API v2, GCST007609: "458,969 European ancestry individuals".
+      "n": 458969
   ADRB1:
     # Beta-1 adrenergic receptor — lipophilic beta-blockers.
     predicted_lower_activity: protective
@@ -166,14 +250,31 @@ targets:
       trait: resting_heart_rate
       # Beta-blockade lowers heart rate, so higher ADRB1 expression should raise it.
       expected_sign: 1
-      # RESEARCHER: resting heart rate GWAS file under data/raw/
-      file: null
-      # RESEARCHER
-      columns: null
+      # Data step 2026-10-15. Zhu et al. 2019 (PMID 30940143), UK Biobank
+      # BOLT-LMM, mean resting heart rate, GWAS Catalog GCST007609 (GRCh37 per its
+      # readme). Chosen: the only European resting-heart-rate GWAS with full
+      # summary statistics on the GWAS Catalog on GRCh37 (the MVP heart-rate
+      # files GCST90476338 etc. are larger-N but GRCh38; eQTLGen-era HRgene 2016
+      # has no Catalog file). Cis-region subset by src/mr/prepare_inputs.py:
+      # rsIDs from 1000G EUR (chr, pos, alleles), and the A1 frequency oriented
+      # from the file's MAF with the 1000G EUR frequency (palindromic variants:
+      # NA, dropped).
+      file: data/interim/mr/positive_controls/resting_heart_rate_cisregions.tsv
+      # Our names -> headers (GCST007609 readme.txt: A1 = effect allele, BETA in bpm).
+      columns:
+        SNP: rsid_mapped  # added by prepare_inputs.py
+        chrom: chrom_grch37  # = CHR (hg19)
+        pos: pos_grch37  # = BP (hg19)
+        effect_allele: A1  # readme: effect allele
+        other_allele: A0  # readme: reference allele
+        eaf: eaf_oriented  # A1 frequency from MAF, see above
+        beta: BETA  # readme: effect estimate
+        se: SE  # readme
+        p: P  # readme
       # Resting heart rate is quantitative.
       type: quantitative
-      # RESEARCHER: sample size
-      n: null
+      # GWAS Catalog REST API v2, GCST007609: "458,969 European ancestry individuals".
+      "n": 458969
   ADRA1A:
     # Alpha-1A receptor — prazosin, doxazosin.
     predicted_lower_activity: protective
@@ -184,14 +285,30 @@ targets:
       trait: diastolic_blood_pressure
       # Expected sign of the MR estimate per HIGHER expression (see the comment above).
       expected_sign: 1
-      # Summary statistics not yet downloaded (Module 1 data step); null = control not run, target excluded.
-      file: null
-      # Column mapping for that file (Module 1 data step).
-      columns: null
+      # Data step 2026-10-15. Evangelou et al. 2018 (Nat Genet, PMID 30224653),
+      # UKB + ICBP meta-analysis, diastolic blood pressure, GWAS Catalog GCST006630; GRCh37 (README:
+      # "POS is NCBI build 37/hg19"). Chosen: largest open European BP GWAS on
+      # GRCh37 (the Keaton 2024 files named in the 2026-10-13 decision are newer
+      # but GRCh38). Cis-region subset by src/mr/prepare_inputs.py; the file has
+      # no rsIDs (MarkerName = chr:pos:type), so rsIDs come from 1000G EUR by
+      # chr, pos and allele pair.
+      file: data/interim/mr/positive_controls/diastolic_blood_pressure_cisregions.tsv
+      # Our names -> headers (README_Evangelou_30224653.txt).
+      columns:
+        SNP: rsid_mapped  # added by prepare_inputs.py
+        chrom: chrom_grch37  # from MarkerName
+        pos: pos_grch37  # from MarkerName (hg19)
+        effect_allele: Allele1  # README: the effect allele
+        other_allele: Allele2  # README: the other allele
+        eaf: Freq1  # README: frequency of effect allele
+        beta: Effect  # README: mmHg per effect allele
+        se: StdErr  # README
+        p: P  # README
+        "n": TotalSampleSize  # README: total analysed N
       # Trait type (decides the coloc prior and Steiger formula).
       type: quantitative
-      # Sample size of the control GWAS (Module 1 data step).
-      n: null
+      # GWAS Catalog REST API v2, GCST006630: "757,601 European ancestry individuals".
+      "n": 757601
   ADRA2A:
     # Alpha-2A autoreceptor — guanfacine (agonist). Lower activity = loss of restraint.
     predicted_lower_activity: harmful
@@ -202,14 +319,30 @@ targets:
       trait: fasting_glucose
       # Expected sign of the MR estimate per HIGHER expression (see the comment above).
       expected_sign: 1
-      # Summary statistics not yet downloaded (Module 1 data step); null = control not run, target excluded.
-      file: null
-      # Column mapping for that file (Module 1 data step).
-      columns: null
+      # Data step 2026-10-15. Chen et al. 2021 (Nat Genet, PMID 34059833), MAGIC
+      # trans-ancestry glycaemic traits, fasting glucose, European meta-analysis,
+      # GWAS Catalog GCST90002232 (GCST90002232_buildGRCh37.tsv.gz; -meta.yaml:
+      # genome_assembly GRCh37). Chosen: largest open European fasting-glucose
+      # GWAS on GRCh37. Cis-region subset by src/mr/prepare_inputs.py: no rsID
+      # column, so rsIDs from 1000G EUR (chr, pos, alleles); EAF filled from
+      # 1000G EUR where the file's is NA (non-palindromic only).
+      file: data/interim/mr/positive_controls/fasting_glucose_cisregions.tsv
+      # Our names -> headers (GCST90002232 README.txt).
+      columns:
+        SNP: rsid_mapped  # added by prepare_inputs.py
+        chrom: chrom_grch37  # = chromosome
+        pos: pos_grch37  # = base_pair_location (GRCh37)
+        effect_allele: effect_allele  # README
+        other_allele: other_allele  # README
+        eaf: eaf_filled  # effect_allele_frequency, filled where NA (see above)
+        beta: beta  # README: effect from the raw (mmol/L) trait study
+        se: standard_error  # README
+        p: p_value  # README: from the inverse-normalised trait study (beta/SE give the MR p)
+        "n": sample_size  # README
       # Trait type (decides the coloc prior and Steiger formula).
       type: quantitative
-      # Sample size of the control GWAS (Module 1 data step).
-      n: null
+      # GWAS Catalog REST API v2 and -meta.yaml, GCST90002232: 200,622 European ancestry individuals.
+      "n": 200622
   LGMN:
     # Asparagine endopeptidase (legumain) — no human drug yet.
     predicted_lower_activity: protective
@@ -241,14 +374,30 @@ targets:
       trait: systolic_blood_pressure
       # Expected sign of the MR estimate per HIGHER expression (see the comment above).
       expected_sign: 1
-      # Summary statistics not yet downloaded (Module 1 data step); null = control not run, target excluded.
-      file: null
-      # Column mapping for that file (Module 1 data step).
-      columns: null
+      # Data step 2026-10-15. Evangelou et al. 2018 (Nat Genet, PMID 30224653),
+      # UKB + ICBP meta-analysis, systolic blood pressure, GWAS Catalog GCST006624; GRCh37 (README:
+      # "POS is NCBI build 37/hg19"). Chosen: largest open European BP GWAS on
+      # GRCh37 (the Keaton 2024 files named in the 2026-10-13 decision are newer
+      # but GRCh38). Cis-region subset by src/mr/prepare_inputs.py; the file has
+      # no rsIDs (MarkerName = chr:pos:type), so rsIDs come from 1000G EUR by
+      # chr, pos and allele pair.
+      file: data/interim/mr/positive_controls/systolic_blood_pressure_cisregions.tsv
+      # Our names -> headers (README_Evangelou_30224653.txt).
+      columns:
+        SNP: rsid_mapped  # added by prepare_inputs.py
+        chrom: chrom_grch37  # from MarkerName
+        pos: pos_grch37  # from MarkerName (hg19)
+        effect_allele: Allele1  # README: the effect allele
+        other_allele: Allele2  # README: the other allele
+        eaf: Freq1  # README: frequency of effect allele
+        beta: Effect  # README: mmHg per effect allele
+        se: StdErr  # README
+        p: P  # README
+        "n": TotalSampleSize  # README: total analysed N
       # Trait type (decides the coloc prior and Steiger formula).
       type: quantitative
-      # Sample size of the control GWAS (Module 1 data step).
-      n: null
+      # GWAS Catalog REST API v2, GCST006624: "757,601 European ancestry individuals".
+      "n": 757601
   CACNA1D:
     # Cav1.3 — isradipine.
     predicted_lower_activity: protective
@@ -259,14 +408,30 @@ targets:
       trait: systolic_blood_pressure
       # Expected sign of the MR estimate per HIGHER expression (see the comment above).
       expected_sign: 1
-      # Summary statistics not yet downloaded (Module 1 data step); null = control not run, target excluded.
-      file: null
-      # Column mapping for that file (Module 1 data step).
-      columns: null
+      # Data step 2026-10-15. Evangelou et al. 2018 (Nat Genet, PMID 30224653),
+      # UKB + ICBP meta-analysis, systolic blood pressure, GWAS Catalog GCST006624; GRCh37 (README:
+      # "POS is NCBI build 37/hg19"). Chosen: largest open European BP GWAS on
+      # GRCh37 (the Keaton 2024 files named in the 2026-10-13 decision are newer
+      # but GRCh38). Cis-region subset by src/mr/prepare_inputs.py; the file has
+      # no rsIDs (MarkerName = chr:pos:type), so rsIDs come from 1000G EUR by
+      # chr, pos and allele pair.
+      file: data/interim/mr/positive_controls/systolic_blood_pressure_cisregions.tsv
+      # Our names -> headers (README_Evangelou_30224653.txt).
+      columns:
+        SNP: rsid_mapped  # added by prepare_inputs.py
+        chrom: chrom_grch37  # from MarkerName
+        pos: pos_grch37  # from MarkerName (hg19)
+        effect_allele: Allele1  # README: the effect allele
+        other_allele: Allele2  # README: the other allele
+        eaf: Freq1  # README: frequency of effect allele
+        beta: Effect  # README: mmHg per effect allele
+        se: StdErr  # README
+        p: P  # README
+        "n": TotalSampleSize  # README: total analysed N
       # Trait type (decides the coloc prior and Steiger formula).
       type: quantitative
-      # Sample size of the control GWAS (Module 1 data step).
-      n: null
+      # GWAS Catalog REST API v2, GCST006624: "757,601 European ancestry individuals".
+      "n": 757601
   HCRTR2:
     # Orexin receptor 2 — suvorexant, lemborexant. Exploratory.
     predicted_lower_activity: exploratory
@@ -277,11 +442,14 @@ targets:
       trait: sleep_duration
       # Expected sign of the MR estimate per HIGHER expression (see the comment above).
       expected_sign: -1
-      # Summary statistics not yet downloaded (Module 1 data step); null = control not run, target excluded.
-      file: null
-      # Column mapping for that file (Module 1 data step).
+      # Data step 2026-10-15. Dashti et al. 2019 (Nat Commun, PMID 30846698),
+      # UK Biobank self-reported sleep duration, GWAS Catalog GCST007561 (the
+      # study named in the 2026-10-13 decision; UK Biobank imputed data, GRCh37).
+      # Cis-region subset by src/mr/prepare_inputs.py (file has rsIDs).
+      file: data/interim/mr/positive_controls/sleep_duration_cisregions.tsv
+      # Our names -> headers (Dashti README; filled after download - see module1_data_step.md).
       columns: null
       # Trait type (decides the coloc prior and Steiger formula).
       type: quantitative
-      # Sample size of the control GWAS (Module 1 data step).
-      n: null
+      # GWAS Catalog REST API v2, GCST007561: "446,118 European ancestry individuals".
+      "n": 446118
