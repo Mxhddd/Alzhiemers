@@ -47,3 +47,32 @@ Implementation notes:
 3. *DerSimonian–Laird sensitivity.* Only the τ² estimator changes; the
    Knapp–Hartung interval is kept, as §8 item 1 says ("DerSimonian–Laird
    instead of REML").
+
+## Module 2 — base-rate model (osf.io/xb7fy)
+
+Run in progress (started 2026-10-15). This section is completed when the run
+ends.
+
+Notes so far (not departures):
+
+1. *The step-size rule binds on the real data.* §4 requires the derived error
+   bound h²Φ(θ̂) ≤ 10⁻³ at every fitted estimate, halving the step until it
+   holds. For variant A on the real counts:
+
+   | step | bound | Radau max \|Δp\| |
+   |---|---|---|
+   | 0.25 y | 2.3×10⁻² | 7.2×10⁻⁶ |
+   | 0.125 y | 5.7×10⁻³ | 1.8×10⁻⁶ |
+   | 0.0625 y | 1.4×10⁻³ | 4.5×10⁻⁷ |
+
+   So the fit needs h = 0.03125 y. The independent Radau audit passes easily
+   at every step: the bound is conservative. The rule is applied as written,
+   and nothing about it was changed.
+2. *Run time.* A likelihood-and-gradient evaluation costs 34 ms at h = 0.25
+   and 271 ms at h = 0.03125. Cross-validation folds use the step the primary
+   fit settled on (§4–5). The whole registered run is therefore expected to
+   take on the order of two days of compute. The first attempt was stopped by
+   the tool's 2-hour limit for background jobs while the first stage was
+   still running. That stage held both the maximum-likelihood fit and NUTS,
+   so no checkpoint had been written. The run was restarted unchanged, as a
+   detached process. Stage checkpoints protect every finished stage.
