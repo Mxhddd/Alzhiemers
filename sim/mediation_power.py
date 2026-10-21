@@ -1,0 +1,171 @@
+"""SIMULATED power and identifiability study for Module 3 (synthetic data only).
+
+    python -m sim.mediation_power --part assoc   --reps 100
+    python -m sim.mediation_power --part ident   --reps 60
+    python -m sim.mediation_power --part lc      --reps 40 --n-boot 200
+    python -m sim.mediation_power --summarise
+
+Every parameter value here is an ASSUMPTION about worlds the RADC data might
+come from (sim/mediation_sim.py), not a measured value. Results are appended
+cell by cell to manuscript/notes/module3_power_<part>.csv (resumable: finished
+cells are skipped), and --summarise writes manuscript/notes/module3_power.md.
+The verdict rules are the pre-registered ones (src/mediation/hypotheses.py,
+config/mediation.yaml).
+"""
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+from sim.mediation_sim import EXPOSURES, simulate_radc_like
+from src.common.config import load_config
+from src.common.paths import CONFIG_DIR, REPO_ROOT
+from src.mediation.hypotheses import association, mediation_verdict, verdict
+from src.mediation.ordinal import bootstrap_ordinal_mediation, fit_ordinal_mediation
+
+NOTES = REPO_ROOT / "manuscript" / "notes"
+CFG = load_config(CONFIG_DIR / "mediation.yaml")
+COVS = ["age_death", "msex", "educ", "apoe4", "map"]
+KW = dict(level=CFG.get("model.ci_level"), equivalence=CFG.get("model.equivalence_log_or"),
+          max_width=CFG.get("model.uninformative_log_width"))
+
+# assumed worlds (log-ORs per SD); see the module docstring
+WORLDS = {
+    "null":         dict(log_or_amyloid_entry=0.0,   log_or_amyloid_spread=0.0, log_or_expo=0.0),
+    "part_like":    dict(log_or_amyloid_entry=0.0,   log_or_amyloid_spread=0.7, log_or_expo=0.0),
+    "gated_modest": dict(log_or_amyloid_entry=0.405, log_or_amyloid_spread=0.7, log_or_expo=0.140),
+    "gated_strong": dict(log_or_amyloid_entry=0.693, log_or_amyloid_spread=0.7, log_or_expo=0.262),
+}
+
+
+def frame(s: dict) -> pd.DataFrame:
+    d = pd.DataFrame({k: v for k, v in s.items() if k != "study"})
+    d["map"] = (s["study"] == "MAP").astype(float)
+    return d
+
+
+def assoc_rep(world: str, n: int, p0: float, seed: int) -> list[dict]:
+    d = frame(simulate_radc_like(n, seed=seed, p0=p0, **WORLDS[world]))
+    out = []
+    for test, split in (("H1", None), ("H2", CFG.get("model.entry_split"))):
+        r = association(d, outcome="braaksc", exposure="amyloid", direction=1, covariates=COVS, split=split)
+        out.append({"test": test, "n_used": r["n"], "n_stage0": r["levels"].get(0.0, 0) if split else int((d.braaksc == 0).sum()),
+                    "log_or": r["log_or"], **{"verdict": verdict(r["log_or"], r["se"], m=2, **KW)["verdict"]}})
+    for name, (map_only, dirn) in EXPOSURES.items():
+        dd = d[d["map"] == 1] if map_only else d
+        r = association(dd, outcome="braaksc", exposure=name, direction=dirn, covariates=COVS)
+        out.append({"test": f"H3 {name}", "n_used": r["n"], "n_stage0": int((dd.braaksc == 0).sum()),
+                    "log_or": r["log_or"], "verdict": verdict(r["log_or"], r["se"], m=4, **KW)["verdict"]})
+    return out
+
+
+def lc_rep(world: dict, n: int, seed: int, n_boot: int, exposure: str = "vision") -> list[dict]:
+    s = simulate_radc_like(n, seed=seed, with_lc=True, **world)
+    d = frame(s)
+    dirn = EXPOSURES[exposure][1]
+    T = dirn * (d[exposure] - d[exposure].mean()) / d[exposure].std()
+    M = (d["lc"] - d["lc"].mean()) / d["lc"].std()
+    X = d[COVS].to_numpy(float)
+    q0, q1 = np.quantile(T, CFG.get("mediation.contrast_quantiles"))
+    fit = fit_ordinal_mediation(T, M, d["braaksc"], X)
+    eff = fit.effects(q1, q0)
+    b = bootstrap_ordinal_mediation(T, M, d["braaksc"], X, t1=q1, t0=q0, n_boot=n_boot, seed=seed)
+    v = mediation_verdict(eff["nie"], b["nie"], m=CFG.get("mediation.family_size"), level=KW["level"])
+    h3 = association(d, outcome="braaksc", exposure=exposure, direction=dirn, covariates=COVS)
+    return [{"nie": eff["nie"], "rho_star": fit.rho_star, "verdict": v["verdict"],
+             "h3_log_or": h3["log_or"], "h3_verdict": verdict(h3["log_or"], h3["se"], m=4, **KW)["verdict"]}]
+
+
+def run_cells(part: str, cells: list[dict], reps: int, fn) -> None:
+    path = NOTES / f"module3_power_{part}.csv"
+    done = set(pd.read_csv(path)["cell"]) if path.exists() else set()
+    for c in cells:
+        key = "|".join(f"{k}={v}" for k, v in c.items() if k != "kwargs")
+        if key in done:
+            continue
+        rows = []
+        for r in range(reps):
+            for row in fn(seed=10_000 + r, **c["kwargs"]):
+                rows.append({"cell": key, "rep": r, **{k: v for k, v in c.items() if k != "kwargs"}, **row})
+        pd.DataFrame(rows).to_csv(path, mode="a", header=not path.exists(), index=False)
+        print(f"{part}: finished {key}", flush=True)
+
+
+def summarise() -> None:
+    lines = ["# Module 3: simulated power and identifiability (synthetic data only)", "",
+             "Generated by `python -m sim.mediation_power --summarise` from `manuscript/notes/module3_power_*.csv`.",
+             "Every world is an ASSUMPTION (sim/mediation_sim.py, sim/mediation_power.py); none is a RADC value.",
+             "Verdicts use the pre-registered rules (Bonferroni within family; practically-null band ln(1/0.9)).", ""]
+    p = NOTES / "module3_power_assoc.csv"
+    if p.exists():
+        d = pd.read_csv(p)
+        t = (d.assign(sup=d.verdict.eq("supports"), ag=d.verdict.str.startswith("AGAINST"),
+                      null=d.verdict.eq("AGAINST (practically null)"))
+             .groupby(["world", "n", "p0", "test"]).agg(reps=("rep", "nunique"), n_used=("n_used", "median"),
+                                                        n_stage0=("n_stage0", "median"),
+                                                        supports=("sup", "mean"), against_any=("ag", "mean"),
+                                                        practically_null=("null", "mean")).reset_index())
+        lines += ["## Association tests H1, H2, H3 (share of simulated data sets per verdict)", "",
+                  t.to_markdown(index=False, floatfmt=".2f"), ""]
+    p = NOTES / "module3_power_ident.csv"
+    if p.exists():
+        d = pd.read_csv(p)
+        t = (d.assign(nie_sup=d.verdict.str.startswith("NIE in the predicted"), h3_sup=d.h3_verdict.eq("supports"))
+             .groupby(["world", "n"]).agg(reps=("rep", "nunique"), mean_h3_log_or=("h3_log_or", "mean"),
+                                         h3_supports=("h3_sup", "mean"), mean_nie=("nie", "mean"),
+                                         nie_predicted=("nie_sup", "mean")).reset_index())
+        lines += ["## Identifiability: same total association, mediated through the LC or not", "",
+                  "Without an LC measure only H3 can be computed; its distribution is (nearly) the same in both "
+                  "worlds, so the Standard dataset cannot tell LC-mediated from direct effects. With an LC measure, "
+                  "the NIE separates them.", "", t.to_markdown(index=False, floatfmt=".3f"), ""]
+    p = NOTES / "module3_power_lc.csv"
+    if p.exists():
+        d = pd.read_csv(p)
+        t = (d.assign(nie_sup=d.verdict.str.startswith("NIE in the predicted"),
+                      opp=d.verdict.str.contains("OPPOSITE"))
+             .groupby(["world", "n"]).agg(reps=("rep", "nunique"), mean_nie=("nie", "mean"),
+                                         nie_predicted=("nie_sup", "mean"), nie_opposite=("opp", "mean"),
+                                         median_rho_star=("rho_star", "median")).reset_index())
+        lines += ["## Conditional LC branch (H4): NIE through the LC measure, exposure = vision", "",
+                  t.to_markdown(index=False, floatfmt=".3f"), ""]
+    (NOTES / "module3_power.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print("wrote manuscript/notes/module3_power.md")
+
+
+def main(argv: list[str]) -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--part", choices=["assoc", "ident", "lc"])
+    ap.add_argument("--reps", type=int, default=100)
+    ap.add_argument("--n-boot", type=int, default=200)
+    ap.add_argument("--summarise", action="store_true")
+    a = ap.parse_args(argv)
+    NOTES.mkdir(parents=True, exist_ok=True)
+    if a.summarise:
+        summarise()
+        return 0
+    if a.part == "assoc":
+        cells = [{"world": w, "n": n, "p0": p0, "kwargs": {"world": w, "n": n, "p0": p0}}
+                 for w in WORLDS for n in (500, 1000, 1500) for p0 in (0.03, 0.10)]
+        run_cells("assoc", cells, a.reps, assoc_rep)
+    elif a.part == "ident":
+        mediated = dict(lc_beta2=1.0, lc_gamma=0.5, log_or_expo=0.0, log_or_amyloid_spread=0.7)
+        direct = dict(lc_beta2=0.0, lc_gamma=0.5, log_or_expo=0.25, log_or_amyloid_spread=0.7)
+        cells = [{"world": w, "n": 1000, "kwargs": {"world": kw, "n": 1000, "n_boot": a.n_boot}}
+                 for w, kw in (("all_through_LC", mediated), ("none_through_LC", direct))]
+        run_cells("ident", cells, a.reps, lc_rep)
+    else:
+        worlds = {"no_LC_path": dict(lc_beta2=0.0, lc_gamma=0.4), "modest": dict(lc_beta2=0.4, lc_gamma=0.3),
+                  "strong": dict(lc_beta2=0.8, lc_gamma=0.4)}
+        cells = [{"world": w, "n": n, "kwargs": {"world": {**kw, "log_or_amyloid_spread": 0.7}, "n": n,
+                                                  "n_boot": a.n_boot}}
+                 for w, kw in worlds.items() for n in (300, 800)]
+        run_cells("lc", cells, a.reps, lc_rep)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

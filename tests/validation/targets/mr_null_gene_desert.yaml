@@ -20,11 +20,18 @@ settings:
   pass_quantile: 0.99   # fail only if the excess is beyond the 99% binomial quantile
 
 inputs:
-  genome_build: null    # RESEARCHER: must equal config/mr_targets.yaml genome_build
-  # One column, SNP: variants >= 1 Mb from any Ensembl GRCh37 gene and mutually
-  # > 10 Mb apart or LD-pruned (so draws are independent). RESEARCHER: produce
-  # from the Ensembl gene list + LD reference, or approve a script to do it.
-  desert_variants: null
+  genome_build: GRCh37  # = config/mr_targets.yaml genome_build
+  # Filled 2026-10-21 (researcher decision 3). One column, SNP, built by
+  # src/mr/gene_deserts.py with the rule in config/mr_targets.yaml
+  # `gene_deserts`: gene deserts as defined by Ovcharenko et al. 2005 (Genome
+  # Res 15:137; the 3% longest intergenic intervals between protein-coding
+  # genes, segments bounded by telomeres, centromeres and gaps > 250 kb), on
+  # GENCODE release 19 / GRCh37; variants from the 1000G EUR LD panel, >= 100 kb
+  # inside the desert, MAF >= 0.01, thinned and LD-pruned (r^2 < 0.001 within
+  # 10 Mb). Provenance: the PROVENANCE.yaml written next to the file.
+  # NOT RUN before the freeze: this test reads the AD outcome rows.
+  desert_variants: data/interim/mr/gene_deserts/gene_desert_variants.csv
   provided_by: >-
-    researcher: gene-desert variant list (data/raw/validation/), plus the AD
-    outcome file and column map configured in config/mr_targets.yaml
+    src/mr/gene_deserts.py (gene-desert variant list, from GENCODE 19, the
+    NCBI GRCh37.p13 gap table and the 1000G EUR panel), plus the AD outcome
+    file and column map configured in config/mr_targets.yaml after the freeze

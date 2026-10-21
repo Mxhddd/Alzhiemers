@@ -1,25 +1,60 @@
-# Module 3 validation (brief ground rule 1): reproduce a published causal
-# mediation analysis (linear-linear, no interaction) from its public data.
-# RESEARCHER fields only. Brief §5: no public cohort may be substituted for
-# the analysis without the researcher's say-so — this is validation only.
+# Module 3 validation (brief ground rule 1): reproduce two published causal
+# mediation analyses (linear mediator, linear outcome, no interaction) from
+# the authors' own public replication data. Validation only: these data are
+# never Module 3 data (brief §5).
+# Values EXTRACTED BY CLAUDE from the open full texts (verified: false until
+# the researcher checks them): data/extracted/mediation_validation_published.csv,
+# with locators and verbatim snippets; citations in data/extracted/SOURCES.md.
+# Data: python -m src.mediation.fetch_validation_data (sha256-pinned, CC0).
 id: mediation_published
 module: mediation
 kind: published_mediation
 
 published:
-  citation: null          # RESEARCHER
-  doi: null               # RESEARCHER
-  locator: null           # RESEARCHER: table with ACME / ADE
-  acme: null              # RESEARCHER
-  acme_ci_lower: null     # RESEARCHER
-  acme_ci_upper: null     # RESEARCHER
-  ade: null               # RESEARCHER
-  transcribed_by: null    # RESEARCHER
-  transcribed_on: null    # RESEARCHER
+  citation: "Imai K, Keele L, Tingley D. A general approach to causal mediation analysis. Psychol Methods 2010;15(4):309-334"
+  doi: 10.1037/a0020761
+  locator: "Table 1, column 'Product of coefficients: No interaction'"
+  acme: -0.016
+  acme_ci_lower: -0.03
+  acme_ci_upper: -0.002
+  ade: -0.032
+  # printed to 3 decimals; reproduction must agree to the printed precision
+  ade_tolerance: 0.0005
+  acme_tolerance: 0.0005
+  effect_on_mediator: 0.100
+  # DISCREPANCY, reported not hidden: the authors' replication data and code give
+  # 0.1008, which rounds to .101, not the printed .100 (truncation in the note?).
+  # Checked to 0.001; ACME, ADE and total agree to the printed 3 decimals.
+  effect_on_mediator_tolerance: 0.001
+  transcribed_by: Claude (machine extraction from the authors' PDF; verified false)
+  transcribed_on: 2026-10-21
 
 inputs:
-  data: null              # RESEARCHER: path under data/raw/validation/
-  exposure: null          # RESEARCHER: column names as in the paper's model
-  mediator: null          # RESEARCHER
-  outcome: null           # RESEARCHER
-  covariates: null        # RESEARCHER: list (may be empty: [])
+  data: data/raw/validation/jobs_ii_ikt2010.csv
+  # treat is stored as a factor (control/exp); treat_num is its 0/1 coding
+  exposure: treat_num
+  mediator: job_seek
+  outcome: depress2
+  # as in the authors' Table-1.R; factors dummy-coded with the first level as reference
+  covariates: [depress1, age, educ, sex, nonwhite, econ_hard, marital, occp, income]
+  factors: [educ, nonwhite, marital, occp, income]
+
+sensitivity:
+  citation: "Imai K, Keele L, Yamamoto T. Identification, inference and sensitivity analysis for causal mediation effects. Stat Sci 2010;25(1):51-71"
+  doi: 10.1214/10-STS321
+  locator: "Table 3 ('With the no-interaction assumption', Parametric); Section 6.2 paragraph 1"
+  acme: -0.510
+  acme_ci_lower: -0.969
+  acme_ci_upper: -0.051
+  total: -0.540
+  # "would be maintained unless rho is less than -0.68" (grid step 0.01)
+  rho_at_zero_acme: -0.68
+  rho_tolerance: 0.01
+  acme_tolerance: 0.0005
+  transcribed_by: Claude (machine extraction from arXiv:1011.1079; verified false)
+  transcribed_on: 2026-10-21
+  data: data/raw/validation/nelson_iky2010.csv
+  exposure: vidcdum
+  mediator: idisord
+  outcome: kspeech
+  covariates: []

@@ -240,6 +240,7 @@ dependencies = [
     { name = "numpy" },
     { name = "numpyro" },
     { name = "pandas" },
+    { name = "pyliftover" },
     { name = "pyyaml" },
     { name = "salib" },
     { name = "scipy" },
@@ -260,6 +261,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.4.6" },
     { name = "numpyro", specifier = ">=0.22.0" },
     { name = "pandas", specifier = ">=3.0.6" },
+    { name = "pyliftover", specifier = "==0.4.1" },
     { name = "pyyaml" },
     { name = "salib", specifier = ">=1.6.0" },
     { name = "scipy", specifier = ">=1.17.1" },
@@ -502,6 +504,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/49/2e/ced460408999b33da6b31b0021b0f37d329e202d4169aeb164493778f25b/pygments-2.21.0.tar.gz", hash = "sha256:610ca751c9bc2492b38eb9a38a7fbc93edbbb2d7182edaf34e66ae493dee5c8c", size = 5005329, upload-time = "2026-08-17T08:02:48.824Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/71/46/17f022dd3e953bf20a04a028a21ec746d942f8d2af30fa0f124fa0e6a684/pygments-2.21.0-py3-none-any.whl", hash = "sha256:2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9", size = 1250147, upload-time = "2026-08-17T08:02:44.912Z" },
+]
+
+[[package]]
+name = "pyliftover"
+version = "0.4.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/00/e8/f09804e990d66d235f4c90cb343bdc540ec17b67c925e72c67432a4d6130/pyliftover-0.4.1.tar.gz", hash = "sha256:33ad187e35d1b6662ba446432f4dd1a808ac2914ce1645eef37598fa5a3860cd", size = 11911, upload-time = "2024-02-08T21:32:16.566Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b1/61/e3afcf369fe45223cfebfbb8cde46d521e2786889c1b3eed01ee08adb626/pyliftover-0.4.1-py3-none-any.whl", hash = "sha256:49ef8938010d2e934abb483d3ef8073897ed6b88bcd978c486c8f7631c24dbc1", size = 12394, upload-time = "2024-02-08T21:32:15.157Z" },
 ]
 
 [[package]]

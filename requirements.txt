@@ -102,6 +102,8 @@ pluggy==1.6.0
     # via pytest
 pygments==2.21.0
     # via pytest
+pyliftover==0.4.1
+    # via lc-first
 pyparsing==3.3.3
     # via matplotlib
 pytest==9.1.1

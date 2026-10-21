@@ -3,43 +3,66 @@
 # HMGCR variants, on coronary artery disease, and require our estimate to
 # fall inside the published confidence interval.
 #
-# Every field marked RESEARCHER is transcribed by the researcher from the
-# paper. Claude must never fill these in. Until they are present, `make
-# validate` FAILS (it does not skip) and Module 1 is blocked.
+# Filled 2026-10-21 under the researcher's decision 2 (choose a published
+# HMGCR estimate whose instruments and outcome are open data). Every published
+# value below is in data/extracted/mr_validation_huang2021_hmgcr.csv with its
+# locator and the verbatim cell text, verified: false (the researcher checks it
+# against the supplement). Why this paper: it is open access (CC BY 4.0), its
+# supplement lists the 7 instruments with their GLGC 2013 statistics (which
+# equal those in the GLGC file we downloaded, to every printed digit), and both
+# GWAS it used are open (GLGC 2013 jointGwasMc_LDL, GWAS Catalog GCST002222;
+# CARDIoGRAMplusC4D 1000G additive, GCST003116). Ference et al. 2016 (NEJM)
+# was considered: its site refused automated access (Cloudflare check), so its
+# CIs were not read, and it used individual-level data and its own composite
+# outcome, so it cannot be reproduced from open data. Candidates are listed in
+# data/extracted/mr_sources.md.
+#
+# Comparison rule, fixed before the run (prereg/mr.md section 6): PASS if our
+# IVW estimate (log OR per unit of the GLGC LDL-C beta, i.e. per SD) lies
+# inside the published 95% CI 1.24-1.68 on the log scale. Whether the
+# published estimate lies inside our CI is reported but does not decide.
 id: mr_ldl_hmgcr_cad
 module: mr
 kind: published_estimate
 description: LDL cholesterol (HMGCR variants) -> coronary artery disease, two-sample MR
 
 published:
-  citation: null        # RESEARCHER: full reference
-  doi: null             # RESEARCHER
-  locator: null         # RESEARCHER: table / figure / page holding the estimate
-  method: null          # RESEARCHER: ivw | mr_egger | weighted_median | wald_ratio
-  scale: null           # RESEARCHER: words, e.g. "OR for CAD per 1 mmol/L lower LDL-C"
-  reported_as: null     # RESEARCHER: ratio (OR/HR as printed) or log (log-OR / beta)
-  estimate: null        # RESEARCHER
-  ci_lower: null        # RESEARCHER
-  ci_upper: null        # RESEARCHER
-  ci_level: null        # RESEARCHER: e.g. 0.95
-  transcribed_by: null  # RESEARCHER: name
-  transcribed_on: null  # RESEARCHER: YYYY-MM-DD
+  citation: >-
+    Huang W, Xiao J, Ji J, Chen L. Association of lipid-lowering drugs with
+    COVID-19 outcomes from a Mendelian randomization study. eLife
+    2021;10:e73873. PMID 34866576, PMC8709572.
+  doi: 10.7554/eLife.73873
+  locator: >-
+    Supplementary file 1 (elife-73873-supp1.xlsx), sheet 'Table 6', row HMGCR
+    (OR 1.4442826538077589, 95%CI 1.24-1.68); beta/SE in sheet 'Table 9'; the
+    7 instruments in sheet 'Table 3'; IVW in sheet 'Table 4'
+  method: ivw
+  scale: OR for coronary heart disease per 1-unit (SD) higher LDL-C proxied by HMGCR variants (GLGC 2013 betas)
+  reported_as: ratio
+  estimate: 1.4442826538077589
+  ci_lower: 1.24
+  ci_upper: 1.68
+  ci_level: 0.95
+  transcribed_by: Claude (Anthropic AI) for Mohammad Hassan; unverified (verified false in data/extracted)
+  transcribed_on: 2026-10-21
 
 conversion:
   # Our estimate is per unit of the exposure GWAS beta, for the exposure-
-  # increasing allele. Multiply by `factor` to reach the published scale
-  # (e.g. -1 for "per lower LDL"; a per-SD -> per-mmol/L factor, which is an
-  # empirical number the researcher must supply with its source). 1 if the
-  # scales already match.
-  factor: null          # RESEARCHER
-  reason: null          # RESEARCHER: why this factor, with source
+  # increasing allele. Multiply by `factor` to reach the published scale.
+  factor: 1
+  reason: >-
+    Same exposure GWAS (GLGC 2013 LDL-C, betas in SD units) and same direction
+    (per higher LDL-C) as the published OR; IVW does not depend on which
+    allele is coded, so no rescaling and no sign change.
 
 inputs:
-  genome_build: null    # RESEARCHER: build of both variant tables, e.g. GRCh37
+  genome_build: GRCh37
   # Per-variant summary statistics, columns:
   #   SNP, effect_allele, other_allele, beta, se, eaf, source
   exposure: data/raw/validation/mr_ldl_hmgcr_cad_exposure.csv
   outcome: data/raw/validation/mr_ldl_hmgcr_cad_outcome.csv
   provided_by: >-
-    researcher: per-variant statistics for the paper's HMGCR instruments,
-    transcribed from its supplement or extracted from the GWAS it names
+    src/mr/build_hmgcr_validation_inputs.py (researcher decision 2026-10-21):
+    the 7 SNPs of Huang 2021 Supplementary file 1 Table 3, with statistics
+    taken from GLGC 2013 jointGwasMc_LDL (GCST002222) and CARDIoGRAMplusC4D
+    1000G additive (GCST003116), both GRCh37

@@ -59,24 +59,28 @@ outcome:
   # must wait for the freeze. Left null = "not run: no proxy-free file supplied".
   proxy_free_file: null
 
-# FinnGen public Alzheimer's endpoint for replication. RESEARCHER: endpoint
-# name, release and file; null = replication reported as not run.
+# FinnGen public Alzheimer's endpoint for replication.
 replication:
-  # prereg/mr.md §4 names G6_ALZHEIMER; FinnGen R10 has it (manifest read
-  # 2026-10-15), so no endpoint substitution. R10 was the release the data-step
-  # brief named. NOTE for the researcher: prereg §4 says "the FinnGen public
-  # release current at run time", and on 2026-10-15 that is R13
-  # (finngen_R13_manifest.tsv: G6_ALZHEIMER 16,652 cases / 483,534 controls).
-  # Switching to R13 is a one-line change here plus a download; not done.
-  finngen_endpoint: R10 G6_ALZHEIMER
-  # Data step 2026-10-15: downloaded and QUARANTINED, NOT READ, at
-  # data/raw/mr/quarantine_outcome/finngen_R10_G6_ALZHEIMER/finngen_R10_G6_ALZHEIMER.gz.
-  # FinnGen R10 is GRCh38: needs liftover to GRCh37 (src/mr/liftover.py), which
-  # reads rows and so must wait until prereg/mr.md is frozen. Null until then.
+  # Decision 2026-10-21: the release current at run time (prereg section 4) is
+  # R13, and its files are downloadable without an account (public Google
+  # Cloud bucket finngen-public-data-r13, anonymous listing and download; the
+  # finngen.fi access page, which describes an access form, refused automated
+  # access and was not read). Endpoint G6_ALZHEIMER, the one the
+  # pre-registration names, so no substitution. R13 G6_ALZHEIMER downloaded
+  # 2026-10-21 from
+  # https://storage.googleapis.com/finngen-public-data-r13/summary_stats/finngen_R13_G6_ALZHEIMER.gz
+  # (805,395,928 bytes; sha256 9cfdf75f996ca688eb9de4638fa0dc5249b102c8e65da0423769b5ce4324e8eb;
+  # md5 equals the bucket's md5Hash) to
+  # data/raw/mr/quarantine_outcome/finngen_R13_G6_ALZHEIMER/ and QUARANTINED:
+  # only its header line was read. The R10 file was deleted the same day (the
+  # researcher said R10 is not needed). FinnGen is GRCh38: the copy is lifted
+  # to GRCh37 (src/mr/liftover.py) after prereg/mr.md is frozen. Null until then.
+  release: R13
+  finngen_endpoint: G6_ALZHEIMER
   file: null
-  # From the file's header line only (2026-10-15): "#chrom pos ref alt rsids
-  # nearest_genes pval mlogp beta sebeta af_alt af_alt_cases af_alt_controls".
-  # FinnGen's beta and af are for the alt allele.
+  # From the R13 file's header line only (2026-10-21): "#chrom pos ref alt
+  # rsids nearest_genes pval mlogp beta sebeta af_alt af_alt_cases
+  # af_alt_controls" (same as R10). FinnGen's beta and af are for the alt allele.
   columns:
     SNP: rsids  # rsID (can hold several comma-separated ids; check after the freeze)
     # GRCh38 in the raw file; GRCh37 after liftover (header really is "#chrom")
@@ -88,10 +92,15 @@ replication:
     beta: beta  # log-OR for alt
     se: sebeta  # file header
     p: pval  # file header
-  # FinnGen R10 manifest (data/raw/mr/finngen_r10/R10_manifest.tsv), row G6_ALZHEIMER: num_cases 10520.
-  n_cases: 10520
-  # Same manifest row: num_controls 401661.
-  n_controls: 401661
+  # Official FinnGen R13 manifest
+  # (https://storage.googleapis.com/finngen-public-data-r13/summary_stats/finngen_R13_manifest.tsv,
+  # the link given in the FinnGen documentation; downloaded 2026-10-21 to
+  # data/raw/mr/finngen_r13/finngen_R13_manifest.tsv, sha256
+  # c9caafa9b98ee5ef050a705766bd1c451fc2154fb8e81b069022012a2f75ae20), row
+  # G6_ALZHEIMER "Alzheimer disease": num_cases 16652.
+  n_cases: 16652
+  # Same manifest row: num_controls 483534.
+  n_controls: 483534
 
 exposures:
   eqtlgen:
@@ -123,23 +132,122 @@ exposures:
     # Must match genome_build above.
     build: GRCh37
   metabrain:
-    # Cortex cis-eQTLs (MetaBrain). RESEARCHER: file, columns, build.
+    # Brain (cortex) cis-eQTLs: MetaBrain, de Klein et al. 2023 Nat Genet
+    # (doi 10.1038/s41588-023-01300-6), Cortex-EUR (n = 2,683). Decision
+    # 2026-10-21 (option b). ACCESS: the full cis-eQTL summary statistics need a
+    # Google form (name, e-mail, institute, intended use; link e-mailed back) -
+    # "needs the researcher", not downloaded. What IS open (no account, no form,
+    # website terms of use only: no redistribution, cite, no re-identification):
+    # the significant cis-eQTL table behind the public browser
+    # (www.metabrain.nl/cis-eqtls.html, served by
+    # https://eqtlgen.molgeniscloud.org/api/v2/metabrain_cis_eqtl_v2; 56,894 rows,
+    # downloaded 2026-10-21 to data/raw/mr/metabrain_deklein2023/). That table
+    # holds only the top variant of each conditional round (QTLRank) per gene, so
+    # it is used as follows (src/mr/prepare_qtl_sources.py):
+    #  - Cortex-EUR rows only (the ancestry of the outcome GWAS; Cortex is the
+    #    tissue named in the pre-registration);
+    #  - QTLRank 1 only: rank >= 2 effects are conditional on the earlier ranks,
+    #    and mixing conditional exposure effects with marginal outcome effects is
+    #    not valid; rank 1 is the marginal top variant;
+    #  - GRCh38 positions lifted to GRCh37 with src/mr/liftover.py (drops logged);
+    #  - no allele frequency in the table: eaf = 1000 Genomes EUR frequency of the
+    #    effect allele, non-palindromic variants only (palindromic -> NA -> dropped
+    #    by the reader), the rule already used for fasting glucose.
+    # Consequence: at most one MetaBrain instrument per gene (Wald ratio), and no
+    # cis-window colocalisation with this source (needs the full file).
     tissue: cortex
-    # RESEARCHER
-    file: null
-    # RESEARCHER
-    columns: null
-    # RESEARCHER: MetaBrain release build — must match genome_build or be lifted over first
-    build: null
-  pqtl:
-    # UKB-PPP / deCODE cis-pQTLs where available. RESEARCHER: file, columns, build.
+    file: data/interim/mr/metabrain_cortex_eur_rank1_targets_grch37.tsv
+    columns:
+      SNP: rsid  # from MetaBrain's SNP id chr:pos:rsid:alleles
+      chrom: chrom_grch37  # lifted from GRCh38 (src/mr/liftover.py)
+      pos: pos_grch37  # lifted from GRCh38
+      effect_allele: SNPEffectAllele  # browser table: allele the beta refers to
+      other_allele: other_allele  # the other allele of SNPAlleles
+      eaf: eaf_1000g_eur  # 1000G EUR frequency of the effect allele (see above)
+      beta: MetaBeta  # browser table
+      se: MetaSE  # browser table
+      p: MetaP  # browser table
+      "n": MetaPN  # browser table: meta-analysis sample size (key quoted, YAML 1.1)
+      gene: GeneSymbol  # browser table
+    # After liftover (the raw table is GRCh38).
+    build: GRCh37
+  pqtl_ukbppp:
+    # Plasma cis-pQTLs: UK Biobank Pharma Proteomics Project, Sun et al. 2023
+    # Nature 622:329 (doi 10.1038/s41586-023-06592-6), Olink Explore 3072.
+    # Decision 2026-10-21 (option b). ACCESS: the full per-protein summary
+    # statistics are on Synapse (syn51364943; the API answers "Anonymous users
+    # have only READ access permission" to a download request, so a free Synapse
+    # account is needed) and in a controlled-access AWS bucket - "needs the
+    # researcher", not downloaded. What IS open (CC BY 4.0): Supplementary
+    # Table 9 of the paper, every significant (p < 1.7e-11) primary pQTL of the
+    # European-ancestry discovery cohort (n = 34,557) with A1, A1FREQ, BETA, SE,
+    # log10(p), GRCh38 position and the GRCh37 position inside the variant id
+    # (data/raw/mr/ukbppp_sun2023/41586_2023_6592_MOESM3_ESM.xlsx). Used as
+    # follows (src/mr/prepare_qtl_sources.py): rows whose assay target is a
+    # target gene; GRCh38 GENPOS lifted to GRCh37 with src/mr/liftover.py (drops
+    # logged) and checked against the GRCh37 position in the variant id; p =
+    # 10^-log10(p). One primary association per locus, so at most one cis
+    # instrument per protein. Among the targets only ADRA2A, DBH and LGMN are on
+    # the Olink panel (Supplementary Table 3); ADRA2A has no cis pQTL there.
     tissue: plasma
-    # RESEARCHER
+    file: data/interim/mr/ukbppp_discovery_st9_targets_grch37.tsv
+    columns:
+      SNP: rsID  # Supplementary Table 9
+      chrom: chrom_grch37  # lifted from GENPOS (hg38)
+      pos: pos_grch37  # lifted from GENPOS (hg38)
+      effect_allele: A1  # ST9: "BETA (discovery, wrt. A1)"
+      other_allele: A0  # ST9 variant id CHROM:GENPOS(hg37):A0:A1
+      eaf: A1FREQ  # ST9: A1FREQ (discovery)
+      beta: BETA  # ST9: BETA (discovery), SD units of NPX
+      se: SE  # ST9: SE (discovery)
+      p: P  # 10^-log10(p) (discovery)
+      "n": N  # discovery cohort size 34,557 (Sun 2023, Results), per-protein N not given
+      gene: Assay_Target  # ST9 column "Assay Target" (gene symbol), renamed without the space
+    build: GRCh37
+  pqtl_decode:
+    # Plasma cis-pQTLs: deCODE, Ferkingstad et al. 2021 Nat Genet 53:1712
+    # (doi 10.1038/s41588-021-00978-w), SomaScan, 35,559 Icelanders. Decision
+    # 2026-10-21 (option b). ACCESS: the summary statistics at
+    # www.decode.com/summarydata need a form (name, e-mail, institution, accept
+    # terms: scientific use only, no redistribution) with a reCAPTCHA - "needs
+    # the researcher", not downloaded. The open supplement (Supplementary
+    # Tables 2 and 8, CC BY 4.0) lists significant pQTLs with beta to 2 decimals
+    # and no SE; among the targets it has cis pQTLs only for LGMN, which has no
+    # positive control (untestable whatever the instrument). So no deCODE file is
+    # built: null = "not run: exposure file not supplied".
+    tissue: plasma
     file: null
-    # RESEARCHER
     columns: null
-    # RESEARCHER: UKB-PPP is distributed on GRCh38 — needs liftover to GRCh37 first
     build: null
+
+# How a target's PRIMARY instrument source is chosen when several sources give
+# instruments. Decided 2026-10-21, before any new-source positive control was
+# run and before any Alzheimer's outcome row was read:
+#  1. A source is eligible for a target only if its instruments pass that
+#     target's positive-control gate (p < positive_control.p_max and the
+#     expected sign) in the same window.
+#  2. Among eligible sources, the first in this list is the primary source; the
+#     others are reported as secondary analyses, never pooled.
+#  3. Order and reason: plasma pQTL before brain eQTL before blood eQTL. A drug
+#     acts on the protein, so protein abundance is one step closer to drug
+#     action than mRNA; among transcript sources, cortex is the tissue of the
+#     disease and of locus coeruleus projections, blood a convenience tissue.
+#     UKB-PPP before deCODE: European ancestry like the outcome GWAS, full-
+#     precision beta/SE/EAF in the open table, and antibody (Olink) assays are
+#     less exposed to aptamer-binding artefacts than SomaScan.
+#  4. The blood-only result (eQTLGen alone, the 2026-10-15 design) is always
+#     reported alongside, labelled "option (a), blood only".
+source_selection:
+  hierarchy: [pqtl_ukbppp, pqtl_decode, metabrain, eqtlgen]
+  blood_only_source: eqtlgen
+  # Instrument orientation. eQTL instruments: effect allele = expression-
+  # increasing allele; pQTL instruments: effect allele = protein-increasing
+  # allele. The Wald ratio and IVW are invariant to which allele is coded, so
+  # this fixes only the reporting: every estimate is per 1 SD higher genetically
+  # predicted level of the source's measure (expression or protein), and the
+  # expected signs in targets.*.positive_control and in prereg section 3 apply
+  # unchanged to pQTL instruments.
+  orientation: level_increasing_allele
 
 instruments:
   # Genome-wide significance for cis instruments. A choice (brief left it
@@ -189,6 +297,57 @@ positive_control:
   # 0.05 is a choice: the control is a sanity check of instrument function,
   # not a discovery, so no multiple-testing correction.
   p_max: 0.05
+
+# Gene-desert null test (tests/validation/targets/mr_null_gene_desert.yaml).
+# Decided 2026-10-21 (researcher decision 3). The list is built by
+# src/mr/gene_deserts.py from the files named here; it reads no outcome data.
+# The null test itself reads the AD outcome, so it runs only after
+# prereg/mr.md is frozen, and before any target's MR (prereg section 6).
+gene_deserts:
+  # Ovcharenko et al. 2005, Genome Res 15:137-145 (doi 10.1101/gr.3015505,
+  # PMC540279), Results, "Identification of human gene deserts": gene deserts
+  # are "The 3% longest intergenic intervals (545 genomic regions, with the
+  # shortest of them covering 640 kb)" of the UCSC knownGenes annotation on
+  # NCBI Build 34, "with subtelomeric and pericentromeric regions excluded".
+  # So the definition is a percentile; 640 kb was its consequence on that
+  # annotation. We apply the same percentile rule (data/extracted/mr_gene_desert_definition_ovcharenko2005.csv).
+  longest_fraction: 0.03
+  # GENCODE release 19 (GRCh37.p13): the last GENCODE release annotated
+  # natively on GRCh37, the build of the pipeline (later "lift37" files are
+  # mapped back from GRCh38). Downloaded 2026-10-21 from
+  # https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_19/gencode.v19.annotation.gtf.gz
+  annotation: GENCODE release 19 (GRCh37.p13), gene records
+  annotation_file: data/raw/mr/gencode_v19/gencode.v19.annotation.gtf.gz
+  # Which gene records count as genes: protein-coding only, as in the paper's
+  # definition ("devoid of protein-coding genes", abstract).
+  gene_types: [protein_coding]
+  # Autosomes only: the outcome GWAS and the LD panel analyses are autosomal.
+  chromosomes: autosomes
+  # Edge handling, following the paper's Methods: the genome is cut into
+  # segments bounded by a chromosome end, a centromere, a telomere, a
+  # heterochromatin or short-arm gap, or any assembly gap longer than
+  # boundary_gap_min_bp; an intergenic interval must lie between two genes
+  # inside one segment, so intervals that touch a segment boundary
+  # (subtelomeric, pericentromeric, next to a large gap) are excluded. Smaller
+  # gaps inside an interval are kept and counted in its length. Gene spans
+  # that overlap are merged first. Gap table: NCBI GRCh37.p13
+  # GCA_000001405.14_GRCh37.p13_genomic_gaps.txt.gz (UCSC's hg19 gap table was
+  # unreachable on 2026-10-21: TLS chain failure; NCBI's is the source assembly).
+  gaps_file: data/raw/mr/ncbi_grch37/GCA_000001405.14_GRCh37.p13_genomic_gaps.txt.gz
+  assembly_report: data/raw/mr/ncbi_grch37/GCA_000001405.14_GRCh37.p13_assembly_report.txt
+  boundary_gap_types: [centromere, telomere, heterochromatin, short_arm]
+  boundary_gap_min_bp: 250000
+  # Variants for the null test, from the LD reference panel (1000G EUR,
+  # instruments.ld_reference_bfile): bi-allelic SNVs with an rsID, MAF >=
+  # instruments.maf_min, at least variant_margin_kb inside the desert from both
+  # flanking genes (the primary cis window, so no variant falls in any gene's
+  # +/-100 kb window), thinned to at least thin_bp apart, then LD-pruned to
+  # r^2 < instruments.ld_r2_max within instruments.ld_window_kb (PLINK
+  # --indep-pairwise), so draws are near-independent like clumped instruments.
+  variant_margin_kb: 100
+  thin_bp: 50000
+  regions_file: data/interim/mr/gene_deserts/gene_deserts_grch37_gencode19_protein_coding.tsv
+  variants_file: data/interim/mr/gene_deserts/gene_desert_variants.csv
 
 # Pre-registered targets (brief §5 table). `predicted_lower_activity` is copied
 # from the brief. Expression eQTLs are oriented to the expression-INCREASING

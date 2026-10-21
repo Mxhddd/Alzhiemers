@@ -18,6 +18,7 @@ dependencies = [
     "jax[cpu]>=0.10.2",
     "numpyro>=0.22.0",
     "arviz>=0.23.4",
+    "pyliftover==0.4.1",
 ]
 
 [dependency-groups]

@@ -1,53 +1,171 @@
-# Module 3 — causal mediation (Killer 2), PROJECT_BRIEF.md §5.
-# `null` = researcher must supply. The real data path fails loudly while absent.
+# Module 3 (Killer 2), rewritten 2026-10-21 for the RADC ROS/MAP Standard
+# dataset (requested by the researcher, not yet received). Every choice below
+# is fixed before the data arrive; prereg/mediation.md states each one and
+# tests/unit/test_prereg_mediation_consistency.py keeps the two in step.
+# Variable names: RADC Research Resource Sharing Hub, public pages
+# https://www.radc.rush.edu/docs/var/standardDatasetVariables.htm and
+# https://www.radc.rush.edu/docs/var/detail.htm?variable=<name> (read 2026-10-21).
 
-# Seed for the bootstrap.
-seed: 20261020
+# Seed for every bootstrap and imputation (date this plan was written).
+seed: 20261021
 
 data:
-  # RESEARCHER: the cohort file (not yet available). Never a public substitute
-  # without the researcher's explicit say-so (brief §5).
-  file: data/raw/mediation_cohort.csv
-  # RESEARCHER: exposure columns (risk factors), e.g. hearing loss, social
-  # isolation, physical inactivity — names as in the file.
-  exposures: null
-  # RESEARCHER: the LC-integrity mediator column (e.g. neuromelanin MRI contrast).
-  mediator: null
-  # RESEARCHER: the tau outcome column (e.g. tau-PET SUVR in a Braak region).
-  outcome: null
-  # RESEARCHER: adjustment set, exactly as implied by the frozen DAG.
-  covariates: null
-  # Missing values stop the run (brief: missing data raises). The alternative,
-  # complete_case_logged, drops incomplete rows and logs each with its reason;
-  # it assumes data missing completely at random and must be pre-registered.
-  missing: raise
+  # Delivered cross-sectional file, exported to CSV. File name and format are
+  # unknown until delivery; the researcher sets the real path on receipt.
+  basic_file: data/raw/radc/radc_standard_basic.csv
+  # Delivered longitudinal file (one row per participant-visit), as CSV. Same caveat.
+  long_file: data/raw/radc/radc_standard_long.csv
+  # The researcher requested ROS and MAP; MARS, Clinical Core and Latino Core rows are excluded.
+  cohorts: [ROS, MAP]
+  # Identifier and timing columns. projid / study / fu_year are RADC's usual
+  # keys but are NOT listed on the public Standard-dataset page: to be confirmed
+  # against the codebook on receipt.
+  columns:
+    # Participant identifier (to be confirmed).
+    id: projid
+    # Cohort label, values ROS / MAP (to be confirmed).
+    study: study
+    # Years since baseline for each longitudinal row (to be confirmed).
+    visit: fu_year
+    # Age at each visit. No such variable is on the public Standard list, so it
+    # is computed as age_bl + fu_year; replace with the delivered column if one exists.
+    visit_age: age_bl_plus_fu_year
+  # Set to true by the researcher after checking every name in this file
+  # against the delivered codebook, before any analysis (names only, no values).
+  codebook_confirmed: false
+
+variables:
+  # Braak NFT stage 0-VI, Bielschowsky silver stain, no LC / pre-tangle stages a-c (public page, confirmed).
+  outcome: braaksc
+  # Braak stage collapsed to 4 levels (0, I-II, III-IV, V-VI); sensitivity S2 (public page, confirmed).
+  outcome_sensitivity: b_score
+  # Amyloid density, mean of sqrt %-area over 8 regions, continuous (public page, confirmed).
+  amyloid: amylsqrt_est_8reg
+  # Thal-based A score, 4 levels; sensitivity S1 (public page, confirmed).
+  amyloid_sensitivity: a_score_st4
+  # Age at death, years (public page, confirmed).
+  age_death: age_death
+  # Age at baseline, years (public page, confirmed).
+  age_baseline: age_bl
+  # Sex, 1 = male, 0 = female (public page, confirmed).
+  sex: msex
+  # Years of education (public page, confirmed).
+  education: educ
+  # APOE genotype coded 22..44 (public page, confirmed).
+  apoe: apoe_genotype
+  # e2/e4, e3/e4 and e4/e4 count as e4 carriers: carrier status is the usual RADC adjustment and keeps one parameter.
+  apoe4_carrier_codes: [24, 34, 44]
+  # Death indicator, 1 = died (public page, confirmed).
+  died: died
+  # Clinical diagnosis at each visit, 1 = no cognitive impairment (public page, confirmed).
+  diagnosis_visit: dcfdx
+  # dcfdx code for no cognitive impairment (sensitivity S5 keeps only exposures measured at such a visit).
+  normal_cognition_code: 1
+  # Global cognition at each visit (public page, confirmed); only a predictor of autopsy in the S9 weights.
+  cognition_visit: cogn_global
+
+# The four exposures the researcher named. risk_direction: +1 if a higher
+# value is the predicted risk side, -1 if a lower value is. cohorts: where the
+# variable exists (public pages: social_isolation and late_life_soc_act are
+# not collected in ROS).
+exposures:
+  # Social network size (count); smaller network = predicted risk. ROS and MAP (ROS asks different questions).
+  - {name: soc_net, risk_direction: -1, cohorts: [ROS, MAP]}
+  # Perceived social isolation (loneliness, 1-5, higher = lonelier). MAP only.
+  - {name: social_isolation, risk_direction: 1, cohorts: [MAP]}
+  # Late-life social activity (1-5, higher = more active); less activity = predicted risk. MAP only.
+  - {name: late_life_soc_act, risk_direction: -1, cohorts: [MAP]}
+  # Near-vision acuity code 1 (20/40) to 7 (worse than 20/400); worse vision = predicted risk. ROS and MAP.
+  - {name: vision, risk_direction: 1, cohorts: [ROS, MAP]}
+
+exposure_timing:
+  # Primary: each participant's earliest non-missing value (baseline in practice): furthest from death, so least affected by prodromal decline.
+  primary: earliest
+  # Sensitivity S4: the mean of all visits, and the last value before death.
+  sensitivity: [mean, last]
+  # Sensitivity S6: keep only exposures measured at least this many years before death (cuts the years of steepest prodromal decline).
+  min_lag_years: 5
 
 model:
-  # Linear mediator and outcome models, no exposure x mediator interaction.
-  # Under these, ACME = beta2 * gamma and the Imai-Keele-Yamamoto rho
-  # sensitivity has a closed form. Interaction is not implemented; a request
-  # for it stops the run rather than being ignored.
-  type: linear_no_interaction
-
-bootstrap:
-  # Nonparametric case-resampling bootstrap; percentile intervals.
-  # 5000 replicates keep Monte Carlo error in 95% limits small.
-  n_boot: 5000
-  # Confidence level of every interval.
+  # Proportional-odds (cumulative logit) model for Braak stage; exp(beta) is an odds ratio for a higher stage.
+  link: logit
+  # Adjustment set fixed by the DAG (prereg section 4); 'map' is the cohort indicator (dropped when constant).
+  covariates: [age_death, msex, educ, apoe4, map]
+  # Exposures are standardised by their SD in the analysis sample: one scale for all four.
+  per_sd: true
+  # H2 cortical-entry split: Braak >= I versus 0.
+  entry_split: 1
+  # Level of every unadjusted interval.
   ci_level: 0.95
+  # Practically-null band on the log-OR scale, ln(1/0.9) = 0.10536: an odds change under 10% per SD is too small to carry a rate-controller claim.
+  equivalence_log_or: 0.10536
+  # An adjusted interval wider than a 4-fold OR range (ln 4 = 1.386) is labelled uninformative.
+  uninformative_log_width: 1.386
+
+families:
+  # Family A (amyloid): H1 and H2, Bonferroni over 2 tests.
+  amyloid: [H1, H2]
+  # Family B (social / sensory): H3 for each of the 4 exposures, Bonferroni over 4 tests.
+  social_sensory: [soc_net, social_isolation, late_life_soc_act, vision]
+
+missing:
+  # Primary: complete cases per analysis; every excluded participant is counted and logged by reason.
+  primary: complete_case_logged
+  # Sensitivity S8 runs if more than this share of autopsied participants is excluded for reasons other than structural absence (e.g. ROS for MAP-only variables).
+  mi_threshold_share: 0.05
+  # Number of chained-equation imputations in S8.
+  mi_imputations: 20
+  # Gibbs cycles per imputation.
+  mi_cycles: 10
+
+autopsy_weights:
+  # S9: predictors of having a Braak stage among deceased participants (baseline values only).
+  predictors: [age_bl, msex, educ, map, cogn_baseline]
+  # Weights truncated at the 99th percentile to stop a few weights dominating.
+  truncate_quantile: 0.99
+  # Bootstrap replicates for the weighted estimates (weights re-estimated in each).
+  n_boot: 500
+
+lc:
+  # CONDITIONAL BRANCH. Empty = no LC measure in the delivered data: H4 / Killer 2
+  # is not run and the report says so. The researcher fills this ONLY from RADC's
+  # written confirmation or the delivered codebook (names and descriptions,
+  # never values), before the data are opened, choosing by the priority below.
+  variables: []
+  # Priority if several LC measures are delivered: integrity first, pathology last.
+  priority: [lc_neuronal_density, lc_neuronal_loss_rating, lc_tangle_density]
+  # The branch runs only with at least this many autopsied participants who have the LC measure and an exposure; fewer = descriptive only.
+  min_n: 100
+
+mediation:
+  # Exposure contrast for natural effects: 25th to 75th percentile, moved in the risk direction.
+  contrast_quantiles: [0.25, 0.75]
+  # Bootstrap replicates for the NIE / NDE intervals.
+  n_boot: 2000
+  # Family C: Bonferroni over the 4 exposures.
+  family_size: 4
+  # rho grid for the sensitivity analysis: lower end.
+  rho_min: -0.95
+  # rho grid: upper end.
+  rho_max: 0.95
+  # rho grid: step.
+  rho_step: 0.01
+  # A predicted-direction NIE whose rho* is below this in absolute value is reported as fragile.
+  fragile_abs_rho: 0.1
 
 sensitivity:
-  # rho = correlation between mediator- and outcome-model errors (unmeasured
-  # mediator-outcome confounding). Grid over (-1, 1), open at the ends.
-  rho_min: -0.95
-  # Upper end of the grid.
-  rho_max: 0.95
-  # Grid step.
-  rho_step: 0.01
+  # Analyses whose agreement makes a confirmatory verdict 'robust' (prereg section 8).
+  robustness_set: [S1, S2, S3, S5, S6]
 
 killer2:
-  # Pre-registered reading of Killer 2 (brief §2): for a harmful exposure the
-  # hypothesis predicts a POSITIVE indirect effect on tau through lower LC
-  # integrity. Killer 2 is met (hypothesis fails) for an exposure if the ACME
-  # 95% CI includes 0 or lies on the negative side. RESEARCHER to confirm.
-  predicted_acme_sign: 1
+  # Predicted sign of every oriented association and of the NIE: risk factor -> more LC damage -> higher Braak stage.
+  predicted_sign: 1
+
+# Linear-linear mediation (Imai-Keele-Yamamoto rho in closed form). Used for
+# the published-reproduction validation and sensitivity S3 (Braak stage
+# treated as a number 0-6).
+linear:
+  # Linear mediator and outcome models without exposure x mediator interaction.
+  type: linear_no_interaction
+  # Bootstrap replicates for S3 intervals.
+  n_boot: 2000
