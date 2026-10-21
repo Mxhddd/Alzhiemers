@@ -1,11 +1,56 @@
-# Module 4 parameters — RESEARCHER to write. One entry per parameter:
+# Module 4 parameters (the dimensionless LC rate-controller model; equations,
+# units and meaning: manuscript/derivations/module4_lc_model.md).
 #
-#   name:
-#     value: <number>          # point value (never reported if confidence is weak)
-#     units: <string>
-#     source: <citation or "assumption: ...">
-#     confidence: strong | moderate | weak
-#     range: [low, high]       # required for weak; the plausible sweep range
+# One line per parameter:
+#   name: {value, units, source, confidence, range, scale}
+#   value       reference point only: the centre of the range on its sampling
+#               scale. Used for validation runs and the illustrative figures.
+#               NEVER an estimate, never reported as a result.
+#   source      a citation, or "assumption: ..."
+#   confidence  strong | moderate | weak
+#   range       the plausible sweep range (required for weak)
+#   scale       log (log-uniform: rates and gains spanning orders of magnitude)
+#               or linear (uniform: shares and the Hill coefficient)
 #
-# Empty until the researcher fills it; the module stops if it is empty.
-parameters: {}
+# NO PUBLISHED VALUE sets any parameter. The model is dimensionless and
+# abstract: every quantity is a ratio of model rates or a model gain, and no
+# published measurement maps onto one without further assumptions. So every
+# parameter is an assumption, confidence "weak", and is swept, never reported.
+# A published value would first have to be extracted to data/extracted/ with
+# source, locator, verbatim snippet and verified: false
+# (tests/unit/test_dynamics_params.py enforces this).
+#
+# The ranges were fixed before any sweep of the registered outputs was run
+# (prereg/dynamics.md, change log). Time unit: baseline extracellular NE
+# turnover time 1/w0. Concentration unit of E and Y: the unrestrained,
+# drug-free extracellular NE level.
+
+parameters:
+  # alpha2A autoreceptor restraint gain: from negligible (kappa R E << 1) to strong (firing cut ~10-fold at baseline)
+  kappa: {value: 3.1623, units: "dimensionless (per unit E at R = 1)", source: "assumption: alpha2A autoreceptor restraint gain", confidence: weak, range: [0.1, 100.0], scale: log}
+  # NET share of baseline NE clearance; the rest (1 - u0) is diffusion and non-NET uptake. Any share from minor to dominant
+  u0: {value: 0.5, units: "dimensionless share", source: "assumption: share of baseline extracellular NE clearance that is NET reuptake", confidence: weak, range: [0.1, 0.9], scale: linear}
+  # share of NET-reuptaken NE entering the LC-terminal cytosolic pool Y; from a tenth to all of it
+  phi: {value: 0.55, units: "dimensionless share", source: "assumption: share of reuptaken NE entering the cytosolic pool Y", confidence: weak, range: [0.1, 1.0], scale: linear}
+  # VMAT2 re-packaging rate (lowered by APOE4 in the hypothesis); a decade either side of the NE turnover rate
+  v: {value: 1.0, units: "1 / NE turnover time", source: "assumption: VMAT2 re-packaging rate of cytosolic NE", confidence: weak, range: [0.1, 10.0], scale: log}
+  # MAO-A rate (cytosolic NE -> DOPEGAL); a decade either side of the NE turnover rate
+  m: {value: 1.0, units: "1 / NE turnover time", source: "assumption: MAO-A rate converting cytosolic NE to DOPEGAL", confidence: weak, range: [0.1, 10.0], scale: log}
+  # repair rate of regulation R; slower than NE turnover by 1-3 decades (fixed points depend only on r_rep / r_dam)
+  r_rep: {value: 0.01, units: "1 / NE turnover time", source: "assumption: repair rate of LC regulatory integrity R", confidence: weak, range: [0.001, 0.1], scale: log}
+  # maximal damage rate of R; 0-3 decades slower than NE turnover
+  r_dam: {value: 0.031623, units: "1 / NE turnover time", source: "assumption: maximal damage rate of R (DOPEGAL load and second hit)", confidence: weak, range: [0.001, 1.0], scale: log}
+  # half-saturation of the DOPEGAL damage switch, in units of the load x = m Y, whose maximum is below 1 (derivation §2), so the switch is reachable
+  K: {value: 0.1, units: "units of the DOPEGAL load x = m Y", source: "assumption: half-saturation of DOPEGAL damage", confidence: weak, range: [0.01, 1.0], scale: log}
+  # cooperativity of DOPEGAL damage; q <= 2 makes bistability impossible (derivation §5), q up to 4 as in the earlier draft
+  q: {value: 2.5, units: "dimensionless", source: "assumption: Hill coefficient of DOPEGAL damage", confidence: weak, range: [1.0, 4.0], scale: linear}
+  # DOPEGAL/AEP-dependent tau seeding relative to baseline seeding; from minor to dominant
+  sigma: {value: 3.1623, units: "per unit DOPEGAL load", source: "assumption: DOPEGAL/AEP-dependent tau seeding", confidence: weak, range: [0.1, 100.0], scale: log}
+  # alpha1-dependent harm (gain on tau production); from negligible to dominant
+  eta: {value: 0.31623, units: "per unit E", source: "assumption: alpha1-dependent harm", confidence: weak, range: [0.01, 10.0], scale: log}
+  # share of tau clearance that needs alpha1 transmission (NE-driven vasomotion); lets prazosin be harmful; up to half
+  eps: {value: 0.25, units: "dimensionless share", source: "assumption: alpha1-dependent share of tau clearance", confidence: weak, range: [0.0, 0.5], scale: linear}
+  # second hit (amyloid), the bifurcation parameter; on the scale of the maximal DOPEGAL damage (H <= 1)
+  hA: {value: 0.5, units: "dimensionless", source: "assumption: second hit (amyloid)", confidence: weak, range: [0.0, 1.0], scale: linear}
+  # tau turnover rate: sets only the time scale of T, provably no effect on any steady-state readout (derivation §2), so in the sweeps it is a dummy whose index shows the noise floor
+  c0: {value: 0.01, units: "1 / NE turnover time", source: "assumption: tau turnover rate (time scale only)", confidence: weak, range: [0.001, 0.1], scale: log}

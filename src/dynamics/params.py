@@ -4,8 +4,11 @@ source and confidence").
 * ``confidence`` is one of strong / moderate / weak.
 * A **weak** parameter must carry a plausible ``range`` and is never reported
   as a fitted or point value — it is swept (``reportable_values`` refuses it).
-* Values are loaded from config/dynamics_params.yaml, written by the
-  researcher; there are no defaults in code.
+* ``scale`` (linear | log) is the scale a swept parameter is sampled on:
+  log-uniform for rates and gains spanning orders of magnitude, uniform for
+  fractions. A log-scale range must be positive.
+* Values are loaded from config/dynamics_params.yaml; there are no defaults
+  in code.
 """
 
 from __future__ import annotations
@@ -16,6 +19,7 @@ from pathlib import Path
 from src.common.config import load_config
 
 CONFIDENCE = ("strong", "moderate", "weak")
+SCALES = ("linear", "log")
 
 
 @dataclass(frozen=True)
@@ -26,8 +30,11 @@ class Parameter:
     source: str
     confidence: str
     range: tuple[float, float] | None = None
+    scale: str = "linear"
 
     def __post_init__(self):
+        if self.scale not in SCALES:
+            raise ValueError(f"{self.name}: scale must be one of {SCALES}")
         if self.confidence not in CONFIDENCE:
             raise ValueError(f"{self.name}: confidence must be one of {CONFIDENCE}")
         for attr in ("units", "source"):
@@ -41,6 +48,8 @@ class Parameter:
                 raise ValueError(f"{self.name}: value {self.value} outside its plausible range {self.range}")
         if self.confidence == "weak" and self.range is None:
             raise ValueError(f"{self.name}: a weak parameter needs a plausible range to be swept over")
+        if self.scale == "log" and (self.range is None or self.range[0] <= 0):
+            raise ValueError(f"{self.name}: a log-scale parameter needs a positive range")
 
 
 @dataclass
@@ -64,7 +73,8 @@ class ParameterSet:
             rng = spec.get("range")
             items.append(Parameter(name=name, value=float(spec["value"]), units=str(spec["units"]),
                                    source=str(spec["source"]), confidence=str(spec["confidence"]),
-                                   range=tuple(rng) if rng is not None else None))
+                                   range=tuple(rng) if rng is not None else None,
+                                   scale=str(spec["scale"]) if rng is not None else "linear"))
         return cls.from_list(items)
 
     def values(self, overrides: dict[str, float] | None = None) -> dict[str, float]:
@@ -86,6 +96,9 @@ class ParameterSet:
                 raise ValueError(f"{n} has no plausible range; it cannot be swept")
             out[n] = r
         return out
+
+    def scales(self, names: list[str]) -> dict[str, str]:
+        return {n: self.params[n].scale for n in names}
 
     def reportable_values(self) -> dict[str, float]:
         """Point values that may appear in a results table: never weak ones."""

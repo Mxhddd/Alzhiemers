@@ -55,6 +55,47 @@ def wilson_interval(k: int, n: int, level: float = 0.95) -> tuple[float, float]:
     return float(c - h), float(c + h)
 
 
+def lhs_sample(ranges: dict[str, tuple[float, float]], *, n_samples: int, seed: int) -> tuple[list[str], np.ndarray]:
+    """Latin hypercube over the given box (one row per sample)."""
+    names = list(ranges)
+    sampler = qmc.LatinHypercube(d=len(names), seed=seed)
+    return names, qmc.scale(sampler.random(n_samples), [ranges[n][0] for n in names], [ranges[n][1] for n in names])
+
+
+def sobol_multi(f: Callable[[dict], dict], ranges: dict[str, tuple[float, float]], outputs: list[str], *,
+                n_base: int, seed: int) -> dict:
+    """Sobol indices for several outputs of one model evaluation per sample
+    (Saltelli sampling, first- and total-order, SALib)."""
+    from SALib.analyze import sobol
+    from SALib.sample import sobol as sobol_sample
+
+    names = list(ranges)
+    problem = {"num_vars": len(names), "names": names, "bounds": [list(ranges[n]) for n in names]}
+    X = sobol_sample.sample(problem, n_base, calc_second_order=False, seed=seed)
+    rows = [f(dict(zip(names, x))) for x in X]
+    out = {}
+    for o in outputs:
+        Y = np.array([float(r[o]) for r in rows])
+        if not np.all(np.isfinite(Y)):
+            raise ValueError(f"{np.sum(~np.isfinite(Y))} non-finite values of {o} in the Sobol sample")
+        if np.ptp(Y) == 0:
+            out[o] = {"names": names, "constant": float(Y[0]), "n_evaluations": len(Y)}
+            continue
+        Si = sobol.analyze(problem, Y, calc_second_order=False, seed=seed)
+        out[o] = {"names": names, "S1": Si["S1"], "S1_conf": Si["S1_conf"], "ST": Si["ST"], "ST_conf": Si["ST_conf"],
+                  "n_evaluations": len(Y)}
+    return out
+
+
+def label_fraction(k: int, n: int, *, fragile_upper: float, robust_lower: float, level: float = 0.95) -> dict:
+    """Fraction k/n with its Wilson CI and the pre-registered label:
+    fragile (upper bound < fragile_upper), robust (lower bound >= robust_lower),
+    intermediate otherwise."""
+    lo, hi = wilson_interval(k, n, level)
+    label = "fragile" if hi < fragile_upper else "robust" if lo >= robust_lower else "intermediate"
+    return {"k": int(k), "n": int(n), "fraction": k / n, "ci95": (lo, hi), "label": label}
+
+
 def lhs_robustness(curve: Callable[[dict], tuple[np.ndarray, np.ndarray]], ranges: dict[str, tuple[float, float]],
                    *, n_samples: int, seed: int, min_relative_rise: float) -> dict:
     names = list(ranges)

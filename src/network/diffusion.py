@@ -81,3 +81,58 @@ def crossover_tau(diff: Diffuser, x0_a: np.ndarray, x0_b: np.ndarray, eval_idx: 
         if np.std(a) > 0 and np.std(b) > 0 and np.corrcoef(a, b)[0, 1] >= threshold:
             return float(tau)
     return None
+
+
+# --- Vectorised fitting (used by the analysis; equal to best_fit/crossover_tau,
+# which the validation exercises, and checked against them in the unit tests).
+
+def prediction_curves(diff: Diffuser, x0: np.ndarray, eval_idx: np.ndarray, tau_grid: np.ndarray) -> np.ndarray:
+    """(n_tau, n_eval): the predicted pattern over eval_idx at every tau."""
+    coef = diff.eigvecs.T @ x0
+    decay = np.exp(-np.outer(tau_grid, diff.eigvals))
+    return (decay * coef) @ diff.eigvecs[eval_idx].T
+
+
+def _ranks(a: np.ndarray) -> np.ndarray:
+    from scipy.stats import rankdata
+    return rankdata(a, axis=-1)
+
+
+def standardise_rows(P: np.ndarray, method: str) -> np.ndarray:
+    """Rows centred and scaled so that a row-by-row dot product divided by the
+    row length is Pearson r. method='spearman' ranks first. A constant row
+    becomes NaN (its correlation is undefined)."""
+    if method not in ("pearson", "spearman"):
+        raise ValueError("correlation method must be 'pearson' or 'spearman'")
+    P = np.atleast_2d(np.asarray(P, float))
+    if method == "spearman":
+        P = _ranks(P)
+    C = P - P.mean(axis=1, keepdims=True)
+    sd = np.sqrt((C ** 2).mean(axis=1, keepdims=True))
+    with np.errstate(invalid="ignore", divide="ignore"):
+        Z = np.where(sd > 1e-12 * (np.abs(P).max(axis=1, keepdims=True) + 1e-300), C / sd, np.nan)
+    return Z
+
+
+def corr_curves(Zpred: np.ndarray, Zmaps: np.ndarray) -> np.ndarray:
+    """(n_maps, n_tau) correlations between standardised maps and standardised
+    prediction curves (both from standardise_rows with the same method)."""
+    return (np.atleast_2d(Zmaps) @ Zpred.T) / Zpred.shape[1]
+
+
+def max_over_tau(R: np.ndarray, tau_grid: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Best r and the tau where it occurs, per row of R (NaN columns ignored)."""
+    if np.all(np.isnan(R)):
+        raise ValueError("prediction is constant over the evaluated regions at every tau")
+    filled = np.where(np.isnan(R), -np.inf, R)
+    k = np.argmax(filled, axis=1)
+    return filled[np.arange(len(R)), k], np.asarray(tau_grid)[k]
+
+
+def crossover_from_curves(Pa: np.ndarray, Pb: np.ndarray, tau_grid: np.ndarray, threshold: float) -> float | None:
+    """First tau at which two seeds' predicted patterns (rows of Pa, Pb)
+    correlate (Pearson) at or above threshold; None if never in the grid."""
+    Za, Zb = standardise_rows(Pa, "pearson"), standardise_rows(Pb, "pearson")
+    r = (Za * Zb).mean(axis=1)
+    hit = np.where(np.nan_to_num(r, nan=-np.inf) >= threshold)[0]
+    return float(tau_grid[hit[0]]) if len(hit) else None

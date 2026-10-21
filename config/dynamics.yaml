@@ -1,12 +1,25 @@
-# Module 4 — ODE dynamical model: analysis settings. Parameter values are in
-# config/dynamics_params.yaml (researcher-written, with units/source/confidence).
+# Module 4 — LC rate-controller ODE model: analysis settings. Parameter values,
+# ranges and sampling scales are in config/dynamics_params.yaml. Equations:
+# manuscript/derivations/module4_lc_model.md. Every setting here is fixed in
+# prereg/dynamics.md (tests/unit/test_prereg_dynamics_consistency.py).
+# These settings were written before any sweep of the registered outputs.
 
-# Seed for Sobol sampling and the Latin hypercube.
+# Seed for the Latin hypercube and the Sobol sample of the registered run.
 seed: 20261019
 
+model:
+  # The readout is the steady-state tau burden T* reached from the healthy
+  # start. The system is cooperative, so that trajectory converges to the
+  # fixed point with the largest R* (derivation §4): computed from the roots of
+  # G(R), and cross-checked by ODE integration (simulation.readout_check_n).
+  readout: steady_state_from_healthy_start
+  # No NE yet, full regulation, no cortical tau.
+  healthy_start: {E: 0.0, Y: 0.0, R: 1.0, T: 0.0}
+
 simulation:
-  # RESEARCHER: simulated time span in the model's time units [start, end].
-  t_span: null
+  # Model time units (baseline NE turnover times). Long enough for the
+  # reference point to settle (slowest rate there ~2e-3, i.e. ~40 time constants).
+  t_span: [0.0, 20000.0]
   # Number of output time points.
   n_out: 400
   # Working tolerances for the stiff solvers; the solver-independence check
@@ -20,32 +33,107 @@ simulation:
   # this (or if tightening does not shrink it) results are declared
   # numerics-dependent and the run stops. 1e-3 = agreement to 0.1%.
   max_solver_disagreement: 1.0e-3
+  # The analytic readout is re-checked by integrating the ODE from the healthy
+  # start for this many Latin-hypercube samples (the first 50), each to 50
+  # time constants of its slowest eigenvalue. 50 checks any systematic error in
+  # the "largest root" rule at a few minutes' cost.
+  readout_check_n: 50
+  # Largest allowed relative difference |T_ode - T*| / T* in that check; above
+  # it the run stops and nothing is interpreted.
+  readout_check_max_rel_diff: 1.0e-3
 
 fixed_points:
-  # RESEARCHER: per-state search box for root-finding guesses, {state: [lo, hi]}.
-  bounds: null
-  # Grid points per state dimension for initial guesses (5^n guesses).
+  # Per-state search box for the 4-D numerical root finder (validation and the
+  # cross-check of the analytic fixed points): E* <= 1/w <= 1/(1 - u0) <= 10 in
+  # principle, but E* <= 1 without drug; Y* < 1; R in [0, 1]; T* is linear once
+  # the others are fixed, so its box only needs to be finite.
+  bounds: {E: [0.0, 2.0], Y: [0.0, 1.0], R: [0.0, 1.0], T: [0.0, 50.0]}
+  # Grid points per state dimension for initial guesses (5^4 = 625 guesses).
   grid_per_dim: 5
+  # R grid for locating the roots of G and the extrema of Phi: 400 log-spaced
+  # points on [1e-9, 1e-2] plus 3600 linear points on [1e-2, 1]; extrema are
+  # then located exactly (brentq on the derivative), so G and Phi are monotone
+  # between grid points and no pair of roots is lost between them.
+  r_grid: {log10_min: -9.0, log10_switch: -2.0, n_log: 400, n_lin: 3600}
 
 bifurcation:
-  # RESEARCHER: name of the "second-hit" parameter swept in the bifurcation scan.
-  parameter: null
-  # RESEARCHER: [low, high] of that sweep.
-  range: null
-  # Values in the scan; fold locations are only as precise as this spacing.
-  n_values: 201
+  # The second-hit parameter (amyloid) of the brief.
+  parameter: hA
+  # The sweep range, equal to its plausible range.
+  range: [0.0, 1.0]
+  # Primary method: the exact bistable window from the increasing stretches of
+  # Phi(R) (derivation §5), which a grid scan can miss when the window is
+  # narrow. The 201-point scan is kept for the figure and as a cross-check.
+  method: exact_window
+  n_values: 201  # scan points for the figure and the grid cross-check
 
 dose_response:
-  # RESEARCHER: dose grid (model units) per drug, {drug: [d0, d1, ...]}, d0 = 0.
-  doses: null
+  # Doses are in units of each drug's IC50 at its target. "Protective" and
+  # "harmful" are judged at one IC50 (half occupancy), the conventional
+  # mid-point of the dose range.
+  reference_dose: 1.0
+  # Protective: T*(drug) / T*(no drug) below this (5% fall). Harmful: above
+  # harmful_ratio (5% rise). In between: no material effect. 5% so numerical
+  # ripples are not called effects.
+  protective_ratio: 0.95
+  harmful_ratio: 1.05  # symmetric to protective_ratio (5% rise)
+  # Dose grid for the U-shape test, both drugs: 0 plus 41 log-spaced doses
+  # from 0.01 to 10 IC50 (1% to 91% occupancy).
+  dose_grid: {include_zero: true, min: 0.01, max: 10.0, n_log: 41}
   # A dose-response is U-shaped only if both ends exceed the minimum by more
   # than this fraction: 5% so numerical ripples are not called U-shapes.
   min_relative_rise: 0.05
 
 sensitivity:
   # Saltelli base sample size N (total evaluations N * (d + 2)); 1024 gives
-  # Sobol CIs of a few percent for smooth outputs.
+  # Sobol CIs of a few percent for smooth outputs. Sampled on each
+  # parameter's sampling scale (log10 for log-scale parameters).
   sobol_n_base: 1024
-  # Latin hypercube samples for the U-shape robustness fraction; 1000 gives a
+  # Outputs analysed: logs of T* and of the drug ratios (T* spans orders of
+  # magnitude; the log makes the indices about relative change), and the
+  # three yes/no outcomes as 0/1 indicators.
+  sobol_outputs: [log_T0, log_ratio_atomoxetine, log_ratio_prazosin, both_protective, u_shape_atomoxetine, bistable]
+  # Latin hypercube samples for the robustness fractions; 1000 gives a
   # Wilson 95% CI half-width of at most ~3 percentage points.
   lhs_n_samples: 1000
+
+robustness:
+  # Labels for each fraction (Wilson 95% CI):
+  #   fragile: upper bound < fragile_upper; robust: lower bound >= robust_lower;
+  #   intermediate otherwise. 10% / 50%: "rare" vs "the majority of the
+  #   plausible space"; fixed before any registered run.
+  fragile_upper: 0.10
+  robust_lower: 0.50  # lower Wilson bound for 'robust'
+  ci_level: 0.95  # Wilson interval level
+  # Fractions reported (each with its label, whatever it is).
+  fractions: [both_protective, u_shape_atomoxetine, bistable, protective_atomoxetine, protective_prazosin,
+              harmful_atomoxetine, harmful_prazosin, inverted_u_atomoxetine]
+
+# Pre-specified sensitivity analyses: the robustness fractions recomputed
+# (same seed and n) under alternative choices that were close calls. A label is
+# called robust to these choices only if it is the same in SA1-SA4.
+sensitivity_analyses:
+  # SA1: every range shrunk to its central half on its sampling scale.
+  SA1_central_half: {shrink_to: 0.5}
+  # SA2: no alpha1-dependent clearance (eps = 0): the earlier draft's model, in
+  # which prazosin cannot be harmful.
+  SA2_no_alpha1_clearance: {fix: {eps: 0.0}}
+  # SA3: eta uniform on [0, 10], the earlier draft's range.
+  SA3_eta_linear: {range: {eta: [0.0, 10.0]}, scale: {eta: linear}}
+  # SA4: K log-uniform on [0.1, 10], the earlier draft's range.
+  SA4_K_draft_range: {range: {K: [0.1, 10.0]}}
+  # SA5: other effect thresholds (reported, not used for robustness).
+  SA5_thresholds: [[0.90, 1.10], [0.99, 1.01]]
+
+pilot:
+  # Exploratory screening run BEFORE registration (src/dynamics/pilot.py). It
+  # does NOT compute the registered fractions or Sobol indices. Its own seed,
+  # so it shares no sample with the registered run.
+  seed: 20261021
+  # Morris elementary effects: 50 trajectories x (14 + 1) points, 4 levels.
+  morris_trajectories: 50
+  morris_levels: 4  # SALib default grid for Morris
+  # Outputs screened: continuous only (no registered yes/no fraction).
+  morris_outputs: [log_T0, log_ratio_atomoxetine, log_ratio_prazosin, bistable_window_length]
+  # One-at-a-time sweeps around the reference point: points per parameter.
+  oat_points: 41
