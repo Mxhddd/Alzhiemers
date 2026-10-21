@@ -85,3 +85,10 @@ Notes so far (not departures):
    computation: the per-chain NUTS draws equal those of the multi-chain run.
    Module 2 was re-validated on the new code before the run restarted.
    Not a departure: no setting, rule or input changed.
+4. *Second container restart (2026-10-21, between 08:26 and 10:36 UTC).* The
+   run was lost again while fitting variant A at h = 0.03125 y. The three
+   finished step-size attempts (0.25, 0.125 and 0.0625 y) were saved as
+   sub-checkpoints and reused on resume, so only the in-progress fit was
+   lost. `scripts/ensure_baserate_running.sh` now restarts the run unchanged
+   whenever it has died, and an hourly scheduled check calls it. Not a
+   departure.
