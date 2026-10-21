@@ -63,23 +63,41 @@ lc_with_run("mr", cfg_path, seed = cfg$seed,
   logf <- function(msg) lc_log(run, msg)
   parts <- list()
   cc_parts <- list()
+  # Primary window (per target) and the pre-registered sensitivity window.
   for (gene in names(cfg$targets)) {
     tcfg <- cfg$targets[[gene]]
-    region <- mr_gene_region(gene, tcfg$window_kb, run = run, root = root)
-    for (s in names(cfg$exposures)) {
-      if (is.null(cfg$exposures[[s]]$file)) {
-        drop("exposure_source", sprintf("%s [%s]", gene, s), "exposure file not supplied")
-        parts[[length(parts) + 1]] <- data.frame(gene = gene, exposure_source = s,
-          predicted_lower_activity = tcfg$predicted_lower_activity, method = NA_character_,
-          status = "excluded: exposure file not supplied", stringsAsFactors = FALSE)
-        next
+    for (wkb in c(tcfg$window_kb, cfg$window_kb_sensitivity)) {
+      region <- mr_gene_region(gene, wkb, run = run, root = root)
+      for (s in names(cfg$exposures)) {
+        if (is.null(cfg$exposures[[s]]$file)) {
+          drop("exposure_source", sprintf("%s [%s, +/-%s kb]", gene, s, wkb), "exposure file not supplied")
+          parts[[length(parts) + 1]] <- data.frame(gene = gene, exposure_source = s, window_kb = wkb,
+            predicted_lower_activity = tcfg$predicted_lower_activity, method = NA_character_,
+            status = "excluded: exposure file not supplied", stringsAsFactors = FALSE)
+          next
+        }
+        res <- mr_analyse_target(gene, tcfg, s, region, io, cfg, mr_settings, drop, logf)
+        res$rows$window_kb <- wkb
+        parts[[length(parts) + 1]] <- res$rows
+        if (!is.null(res$crosscheck)) {
+          res$crosscheck$window_kb <- wkb
+          cc_parts[[length(cc_parts) + 1]] <- res$crosscheck
+        }
       }
-      res <- mr_analyse_target(gene, tcfg, s, region, io, cfg, mr_settings, drop, logf)
-      parts[[length(parts) + 1]] <- res$rows
-      if (!is.null(res$crosscheck)) cc_parts[[length(cc_parts) + 1]] <- res$crosscheck
     }
   }
   summary <- mr_bind_rows(parts)
+  # Primary source per target and window (prereg section 5.2): the first source
+  # in the hierarchy whose instruments passed the positive control (rows that
+  # were not excluded). Blood-only rows are flagged as option (a).
+  passed_gate <- !grepl("^excluded", summary$status)
+  gate <- unique(data.frame(gene = summary$gene, window_kb = summary$window_kb,
+                            exposure_source = summary$exposure_source, passed = passed_gate))
+  sel <- mr_select_source(gate, cfg$source_selection$hierarchy)
+  key <- paste(summary$gene, summary$window_kb)
+  summary$primary_source <- sel$primary_source[match(key, paste(sel$gene, sel$window_kb))]
+  summary$is_primary_source <- !is.na(summary$primary_source) & summary$exposure_source == summary$primary_source
+  summary$blood_only_option_a <- summary$exposure_source == cfg$source_selection$blood_only_source
   out <- file.path(root, "results", "tables", "mr_summary.csv")
   dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)
   utils::write.csv(summary, out, row.names = FALSE)

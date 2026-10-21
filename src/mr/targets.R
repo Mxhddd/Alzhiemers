@@ -170,3 +170,27 @@ mr_bind_rows <- function(parts) {
   cols <- unique(unlist(lapply(parts, names)))
   do.call(rbind, lapply(parts, function(p) { for (c in setdiff(cols, names(p))) p[[c]] <- NA; p[, cols] }))
 }
+
+# Primary instrument source per target (prereg/mr.md section 5.2; config
+# `source_selection`). `gate` has one row per gene x window x exposure_source
+# with a logical `passed` (positive control passed; NA = not run). A source is
+# eligible only if it passed; the primary source is the first eligible one in
+# `hierarchy`. Sources are never pooled. Decided before any outcome was read.
+mr_select_source <- function(gate, hierarchy) {
+  need <- c("gene", "window_kb", "exposure_source", "passed")
+  miss <- setdiff(need, names(gate))
+  if (length(miss)) stop(sprintf("gate table lacks %s", paste(miss, collapse = ", ")))
+  unknown <- setdiff(unique(stats::na.omit(gate$exposure_source)), hierarchy)
+  if (length(unknown)) stop(sprintf("source(s) not in the hierarchy: %s", paste(unknown, collapse = ", ")))
+  keys <- unique(gate[, c("gene", "window_kb")])
+  out <- lapply(seq_len(nrow(keys)), function(i) {
+    g <- gate[gate$gene == keys$gene[i] & gate$window_kb == keys$window_kb[i] & !is.na(gate$exposure_source), ]
+    ok <- g$exposure_source[!is.na(g$passed) & g$passed]
+    eligible <- hierarchy[hierarchy %in% ok]
+    data.frame(gene = keys$gene[i], window_kb = keys$window_kb[i],
+               primary_source = if (length(eligible)) eligible[1] else NA_character_,
+               eligible_sources = paste(eligible, collapse = ";"),
+               testable = length(eligible) > 0, stringsAsFactors = FALSE)
+  })
+  do.call(rbind, out)
+}

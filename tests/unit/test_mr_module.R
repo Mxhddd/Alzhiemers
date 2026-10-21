@@ -209,3 +209,21 @@ test_that("a target with no positive control is excluded, not analysed", {
   expect_false(touched)
   expect_match(res$rows$status, "no positive control specified")
 })
+
+test_that("the primary source is the first source in the hierarchy that passed its positive control", {
+  h <- c("pqtl_ukbppp", "pqtl_decode", "metabrain", "eqtlgen")
+  gate <- data.frame(
+    gene = c("A", "A", "A", "B", "B", "C", "C"), window_kb = 100,
+    exposure_source = c("eqtlgen", "metabrain", "pqtl_ukbppp", "eqtlgen", "metabrain", "eqtlgen", "metabrain"),
+    passed = c(TRUE, TRUE, FALSE, TRUE, NA, FALSE, FALSE), stringsAsFactors = FALSE)
+  s <- mr_select_source(gate, h)
+  expect_identical(s$primary_source[s$gene == "A"], "metabrain")     # pQTL failed, brain before blood
+  expect_identical(s$eligible_sources[s$gene == "A"], "metabrain;eqtlgen")
+  expect_identical(s$primary_source[s$gene == "B"], "eqtlgen")       # NA (not run) is not eligible
+  expect_true(is.na(s$primary_source[s$gene == "C"]))                # every source failed: untestable
+  expect_false(s$testable[s$gene == "C"])
+  expect_error(mr_select_source(transform(gate, exposure_source = "gtex"), h), "not in the hierarchy")
+  cfg <- lc_read_yaml(file.path(lc_test_root, "config", "mr_targets.yaml"))
+  expect_setequal(cfg$source_selection$hierarchy, names(cfg$exposures))
+  expect_identical(cfg$source_selection$hierarchy[1], "pqtl_ukbppp")
+})

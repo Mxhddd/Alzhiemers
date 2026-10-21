@@ -6,8 +6,12 @@
 #
 # - Resumable: curl -C - continues a partial file; a file whose size already
 #   equals the server's Content-Length is not fetched again.
-# - Open sources only (GWAS Catalog FTP over HTTPS, FinnGen R10 public bucket,
-#   eQTLGen, UCSC, MAGMA's 1000 Genomes EUR reference). No login, no token.
+# - Open sources only (GWAS Catalog FTP over HTTPS, FinnGen R13 public bucket,
+#   eQTLGen, UCSC, MAGMA's 1000 Genomes EUR reference, the open supplements of
+#   the UKB-PPP / deCODE / MetaBrain papers, the public MetaBrain browser API,
+#   GENCODE, NCBI). No login, no token, no form. (2026-10-21: the full UKB-PPP,
+#   deCODE and MetaBrain files need an account or a form and are NOT fetched;
+#   FinnGen R10's Alzheimer's file was replaced by R13 and deleted.)
 # - Alzheimer's / dementia OUTCOME files go to data/raw/mr/quarantine_outcome/.
 #   This script only downloads and checksums them; it never opens them. They
 #   must not be read until prereg/mr.md is frozen (only the header line may be
@@ -23,6 +27,10 @@ mkdir -p "$RAW"
 
 GC=https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics
 FG=https://storage.googleapis.com/finngen-public-data-r10/summary_stats
+FG13=https://storage.googleapis.com/finngen-public-data-r13/summary_stats
+ESM=https://static-content.springer.com/esm
+MB=https://eqtlgen.molgeniscloud.org/api/v2/metabrain_cis_eqtl_v2
+NCBI37=https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.14_GRCh37.p13
 EQ=https://molgenis26.gcc.rug.nl/downloads/eqtlgen/cis-eqtl
 
 # relative path under data/raw/mr | URL | purpose
@@ -54,7 +62,20 @@ FILES=(
   "quarantine_outcome/GCST90027158/README.txt|$GC/GCST90027001-GCST90028000/GCST90027158/README.txt|AD outcome README (study-level, no data rows)"
   "quarantine_outcome/GCST90027158/md5sum.txt|$GC/GCST90027001-GCST90028000/GCST90027158/md5sum.txt|AD outcome md5 (study-level, no data rows)"
   "quarantine_outcome/GCST007511/Kunkle_etal_Stage1_results.txt|$GC/GCST007001-GCST008000/GCST007511/Kunkle_etal_Stage1_results.txt|AD OUTCOME (QUARANTINED, not read): Kunkle 2019 stage 1, proxy-free sensitivity"
-  "quarantine_outcome/finngen_R10_G6_ALZHEIMER/finngen_R10_G6_ALZHEIMER.gz|$FG/finngen_R10_G6_ALZHEIMER.gz|AD OUTCOME (QUARANTINED, not read): FinnGen R10 G6_ALZHEIMER replication"
+  "finngen_r13/finngen_R13_manifest.tsv|$FG13/finngen_R13_manifest.tsv|FinnGen R13 manifest (endpoint names, case/control counts)"
+  "quarantine_outcome/finngen_R13_G6_ALZHEIMER/finngen_R13_G6_ALZHEIMER.gz|$FG13/finngen_R13_G6_ALZHEIMER.gz|AD OUTCOME (QUARANTINED, not read): FinnGen R13 G6_ALZHEIMER replication"
+  "ukbppp_sun2023/41586_2023_6592_MOESM3_ESM.xlsx|$ESM/art%3A10.1038%2Fs41586-023-06592-6/MediaObjects/41586_2023_6592_MOESM3_ESM.xlsx|exposure: UKB-PPP (Sun 2023) Supplementary Tables, CC BY; ST9 = discovery pQTLs"
+  "decode_ferkingstad2021/41588_2021_978_MOESM4_ESM.xlsx|$ESM/art%3A10.1038%2Fs41588-021-00978-w/MediaObjects/41588_2021_978_MOESM4_ESM.xlsx|exposure check: deCODE (Ferkingstad 2021) Supplementary Tables, CC BY (cis pQTL only for LGMN among targets; not used)"
+  "metabrain_deklein2023/41588_2023_1300_MOESM4_ESM.zip|$ESM/art%3A10.1038%2Fs41588-023-01300-6/MediaObjects/41588_2023_1300_MOESM4_ESM.zip|exposure check: MetaBrain (de Klein 2023) Supplementary Tables, CC BY (not used)"
+  "metabrain_deklein2023/api_page_0.json|$MB?num=10000&start=0|exposure: MetaBrain public cis-eQTL browser table, rows 1-10000"
+  "metabrain_deklein2023/api_page_10000.json|$MB?num=10000&start=10000|exposure: MetaBrain browser table, rows 10001-20000"
+  "metabrain_deklein2023/api_page_20000.json|$MB?num=10000&start=20000|exposure: MetaBrain browser table, rows 20001-30000"
+  "metabrain_deklein2023/api_page_30000.json|$MB?num=10000&start=30000|exposure: MetaBrain browser table, rows 30001-40000"
+  "metabrain_deklein2023/api_page_40000.json|$MB?num=10000&start=40000|exposure: MetaBrain browser table, rows 40001-50000"
+  "metabrain_deklein2023/api_page_50000.json|$MB?num=10000&start=50000|exposure: MetaBrain browser table, rows 50001-56894"
+  "gencode_v19/gencode.v19.annotation.gtf.gz|https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_19/gencode.v19.annotation.gtf.gz|gene deserts: GENCODE release 19 (GRCh37) gene annotation"
+  "ncbi_grch37/GCA_000001405.14_GRCh37.p13_genomic_gaps.txt.gz|$NCBI37/GCA_000001405.14_GRCh37.p13_genomic_gaps.txt.gz|gene deserts: GRCh37.p13 assembly gaps (centromeres, telomeres, gaps)"
+  "ncbi_grch37/GCA_000001405.14_GRCh37.p13_assembly_report.txt|$NCBI37/GCA_000001405.14_GRCh37.p13_assembly_report.txt|gene deserts: GRCh37.p13 assembly report (chromosome lengths, accessions)"
 )
 
 log() { echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $*" | tee -a "$PROGRESS"; }

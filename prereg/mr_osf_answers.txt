@@ -1,0 +1,112 @@
+ATTACH prereg/mr.pdf TO THESE FILE BOXES: Study design; Statistical models
+
+STEP 1 - METADATA
+
+Title:
+Noradrenergic drug targets and Alzheimer's disease: a pre-registered drug-target Mendelian randomisation
+
+Description:
+A pre-registered two-sample drug-target Mendelian randomisation (Module 1 of the LC-First project). Genetic proxies for the activity of noradrenergic drug targets (SLC6A2, ADRB1, ADRA1A, ADRA2A, LGMN, SLC18A2, MAOA, DBH, CACNA1D, HCRTR2) are tested against Alzheimer's disease risk, with instruments from blood eQTLs (eQTLGen), brain eQTLs (MetaBrain cortex) and plasma pQTLs (UKB-PPP). Each target must first pass a positive control on a trait the drug is known to move; a target that fails with every source is reported as untestable. The plan is registered before any row of any Alzheimer's outcome file has been read. Positive controls and a validation on non-Alzheimer's traits have already been run and are reported in section 0 of the attached plan: on present instruments no target passes in the primary window and one (ADRA2A) passes in the sensitivity window. The full plan is in the attached PDF.
+
+License:
+CC0 1.0 Universal
+
+Subjects:
+Neuroscience and Neurobiology; Genetics and Genomics; Epidemiology
+
+Tags:
+Mendelian randomisation; drug-target MR; locus coeruleus; noradrenaline; Alzheimer's disease; eQTL; pQTL; positive control; pre-registration
+
+STEP 2 - OVERVIEW
+
+Research questions or hypotheses:
+Question: do genetic proxies for lower activity of noradrenergic drug targets shift Alzheimer's disease risk in the directions predicted by the hypothesis that the locus coeruleus sets the rate of Alzheimer's progression? Each target is a separate prediction (section 3 of the plan). Estimates are per 1 SD higher genetically predicted expression or protein level.
+
+H1 (SLC6A2, atomoxetine): lower activity protective; predicted estimate positive.
+H2 (ADRB1, lipophilic beta-blockers): lower activity protective; predicted estimate positive.
+H3 (ADRA1A, prazosin and doxazosin): lower activity protective; predicted estimate positive.
+H4 (ADRA2A, guanfacine): lower activity harmful; predicted estimate negative.
+H5 (CACNA1D, isradipine): lower activity protective; predicted estimate positive.
+DBH and HCRTR2 are exploratory (no predicted direction). LGMN, SLC18A2 and MAOA have no defensible positive control and are untestable.
+
+What counts against each hypothesis: a primary estimate that is DISCORDANT, meaning opposite to the prediction with a 95% confidence interval that excludes zero. Estimates that are all null are reported as no evidence, not support. Results are read at the 95% level, with Bonferroni correction over the targets that pass their positive control reported alongside; a conclusion that changes between the two levels is called fragile. A target that cannot be tested (no positive control, no instrument, or a failed positive control with every source) is reported as untestable with current instruments and counts neither for nor against. On present instruments no target is testable in the primary analysis (section 0 of the plan); that result cannot count for or against the hypothesis.
+
+Foreknowledge of data or evidence:
+Authors' limited observation of the data could not influence their analysis decisions.
+
+Explanation of foreknowledge and managing unintended influences:
+The Alzheimer's outcome data exist and have been downloaded (Bellenguez 2022 stage 1, Kunkle 2019 stage 1, FinnGen R13 G6_ALZHEIMER) but are kept in a separate quarantine folder. Only their header lines were read, to write the column maps, and their checksums recorded. No row of any Alzheimer's or dementia outcome file has been read, and no MR, liftover, filter or summary has been run on them; the analysis code refuses to read them until this plan is frozen. A FinnGen R10 copy was deleted unread.
+
+Data on other traits have been observed and analysed, and section 0 of the plan reports them in full. The exposure data (eQTLGen, the open MetaBrain browser table and the open UKB-PPP supplementary table) and the positive-control GWAS (heart rate, blood pressure, fasting glucose, sleep duration) were used to run the positive controls: with blood eQTLs on 2026-10-15, when every target failed, and with all sources on 2026-10-21. The HMGCR validation (LDL cholesterol on coronary heart disease) was run on 2026-10-21 and passed. These results did shape decisions: after the blood-only failures I added brain and protein instrument sources (option b), with the rule for choosing a target's source written into the config before the new positive controls were run; after seeing the new positive controls I fixed how a target testable only in the sensitivity window is read (no verdict). The positive-control traits, signs and gate are unchanged since 2026-10-13, and the blood-only result is always reported. These decisions can change only which targets are tested; none of them could be influenced by any Alzheimer's result, because none has been seen. Claude (Anthropic's AI model) did this work under my instructions; the dates are in the change log of the plan.
+
+STEP 3 - RESEARCH DESIGN
+
+Study type:
+Other
+Two-sample Mendelian randomisation (an instrumental-variable analysis) on published genome-wide summary statistics.
+
+Intention for causal interpretation:
+Indirect inference
+Mendelian randomisation estimates causal effects only under its instrument assumptions; the positive controls, colocalisation, Steiger test and sensitivity analyses check them indirectly.
+
+Blinding of experimental treatments:
+No blinding is involved in this study.
+
+Additional blinding during research or analysis:
+The Alzheimer's outcome files are quarantined: only their header lines were read, and the code refuses to read any row until this plan is frozen and the validation has passed. Every decision about which targets and instruments are used (the positive-control gate and the source rule) is taken before the outcome is read.
+
+Study design:
+Two-sample drug-target Mendelian randomisation (sections 3 to 5 of the plan). For each of 10 pre-specified targets, cis instruments (within 100 kb of the gene body; sensitivity 1,000 kb) are taken from up to four sources: UKB-PPP plasma pQTLs, deCODE plasma pQTLs (not usable with open data), MetaBrain cortex eQTLs and eQTLGen blood eQTLs. A target's instruments from a source must pass its positive control (p < 0.05 and the expected sign) before the outcome is read. The primary source is the first eligible source in the fixed order UKB-PPP, deCODE, MetaBrain, eQTLGen; the blood-only result is always reported. Outcome: Bellenguez 2022 stage 1 (85,934 cases, 401,577 controls); proxy-free sensitivity: Kunkle 2019; replication: FinnGen R13 G6_ALZHEIMER (16,652 cases, 483,534 controls). Before any target's MR, an HMGCR reproduction (passed) and a gene-desert null test (after the freeze) must pass.
+
+Randomization:
+Not applicable.
+
+STEP 4 - SAMPLING
+
+Data collection procedures:
+No new data are collected. All inputs are public summary statistics downloaded without an account, form or agreement (section 4 of the plan): GWAS Catalog files for the outcomes and control traits, the FinnGen R13 public bucket, the eQTLGen full cis-eQTL file, the MetaBrain public browser table, the UKB-PPP and deCODE open supplements, GENCODE release 19, the NCBI GRCh37.p13 gap table, and the 1000 Genomes EUR LD panel. The full MetaBrain, UKB-PPP and deCODE files need a form or an account and were not used. Files on GRCh38 are lifted to GRCh37; dropped positions are logged.
+
+Sample size:
+Fixed by the published studies: outcome 85,934 cases and 401,577 controls; replication 16,652 cases and 483,534 controls; exposures up to 31,684 people per variant–gene pair (eQTLGen), 2,683 (MetaBrain Cortex-EUR) and 34,557 (UKB-PPP discovery cohort).
+
+Sample size rationale:
+The largest openly available summary statistics were used; no power calculation can change the sample. Few instruments per target (one for MetaBrain and UKB-PPP) mean wide intervals; this is stated as a limitation (section 9).
+
+Starting and stopping rules:
+Not applicable: the analysis runs once on fixed published data, after the freeze, the HMGCR validation and the gene-desert null test. If the null test fails, no target's MR is run.
+
+STEP 5 - VARIABLES
+
+Manipulated variables:
+None. The exposures are genetically predicted levels of each target (expression or protein), proxied by cis variants.
+
+Measured variables:
+Per-variant associations with the exposure (expression or protein level), with each positive-control trait (resting heart rate, diastolic and systolic blood pressure, fasting glucose, sleep duration) and with Alzheimer's disease (log odds ratio), from published summary statistics.
+
+Indices:
+MR estimate per 1 SD higher genetically predicted level: Wald ratio for one instrument, inverse-variance weighted with multiplicative random effects for 2 or more; MR-Egger and weighted median with at least 3. Concordance label per primary estimate: concordant; direction as predicted, CI includes null; opposite, CI includes null; DISCORDANT. Colocalisation PP4; Steiger direction.
+
+STEP 6 - ANALYSIS PLAN
+
+Statistical models:
+Instruments: p < 5×10⁻⁸, minor-allele frequency at least 0.01, F > 10, LD clumping at r² < 0.001 within 10 Mb (1000 Genomes EUR). Wald ratio or IVW with multiplicative random effects; MR-Egger and weighted median as secondary. Every estimate is cross-checked against TwoSampleMR at the stated tolerances. ABF colocalisation with p1 = p2 = 10⁻⁴ and p12 = 5×10⁻⁶, supportive if PP4 ≥ 0.8 (eQTLGen only; the open MetaBrain and UKB-PPP tables have lead variants only). Steiger directionality as supportive evidence. Details in section 5 of the plan.
+
+Transformations:
+eQTLGen Z-scores are converted to beta and SE from Z, allele frequency and N. GRCh38 positions are lifted to GRCh37. Alleles are harmonised; palindromic variants are kept only if both minor-allele frequencies are at most 0.42. Instruments are oriented to the level-increasing allele for reporting. Odds ratios are analysed as log odds ratios.
+
+Inference criteria:
+Each target with a prediction is read at the 95% level; DISCORDANT counts against the hypothesis. Bonferroni correction over the targets that pass their positive control is reported alongside. The primary result of a target comes from its primary source in the 100 kb window. A target that passes its positive control only in the 1,000 kb window (on present data, ADRA2A) gets a sensitivity estimate with its concordance label, but no verdict. DBH and HCRTR2 are reported without a verdict. Section 7 of the plan.
+
+Data inclusion and exclusion:
+A target is excluded and reported as untestable if it has no positive control (LGMN, SLC18A2, MAOA), no instrument, or instruments that fail the positive control with every source. Variants are dropped, with the reason logged, for failing the instrument filters, being absent from the LD panel or the other GWAS, unresolvable palindromes, and liftover failures. In the open MetaBrain table only the conditional rank 1 variant of each gene is used; MetaBrain variants without a non-palindromic 1000 Genomes EUR allele frequency are dropped.
+
+Missing data:
+Instruments missing from an outcome or control GWAS are dropped and logged; no proxies are imputed. A source with no instrument for a target gives no estimate for that target. Replication or proxy-free analyses without a usable file are reported as not run.
+
+Other planned analysis:
+Sensitivity analyses (section 8 of the plan): the 1,000 kb window with the source rule re-applied; the blood-only result (option a); every eligible secondary source; the proxy-free outcome (Kunkle 2019); replication in FinnGen R13; MR-Egger and weighted median. A verdict is called robust only if the concordance label is the same in the 1,000 kb window, the proxy-free outcome and the replication. Checks that must pass first (section 6): reproduction of the published HMGCR estimate of Huang et al. 2021 (IVW OR 1.44, 95% CI 1.24–1.68; passed on 2026-10-21) and the gene-desert null test (Ovcharenko 2005 definition on GENCODE release 19: 458 deserts, 357 variants; 1,000 random sets of 5 variants; run after the freeze).
+
+STEP 7 - OTHER
+
+Context and additional information:
+This is Module 1 of the LC-First project (the locus coeruleus as rate controller of Alzheimer's progression) by Mohammad Hassan, independent researcher. Earlier registrations of the project: Module 2 base-rate model, https://osf.io/xb7fy/ ; Module 5 meta-analysis, https://osf.io/9kb4w/ . AI use: I used Claude, Anthropic's AI model, through Claude Code to write the code, extract the published values, download the public data, check the access terms of each source, run the positive controls and the HMGCR validation, and draft the plan; the reasons for its methodological choices are in the config files, and by registering I adopt them. All extracted published values are marked unverified until I check them. Still needing me: the full MetaBrain, UKB-PPP and deCODE files need a form or an account, which I have not completed; the plan uses only the open versions.

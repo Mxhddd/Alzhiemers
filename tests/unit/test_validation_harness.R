@@ -4,8 +4,24 @@
 library(testthat)
 source(file.path(lc_test_root, "tests", "validation", "harness.R"))
 
-test_that("the shipped LDL-CAD target is refused until its published values are filled in", {
-  expect_error(lc_load_target("mr_ldl_hmgcr_cad", lc_test_root), "incomplete - missing: published.citation")
+test_that("a target without its published values is refused, and the shipped LDL-CAD target matches its extraction", {
+  # A copy of the shipped target with the citation removed must be refused.
+  tmp <- file.path(tempfile(), "tests", "validation", "targets")
+  dir.create(tmp, recursive = TRUE)
+  t <- lc_read_yaml(file.path(lc_test_root, "tests", "validation", "targets", "mr_ldl_hmgcr_cad.yaml"))
+  t$published$citation <- NULL
+  yaml::write_yaml(t, file.path(tmp, "mr_ldl_hmgcr_cad.yaml"))
+  expect_error(lc_load_target("mr_ldl_hmgcr_cad", dirname(dirname(dirname(tmp)))),
+               "incomplete - missing: published.citation")
+  # The shipped target (filled 2026-10-21) loads, and its numbers are the
+  # extracted ones (data/extracted/mr_validation_huang2021_hmgcr.csv).
+  shipped <- lc_load_target("mr_ldl_hmgcr_cad", lc_test_root)
+  ex <- utils::read.csv(file.path(lc_test_root, "data", "extracted", "mr_validation_huang2021_hmgcr.csv"),
+                        stringsAsFactors = FALSE)
+  pub <- ex[ex$role == "published_estimate", ]
+  expect_equal(shipped$published$estimate, as.numeric(pub$estimate))
+  expect_equal(c(shipped$published$ci_lower, shipped$published$ci_upper), as.numeric(c(pub$ci_lower, pub$ci_upper)))
+  expect_identical(shipped$published$method, "ivw")
 })
 
 fixture <- list(id = "fixture", conversion = list(factor = 1),

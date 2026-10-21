@@ -29,6 +29,10 @@ mr_read_sumstats <- function(path, columns, build, provided_by, region = NULL, g
   miss <- setdiff(.ss_required, names(columns))
   if (length(miss)) stop(sprintf("column map for %s lacks: %s", path, paste(miss, collapse = ", ")))
 
+  # data.table::fread reads .gz files through R.utils (in renv.lock since 2026-10-21).
+  if (grepl("\\.(gz|bz2)$", abs) && !requireNamespace("R.utils", quietly = TRUE)) {
+    stop(sprintf("%s is compressed and the R.utils package is not installed (renv::restore())", path))
+  }
   header <- names(data.table::fread(abs, nrows = 0))
   absent <- setdiff(unlist(columns), header)
   if (length(absent)) stop(sprintf("%s has no column(s) %s (header: %s)", path,

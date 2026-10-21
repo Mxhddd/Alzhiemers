@@ -201,7 +201,7 @@ exposures:
       beta: BETA  # ST9: BETA (discovery), SD units of NPX
       se: SE  # ST9: SE (discovery)
       p: P  # 10^-log10(p) (discovery)
-      "n": N  # discovery cohort size 34,557 (Sun 2023, Results), per-protein N not given
+      "n": "N"  # discovery cohort size 34,557 (Sun 2023, Results); per-protein N not given. Value quoted: R yaml reads a bare N as FALSE
       gene: Assay_Target  # ST9 column "Assay Target" (gene symbol), renamed without the space
     build: GRCh37  # after liftover from GRCh38 (checked against the hg37 position in the ST9 id)
   pqtl_decode:

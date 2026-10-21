@@ -20,6 +20,7 @@ None of these changes was made after seeing any Alzheimer's outcome data. No out
 | 2026-10-21 | **Brain eQTLs and plasma pQTLs added as instrument sources, alongside eQTLGen** (MetaBrain cortex; UKB-PPP and deCODE plasma), with a fixed rule for choosing a target's primary source (section 5.2). The positive controls, their traits and the gate are unchanged. The blood-only result is kept and reported. | Blood expression may not proxy target activity, and four targets were not in eQTLGen. This is my decision (option b), taken after seeing the blood-only positive controls and before any outcome data. Section 0 says what this means for interpretation. |
 | 2026-10-21 | **HMGCR validation filled in** (section 6.1): Huang et al. 2021, eLife, with the comparison rule fixed before the run. | The validation target had no published estimate. I asked for one whose instruments and outcome are open data. |
 | 2026-10-21 | **Gene-desert null test defined** (section 6.2): Ovcharenko et al. 2005, applied to GENCODE release 19 on GRCh37. The test runs after the freeze, before any target's MR. | The test reads the Alzheimer's outcome by design, so it cannot run before the freeze. |
+| 2026-10-21 | **Targets testable only in the sensitivity window** (section 7): such a target gets a sensitivity estimate with its concordance label, but not a verdict. | The positive controls with the new sources (section 0.2) left no target testable in the ±100 kb window and one, ADRA2A, in the ±1,000 kb window. The plan did not say how to read that case. I fixed it after seeing these non-Alzheimer's results and before any outcome data, in the conservative direction. |
 | 2026-10-21 | **Replication release fixed to FinnGen R13**, endpoint G6_ALZHEIMER (16,652 cases, 483,534 controls). | The plan said "the release current at run time"; that is R13, and its files can be downloaded without an account. |
 
 ## 0. What has already been done, before registration
@@ -39,15 +40,40 @@ What I knew when I made the 2026-10-21 decision: the blood-only positive control
 
 ### 0.1 Positive controls, blood eQTLs only (option a)
 
-{{PC_BLOOD}}
+Instruments from eQTLGen, ±100 kb window; the ±1,000 kb window gave the same instruments and estimates. Estimates are per 1 SD higher blood expression, in the control trait's units.
+
+| Target | Control trait (expected sign) | Instruments | Estimate (SE) | p | Gate |
+|---|---|---|---|---|---|
+| ADRB1 | resting heart rate (+) | rs4917675, rs117648943 | IVW −0.0104 (0.260) | 0.97 | fail |
+| ADRA2A | fasting glucose (+) | rs11195432 | Wald ratio 0.0401 (0.0365) | 0.27 | fail |
+| DBH | systolic blood pressure (+) | rs2519131, rs2427998 | IVW −0.303 (0.173) | 0.081 | fail |
+| CACNA1D | systolic blood pressure (+) | rs9830632 | Wald ratio −2.43 (0.396) | 8.9×10⁻¹⁰ | fail (opposite sign) |
+| SLC6A2, ADRA1A, HCRTR2 | — | none: genes not in eQTLGen | — | — | no instrument |
+
+With blood eQTLs alone (option a), **no target is testable**.
 
 ### 0.2 Positive controls with every available source (option b)
 
-{{PC_ALL}}
+The same controls, traits and gate, with every source that could be used (results file `results/tables/mr_positive_controls.csv`; the TwoSampleMR cross-check agreed on all 154 compared quantities). New rows only; the eQTLGen rows are as in 0.1.
+
+| Target | Source | Instrument | Window | Estimate (SE) | p | Gate |
+|---|---|---|---|---|---|---|
+| ADRB1 | MetaBrain | rs10885531 | both | — | — | fail: the variant is not in the heart-rate GWAS file |
+| ADRA1A | MetaBrain | rs7015698 | both | — | — | no instrument: an A/T variant, so it has no allele frequency under the rule fixed beforehand (non-palindromic only) |
+| ADRA2A | MetaBrain | rs4558098 | ±100 kb | — | — | no instrument: the variant lies about 126 kb from the gene |
+| ADRA2A | MetaBrain | rs4558098 | ±1,000 kb | Wald ratio 0.0217 (0.0096) | 0.024 | **pass** |
+| ADRA2A | UKB-PPP | — | both | — | — | no instrument: no cis pQTL |
+| DBH | UKB-PPP | rs1611115 (F about 15,558) | both | Wald ratio 0.0292 (0.0327) | 0.37 | fail |
+| DBH | MetaBrain | rs1611115 | both | Wald ratio 0.0488 (0.0546) | 0.37 | fail |
+| CACNA1D | MetaBrain | — | both | — | — | no instrument: the top variant has p = 2.4×10⁻⁷ |
+| HCRTR2 | MetaBrain | rs62396368 | ±1,000 kb only (about 882 kb from the gene) | Wald ratio 0.0237 (0.0088) | 0.0070 | fail (opposite sign) |
+| SLC6A2 | — | — | both | — | — | no instrument in any source (MetaBrain has it only in African-ancestry cortex) |
+
+**What this means.** In the primary ±100 kb window, **no target passes its positive control with any source**, so no target is testable in the primary analysis. In the ±1,000 kb sensitivity window one target passes: **ADRA2A, with the MetaBrain instrument rs4558098**. Untestable with current instruments: SLC6A2, ADRB1, ADRA1A, DBH, CACNA1D and HCRTR2 (every available source failed or gave no instrument), and LGMN, SLC18A2 and MAOA (no positive control). For ADRA2A in the primary window, and for every other target, I report "untestable with current instruments", not a null result.
 
 ### 0.3 HMGCR validation
 
-{{HMGCR_RESULT}}
+Run on 2026-10-21, after the target and rule in section 6.1 were written down. Our IVW estimate for the 7 instruments is log OR 0.3676 (95% CI 0.2155 to 0.5197), OR 1.44 (1.24–1.68); the published value is log OR 0.3676 (0.2151 to 0.5188). **Passed**: our estimate lies inside the published interval, and the published estimate inside ours. All 7 SNPs harmonised (1 direct, 6 allele swaps); F from 50.9 to 372. Because the instruments and both GWAS are the paper's own, this checks our harmonisation and IVW arithmetic against a published analysis; it does not check instrument selection.
 
 ## 1. Question and hypotheses
 
@@ -97,7 +123,7 @@ The evidence for each control is in `manuscript/notes/mr_positive_controls.md`.
 
 | Source | Measure | What the full data need | What is used here |
 |---|---|---|---|
-| eQTLGen (Võsa et al. 2021) | blood cis-eQTLs, 31,684 people | open download | full cis-eQTL file |
+| eQTLGen (Võsa et al. 2021) | blood cis-eQTLs, up to 31,684 people per variant–gene pair | open download | full cis-eQTL file |
 | MetaBrain (de Klein et al. 2023), Cortex-EUR | brain cis-eQTLs, 2,683 people | a form with name, e-mail and institute | the open table behind the MetaBrain browser: the top variant of each gene (conditional rank 1), GRCh38 lifted to GRCh37 |
 | UKB-PPP (Sun et al. 2023) | plasma cis-pQTLs (Olink), 34,557 people of European ancestry | a Synapse account | Supplementary Table 9 of the paper (CC BY): the primary pQTL of each locus, GRCh38 lifted to GRCh37 |
 | deCODE (Ferkingstad et al. 2021) | plasma pQTLs (SomaScan), 35,559 Icelanders | a form with name, e-mail, institution and terms | not used: the open supplement has cis pQTLs among the targets only for LGMN, which is untestable |
@@ -116,6 +142,7 @@ The open MetaBrain and UKB-PPP tables contain only lead variants. With them each
 * Filters: p < 5×10⁻⁸, minor-allele frequency ≥ 0.01, F > 10, LD clumping at r² < 0.001 within 10 Mb.
 * Genome build GRCh37 everywhere. GRCh38 files are lifted with the UCSC hg38ToHg19 chain; a position that does not map, maps to several places, maps to the other strand or to another chromosome is dropped and logged. A build mismatch stops the run.
 * eQTLGen gives Z-scores only; beta and SE are derived from Z, allele frequency and N (Zhu et al. 2016).
+* Alleles are harmonised between exposure and outcome; an A/T or C/G variant is kept only if both minor-allele frequencies are at most 0.42, so that frequencies can tell the strand.
 
 ### 5.2 Choosing a target's instrument source
 
@@ -155,7 +182,7 @@ Ference et al. 2016 (NEJM) was considered. Its website refused automated access,
 * autosomes; segments bounded by chromosome ends, centromeres, telomeres, heterochromatin and short-arm gaps, and assembly gaps longer than 250 kb (NCBI GRCh37.p13 gap table), as in the paper's Methods; an interval touching a segment boundary is excluded;
 * deserts: the 3% longest of the remaining intervals.
 
-{{DESERT_RESULT}}
+**The list** (`src/mr/gene_deserts.py`, built 2026-10-21; no outcome data read). GENCODE 19 has 15,286 protein-coding gene spans after merging overlaps. 15,244 intergenic intervals lie between two genes in one segment. The 3% longest are **458 gene deserts**, the shortest 667,564 bp, together 626,146,562 bp. For comparison, 494 intervals are at least 640 kb. The variant list has **357 variants**.
 
 **Variants.** From the 1000 Genomes EUR panel: bi-allelic SNVs with an rsID and minor-allele frequency ≥ 0.01, at least 100 kb inside a desert from both flanking genes, thinned to at least 50,000 bp apart, then LD-pruned to r² < 0.001 within 10 Mb.
 
@@ -168,6 +195,8 @@ Ference et al. 2016 (NEJM) was considered. Its website refused automated access,
 * Each target with a prediction is read at the 95% level, with Bonferroni correction over the targets that pass their positive control reported alongside (section 2).
 * DBH and HCRTR2 are exploratory: their estimates are reported without a verdict.
 * The primary result of a target comes from its primary source (section 5.2) in the ±100 kb window.
+* A target that passes its positive control only in the ±1,000 kb window (on present data, ADRA2A) gets a sensitivity estimate. It is reported with its concordance label, but it is not a test of the hypothesis and it does not enter the Bonferroni count.
+* If no target passes in the ±100 kb window, as on present data, the primary result of this module is that no target is testable with current instruments. That result cannot count for or against the hypothesis.
 
 ## 8. Sensitivity and secondary analyses
 

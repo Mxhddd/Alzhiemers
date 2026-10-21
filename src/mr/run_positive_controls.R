@@ -120,6 +120,21 @@ lc_with_run("mr_positive_controls", cfg_path, seed = cfg$seed,
     }
   }
   out <- mr_bind_rows(rows)
+  # Primary source per target and window (prereg section 5.2, config source_selection).
+  gate <- data.frame(gene = out$gene, window_kb = out$window_kb, exposure_source = out$exposure_source,
+                     passed = if ("passed" %in% names(out)) as.logical(out$passed) else NA, stringsAsFactors = FALSE)
+  sel <- mr_select_source(gate, cfg$source_selection$hierarchy)
+  blood <- gate[!is.na(gate$exposure_source) & gate$exposure_source == cfg$source_selection$blood_only_source, ]
+  sel$blood_only_passed <- blood$passed[match(paste(sel$gene, sel$window_kb), paste(blood$gene, blood$window_kb))]
+  untestable <- vapply(cfg$targets[sel$gene], function(t) is.null(t$positive_control), logical(1))
+  sel$status <- ifelse(untestable, "untestable: no positive control defined (pre-registered)",
+                       ifelse(sel$testable, "testable", "untestable with current instruments: every source failed or has no instrument"))
+  out$is_primary_source <- !is.na(out$exposure_source) &
+    out$exposure_source == sel$primary_source[match(paste(out$gene, out$window_kb), paste(sel$gene, sel$window_kb))]
+  sel_path <- file.path(root, "results", "tables", "mr_positive_controls_source_selection.csv")
+  dir.create(dirname(sel_path), recursive = TRUE, showWarnings = FALSE)
+  utils::write.csv(sel, sel_path, row.names = FALSE)
+  lc_record_output(run, sel_path)
   path <- file.path(root, "results", "tables", "mr_positive_controls.csv")
   dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
   utils::write.csv(out, path, row.names = FALSE)
