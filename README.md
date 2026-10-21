@@ -23,7 +23,7 @@ full scientific brief, ground rules and build order are in
 | 4 | Module 5 — meta-analysis and triangulation (R) | **validation 4/4 PASS** (Moraros 2017 reproduced; anticholinergic control recovered); pre-registration complete; null calibration of the verdict rule measured (`sim/meta_verdict_calibration.R`). The real run is refused at the freeze gate, by design |
 | 5 | Module 4 — ODE dynamical model (Python) | **machinery built; pre-registration complete** (`prereg/dynamics.md`). The analytic fixed points are derived and machine-checked. The derivation showed the proposal's damage term made bistability impossible, so it was generalised. The LC model itself is not yet coded |
 | 6 | Module 3 — mediation analysis (Killer 2) | **built; pre-registration complete except the cohort** (DO NOT FREEZE until the researcher names it); 4/5 validation checks pass |
-| 7 | Module 6 — network diffusion | **built; spin test validated on a known null** (6% vs 57% false positives); pre-registration complete except the datasets (DO NOT FREEZE until named) |
+| 7 | Module 6 — network diffusion | **built; spin test validated on a known null** (6.0% vs 56.5% false positives, re-run 2026-10-21); registration package ready (`prereg/network.md`, `.pdf`, `_osf_answers.txt`; datasets named from public documentation). Waiting for ADNI and HCP access, which have not been requested; nothing downloaded |
 
 Pre-registrations: `make todo` lists which are ready to freeze. `make prereg-package`
 builds the OSF upload package. **Freezing is the researcher's step only.**

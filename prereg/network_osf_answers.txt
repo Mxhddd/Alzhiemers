@@ -1,0 +1,123 @@
+ATTACH prereg/network.pdf TO THESE FILE BOXES: Study design; Statistical models
+
+STEP 1 - METADATA
+
+Title:
+Does early cortical tau spread from the locus coeruleus or from the entorhinal cortex? A pre-registered network diffusion test
+
+Description:
+Module 6 of the LC-First project (the locus coeruleus as rate controller of Alzheimer's disease progression). I ask whether the earliest cortical tau pattern on tau PET (ADNI) is better explained by diffusion along the brain's structural connections (HCP connectome) starting from the locus coeruleus (LC) or from the entorhinal cortex. Every fit is maximised over diffusion time and tested only against spatially constrained spin nulls. The rules for support, failure and an uninformative result are fixed before any data: access to ADNI and HCP has not been granted yet, and nothing from either has been downloaded or seen. The attached PDF is the full plan; code and settings are in the project repository (config/network.yaml, src/network/).
+
+License:
+CC0 1.0 Universal
+
+Subjects:
+Neuroscience and Neurobiology; Cognitive Neuroscience
+
+Tags:
+Alzheimer's disease; tau PET; locus coeruleus; entorhinal cortex; network diffusion; connectome; spin test; ADNI; Human Connectome Project; preregistration
+
+STEP 2 - OVERVIEW
+
+Research questions or hypotheses:
+Question: which seed explains the earliest cortical tau pattern better under a network diffusion model, the LC or the entorhinal cortex (EC)?
+
+H1 (primary). r_LC is greater than r_EC, beyond what spatial autocorrelation alone produces. Here r is the Pearson correlation between predicted and observed regional tau, maximised over diffusion time, computed on the 68 Desikan-Killiany cortical regions minus the two entorhinal regions. Supports: r_LC minus r_EC above 0, one-sided spin p for "LC better" below 0.05, the LC seed alone beats its spin null at p below 0.05, and the LC best fit lies before the crossover time. Counts against: r_LC minus r_EC at or below 0 (labelled "against, beyond the spin null" if the one-sided spin p for "EC better" is below 0.05). Uninformative: both seeds' best fits lie at or beyond the crossover time (the first diffusion time at which the two predictions correlate at 0.95 or more). Anything else is inconclusive.
+
+Robustness: a verdict is called robust only if sensitivity analyses 1, 2, 3, 5, 6, 7 and 8 point the same way.
+
+What a result against would mean: early cortical tau is not explained by diffusion along the LC's own structural connections. It would not rule out an LC origin with a single entry into the cortex through the transentorhinal region, which also produces an entorhinal-like cortical pattern (section 2 of the PDF).
+
+Descriptive, no verdict: two control seeds (V1, precuneus) and a ranking of every bilateral pair of nodes as a seed.
+
+Foreknowledge of data or evidence:
+Data exists but the authors cannot observe it yet.
+
+Explanation of foreknowledge and managing unintended influences:
+The ADNI tau PET data and the HCP diffusion data exist, but I cannot observe them: I have not applied to ADNI (access needs an application with institutional affiliation under the ADNI Data Use Agreement) and have not registered with HCP ConnectomeDB (the Open Access Data Use Terms must be accepted first). Nothing from either source has been requested, downloaded, opened or seen, by me or by the AI tool I used. Only public documentation pages were read, to name tables, variables and files (listed in section 3 of the PDF); anything not confirmed there is marked "to be confirmed on access".
+
+What I do know is the published literature: early tau PET signal sits in the medial temporal lobe, and Braak's staging puts the first cortical tau in the transentorhinal region. That knowledge shaped one decision, and in the direction that removes an advantage rather than creates one: the entorhinal regions are left out of every correlation, because otherwise the entorhinal seed is scored on its own value and the LC seed (not a cortical region) cannot match it. The first draft's design is kept as sensitivity analysis 4.
+
+All other choices were fixed and checked on simulated data only (sim/network_calibration.py; 200 simulated data sets per world): a false "supports" occurred in 1 of 200 worlds where the map was unrelated to the brain graph and in at most 3 of 200 where tau spread from the entorhinal cortex.
+
+Handling after access: the analysis code refuses to run until this plan is frozen and the spin-test validation has passed on the registered code. The ADNI step (src/network/adni_tau.py) also refuses to run before freezing. Because the ADNI Data Use Agreement forbids putting participant-level data into third-party AI tools, I will run that step on my own computer with no AI tool involved; only group-level maps and counts leave it.
+
+STEP 3 - RESEARCH DESIGN
+
+Study type:
+Other
+A model-comparison analysis of existing observational imaging data (secondary data): pre-specified network diffusion models with different seeds are compared by how well they fit a group-level regional tau map, with significance from spatial permutation (spin) nulls. There is no intervention, no assignment and no exposure contrast between groups, so neither "Non-randomized study" nor "Descriptive study" fits; the confirmatory test was also calibrated on simulated data, but the study itself is not a simulation study.
+
+Intention for causal interpretation:
+Indirect inference
+The models are mechanistic (spread along connections from a seed), so a better fit of the LC seed would be read as indirect support for spread from the LC. A fit cannot prove the mechanism or the direction of spread, and a result against does not rule out an LC origin with a single cortical entry point (section 2 and section 8 of the PDF).
+
+Blinding of experimental treatments:
+No blinding is involved in this study.
+
+Additional blinding during research or analysis:
+There are no treatments. In place of blinding, every decision (seeds, evaluation regions, model, diffusion-time grid, spin null, verdict rules, sensitivity analyses, group selection) is fixed in this plan and in config/network.yaml before any data are seen, and the code refuses to run on real data until the plan is frozen. The participant-level ADNI step is run by me without AI tools; the analysis that produces the verdict is the registered code, run once.
+
+Study design:
+Cross-sectional, group-level model comparison. Inputs: (1) a group structural connectome of 84 nodes (68 Desikan-Killiany cortical, 14 subcortical, 2 LC) from tractography in the HCP "100 Unrelated Subjects" group; (2) group-level regional tau maps from ADNI flortaucipir PET: the mean W-score of amyloid-positive cognitively normal people against amyloid-negative cognitively normal people (primary), partial-volume-corrected. Network diffusion from each seed (LC, entorhinal; controls V1 and precuneus) is fitted to the map; the LC and entorhinal fits are compared with spin nulls; the crossover time is reported. Nine pre-specified sensitivity analyses. Full detail: sections 2 to 6 of the attached PDF.
+
+Randomization:
+Not applicable.
+
+STEP 4 - SAMPLING
+
+Data collection procedures:
+No new data are collected. Existing data will be obtained after this plan is frozen:
+ADNI, through the LONI Image and Data Archive after approval of an application under the ADNI Data Use Agreement. Tables: UC Berkeley Tau PET PVC 6mm Res analysis (UCBERKELEY_TAUPVC_6MM, primary), UC Berkeley Tau PET 6mm Res analysis (UCBERKELEY_TAU_6MM, sensitivity 8), UC Berkeley Amyloid PET 6mm Res analysis (UCBERKELEY_AMY_6MM), Diagnostic Summary (DXSUM), Participant Demographics (PTDEMOG). Selection: flortaucipir scans with visual QC pass, first such scan per participant; amyloid status (the Berkeley lab's AMYLOID_STATUS) from the amyloid scan nearest in time within 365 days; diagnosis nearest in time within 180 days.
+HCP Young Adult 1200 Subjects Release, 3T, open-access tier, through ConnectomeDB after accepting the Open Access Data Use Terms: the preset group "100 Unrelated Subjects", packages Diffusion Preprocessed and Structural Preprocessed. No restricted HCP data are needed.
+LC atlas: Ye et al. 2021, 7T probabilistic atlas (5% version primary, 25% version in sensitivity 6).
+Public documentation pages used to name these are listed in section 3 of the PDF.
+
+Sample size:
+HCP: 100 subjects (the preset group). ADNI: every participant who meets the selection rules; the numbers are not known before access and will be reported with every exclusion. A group map (and the reference group) needs at least 30 people; below that the map is not built and the analysis it feeds is reported as not computable.
+
+Sample size rationale:
+The HCP preset group of 100 unrelated subjects is used whole, because the HCP selected it as unrelated (no restricted family-structure data needed). ADNI is used whole because the earliest-stage group is defined by the data, not by a target size. The minimum of 30 people per group is an assumption (smaller group means are dominated by individual noise). The operating characteristics of the verdict rule were measured on simulated data (section 2 of the PDF), not with a power calculation on real effect sizes, which are unknown.
+
+Starting and stopping rules:
+Data access is requested only after freezing. Each data set is downloaded once (download dates recorded), processed once with the registered settings, and analysed once with the registered code. There is no interim analysis and no optional stopping. If the reference group has fewer than 30 people, the analysis stops and is reported as not computable.
+
+STEP 5 - VARIABLES
+
+Manipulated variables:
+None. The seed of the diffusion model (LC, entorhinal, V1, precuneus) is a model setting, not a manipulated variable.
+
+Measured variables:
+Regional tau PET SUVR (flortaucipir) for the 68 Desikan-Killiany cortical regions (CTX_LH_<REGION>_SUVR and CTX_RH_<REGION>_SUVR; inferior cerebellar grey reference), partial-volume-corrected (primary) and not (sensitivity 8); amyloid status (AMYLOID_STATUS); diagnosis (DIAGNOSIS: 1 CN, 2 MCI, 3 dementia); age at the tau scan (from PTDOBYY, mid-year birth assumed); sex (PTGENDER). From HCP: per-subject structural connectomes (SIFT2-weighted streamline counts between 84 nodes) from the preprocessed diffusion data.
+
+Indices:
+W-score per participant and region: (SUVR minus the value predicted from age and sex by a regression in amyloid-negative cognitively normal people) divided by that regression's residual SD. Group map: the mean W-score per region (amyloid-positive CN, primary; amyloid-positive MCI, sensitivity 9). Group connectome: the mean of the 100 subject matrices (absent edges count as zero). Fit index: r, the correlation between the predicted and observed map over the evaluation regions, maximised over 400 diffusion times from 0.01 to 50. Difference index: r_LC minus r_EC. Crossover time: the first diffusion time at which the LC and entorhinal predictions correlate at 0.95 or more.
+
+STEP 6 - ANALYSIS PLAN
+
+Statistical models:
+Network diffusion dx/dt = -beta L x + alpha x on the group connectome, with L the degree-normalised graph Laplacian (Raj et al. 2012), solved by eigendecomposition; beta and t enter only as tau = beta t. Uniform growth (alpha) cannot change a correlation and is not fitted. A seed puts unit mass on its nodes, split equally. For each seed the predicted cortical pattern is computed at 400 log-spaced values of tau from 0.01 to 50 and its Pearson correlation with the observed map is maximised over tau. Null model: 10,000 spins (random rotations of each hemisphere's parcel centroids on the fsaverage sphere, mirrored for the right hemisphere, reassignment without duplicates by Hungarian assignment; seed 20261021). The whole 68-region map is spun and every spun map is fitted exactly like the real one, including the maximisation over tau. Shuffling regions is never used. Code: src/network/analysis.py and src/network/verdict.py. See sections 4 and 5 of the PDF.
+
+Transformations:
+SUVR to W-scores against amyloid-negative cognitively normal people, adjusted for age and sex; group mean per region. Spearman (rank) correlation in sensitivity 2. No other transformations.
+
+Inference criteria:
+One primary comparison, one-sided spin tests at 0.05, no multiplicity correction. p-values: (1 + number of spun maps at least as extreme) / (1 + 10,000), so never below 1/10,001. Verdict rules, applied in order: uninformative if both best fits lie at or beyond the crossover time; against if r_LC minus r_EC is at or below 0 (beyond the spin null if the one-sided p for "EC better" is below 0.05); supports if the difference is above 0 with one-sided p for "LC better" below 0.05, LC seed p below 0.05, and the LC best fit before the crossover time; inconclusive otherwise. Robust only if sensitivity analyses 1, 2, 3, 5, 6, 7 and 8 point the same way.
+
+Data inclusion and exclusion:
+Included: flortaucipir tau scans with visual QC pass (qc_flag 2), the first per participant, with an amyloid scan within 365 days, a diagnosis within 180 days, year of birth, sex, and all 68 regional SUVRs. Excluded and counted: other tau tracers, QC not passed, later scans, no amyloid scan or diagnosis in the window, missing covariates or regional values, diagnoses other than CN or MCI. Groups: reference amyloid-negative CN; primary amyloid-positive CN; sensitivity amyloid-positive MCI. HCP: all 100 subjects of the preset group; a subject whose processing fails is reported, not replaced.
+
+Missing data:
+Nothing is imputed. A participant missing any variable needed for selection, the W-score regression or any of the 68 regional values is excluded and counted (results/tables/network_adni_counts.csv). If a seed region is absent from the connectome, or a cortical region lacks a tau value or sphere coordinates, the analysis stops with an error.
+
+Other planned analysis:
+Nine pre-specified sensitivity analyses, each changing one thing from the primary: (1) unnormalised Laplacian; (2) Spearman correlation; (3) nearest-neighbour spin reassignment; (4) entorhinal regions kept in the evaluation (shown for transparency; favours the entorhinal seed); (5) uniform LC projection: each LC node's edges replaced by equal weights to every cortical region of its hemisphere, total weight kept (an assumption answering unreliable LC tractography); (6) LC mask from the 25% atlas version; (7) connectome keeping only edges present in at least half the subjects; (8) SUVR without partial-volume correction; (9) amyloid-positive MCI (shown for transparency). Descriptive: control seeds V1 and precuneus; a ranking of every bilateral pair of nodes as a seed; the crossover time. Before the real run, the spin test must pass its validation on a known null (6 tests; on 2026-10-21 spin false positives 6.0% of 200 pairs versus 56.5% for naive shuffling).
+
+STEP 7 - OTHER
+
+Context and additional information:
+This is Module 6 of the LC-First project by Mohammad Hassan, independent researcher. Two earlier modules are registered: the base-rate model, https://osf.io/xb7fy/, and the meta-analysis of noradrenergic drug classes, https://osf.io/9kb4w/.
+
+Use of AI: I used Claude, Anthropic's AI model, through Claude Code to write the code, extract the published values (the LC atlas thresholds, marked unverified until I check them), run the simulations and write the first version of the plan and these answers. Claude made the methodological choices I delegated to it and gave a reason for each in config/network.yaml; by registering, I adopt them. Claude read only public documentation about ADNI and HCP and never any data. Under the ADNI Data Use Agreement, participant-level ADNI data will never be given to an AI tool; I will run that step myself.
+
+Known limitations, stated in advance (section 8 of the PDF): tractography to the LC is unreliable at 1.25 mm resolution, which leans the verdict towards against or inconclusive; Braak's LC-first sequence also predicts an entorhinal-like cortical pattern; tau PET cannot measure the LC itself; group-level maps; a young-adult connectome with older-adult tau maps; late stages carry little seed information.

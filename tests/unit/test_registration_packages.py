@@ -26,7 +26,9 @@ def test_document_has_no_draft_status_block_and_names_the_author(name):
     text = (PREREG / f"{name}.md").read_text(encoding="utf-8")
     head = text[:1500].lower()
     assert "mohammad hassan" in head
-    assert "draft" not in head.split("change log")[0] and "status:" not in head
+    # no status block (the approved Tools wording "draft this text" is fine)
+    for phrase in ("status:", "complete draft", "not yet frozen", "draft — ", "draft, ready", "do not freeze"):
+        assert phrase not in head, phrase
     assert "## tools" in text.lower() and "claude" in text.lower() and "change log" in text.lower()
 
 

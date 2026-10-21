@@ -1,0 +1,3 @@
+item,value,unit,source_id,locator,snippet,quantity,verified,machine_rechecked
+lc_atlas_threshold_liberal,5,percent probability,ye2021,"Results, 'LC probabilistic atlas' (subsection 'Spatial variability of the LC')","A liberal threshold (5%) was applied to obtain a template","Threshold of the liberal thresholded version of the 7T LC atlas (used as the primary LC mask, config connectome.lc_threshold_primary)",false,false
+lc_atlas_threshold_stringent,25,percent probability,ye2021,"Results, 'LC probabilistic atlas' (subsection 'Spatial variability of the LC')","A stringent threshold (25%) was applied to the atlas to produce a template","Threshold of the stringent thresholded version of the 7T LC atlas (sensitivity 6, config connectome.lc_threshold_sensitivity)",false,false

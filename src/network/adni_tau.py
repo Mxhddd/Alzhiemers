@@ -73,12 +73,13 @@ def attach_nearest(base: pd.DataFrame, other: pd.DataFrame, *, id_col: str, base
     """For each base row, the value from the `other` row of the same participant
     nearest in time, if within max_days (ties: the earlier one). Missing
     values in `other` are dropped first. Rows without a match get NaN."""
-    o = other[[id_col, other_date, value_col]].dropna().copy()
-    o[other_date] = pd.to_datetime(o[other_date])
-    m = base[[id_col, base_date]].reset_index().merge(o, on=id_col, how="left")
-    m["_gap"] = (m[other_date] - m[base_date]).dt.days.abs()
-    m = m[m["_gap"] <= max_days].sort_values(["index", "_gap", other_date])
-    best = m.drop_duplicates("index", keep="first").set_index("index")[value_col]
+    o = other[[id_col, other_date, value_col]].dropna()
+    o = pd.DataFrame({id_col: o[id_col], "_other_date": pd.to_datetime(o[other_date]), "_value": o[value_col]})
+    b = pd.DataFrame({id_col: base[id_col], "_base_date": pd.to_datetime(base[base_date]), "index": base.index})
+    m = b.merge(o, on=id_col, how="left")
+    m["_gap"] = (m["_other_date"] - m["_base_date"]).dt.days.abs()
+    m = m[m["_gap"] <= max_days].sort_values(["index", "_gap", "_other_date"])
+    best = m.drop_duplicates("index", keep="first").set_index("index")["_value"]
     out = base.copy()
     out[out_col] = best.reindex(base.index)
     return out

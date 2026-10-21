@@ -57,3 +57,44 @@ def uniform_projection(W: np.ndarray, node: int, targets: list[int]) -> np.ndarr
     W[node, targets] = total / len(targets)
     W[targets, node] = total / len(targets)
     return W
+
+
+def main() -> int:  # pragma: no cover - real-data path (HCP step, run by the researcher)
+    """python -m src.network.connectome : per-subject matrices -> the three group
+    connectomes named in config/network.yaml `data`."""
+    import pandas as pd
+
+    from src.common.config import load_config
+    from src.common.io import analysis_input
+    from src.common.paths import CONFIG_DIR, REPO_ROOT
+
+    cfg = load_config(CONFIG_DIR / "network.yaml")
+    nodes = pd.read_csv(analysis_input(REPO_ROOT / cfg.get("connectome.node_table"),
+                                       provided_by="researcher (HCP step node table)"))
+    names = list(nodes["region"])
+    if len(names) != cfg.get("connectome.n_nodes"):
+        raise ValueError(f"node table has {len(names)} nodes, config says {cfg.get('connectome.n_nodes')}")
+    out_dir = REPO_ROOT / cfg.get("data.regions")
+    out_dir.parent.mkdir(parents=True, exist_ok=True)
+    nodes.to_csv(out_dir, index=False)
+    jobs = [("subject_dir_lc5", "connectome", None),
+            ("subject_dir_lc25", "connectome_lc25", None),
+            ("subject_dir_lc5", "connectome_consistent", cfg.get("connectome.consistency_min_fraction"))]
+    for src_key, dst_key, frac in jobs:
+        files = sorted((REPO_ROOT / cfg.get(f"connectome.{src_key}")).glob("*.csv"))
+        if len(files) != cfg.get("connectome.n_subjects"):
+            raise ValueError(f"{src_key}: {len(files)} subject files, expected {cfg.get('connectome.n_subjects')}")
+        mats = []
+        for f in files:
+            m = pd.read_csv(f, index_col=0)
+            if list(m.index) != names or list(m.columns) != names:
+                raise ValueError(f"{f}: node order differs from the node table")
+            mats.append(m.to_numpy(float))
+        W = group_average(mats, frac)
+        pd.DataFrame(W, index=names, columns=names).to_csv(REPO_ROOT / cfg.get(f"data.{dst_key}"))
+    return 0
+
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(main())

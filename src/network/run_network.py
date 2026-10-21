@@ -1,14 +1,19 @@
 """Module 6 entry point: python -m src.network.run_network  (or `make network`)
 
-Does observed regional tau fit an LC seed better than an entorhinal seed?
-Every seed's correlation is maximised over diffusion time; significance comes
-ONLY from spin nulls, and the null maximises over diffusion time too, so the
-seed with more freedom gets no free advantage. The LC − entorhinal difference
-gets its own spin null. The crossover time (after which LC and entorhinal
-predictions are indistinguishable) is reported.
+Does the earliest-stage regional tau map fit diffusion from an LC seed better
+than diffusion from an entorhinal seed? (prereg/network.md)
+
+* Every seed's correlation is maximised over diffusion time; significance comes
+  ONLY from spin nulls, and every spun map is maximised over the same grid.
+* The entorhinal regions (and every seed's own regions) are left out of the
+  correlation, so the entorhinal seed is not scored on its own value.
+* The pre-registered verdict (src/network/verdict.py), the crossover time, the
+  control seeds, the descriptive ranking of every bilateral seed, and the nine
+  pre-specified sensitivity analyses with the robustness rule.
 
 Refuses to start unless Module 6's validation passed on the current code and
-prereg/network.md is frozen. Real data only; fails loudly while absent.
+prereg/network.md is frozen. Inputs are group-level files (section 3 of the
+pre-registration); fails loudly while they are absent.
 """
 
 from __future__ import annotations
@@ -26,26 +31,46 @@ from src.common.plotting import INK, apply_theme, save_figure, series_colors
 from src.common.prereg import require_preregistration
 from src.common.runlog import start_run
 from src.common.validation import require_validated
-from src.network.diffusion import Diffuser, best_fit, crossover_tau, laplacian, seed_vector
-from src.network.spin import perm_pvalue, spin_permutations
+from src.network.analysis import analyse, seed_ranking
+from src.network.connectome import uniform_projection
+from src.network.spin import spin_permutations
+from src.network.verdict import robust
 
 CONFIG = CONFIG_DIR / "network.yaml"
+REGION_COLUMNS = ["region", "hemisphere", "cortical", "sphere_x", "sphere_y", "sphere_z"]
 
 
-def load_inputs(cfg):
-    W = pd.read_csv(analysis_input(REPO_ROOT / cfg.get("data.connectome"), provided_by="researcher (HCP connectome)"),
-                    index_col=0)
+def load_connectome(path) -> pd.DataFrame:
+    W = pd.read_csv(analysis_input(REPO_ROOT / path, provided_by="researcher (HCP group connectome)"), index_col=0)
     if list(W.index) != list(W.columns):
-        raise ValueError("connectome row and column region names differ")
-    reg = pd.read_csv(analysis_input(REPO_ROOT / cfg.get("data.regions"), provided_by="researcher (parcellation table)"))
-    need = ["region", "hemisphere", "cortical", "sphere_x", "sphere_y", "sphere_z"]
-    if list(reg.columns) != need:
-        raise ValueError(f"regions.csv columns must be exactly {need}")
-    reg = reg.set_index("region").loc[W.index]  # KeyError if a connectome region is missing
-    tau = pd.read_csv(analysis_input(REPO_ROOT / cfg.get("data.tau"), provided_by="researcher (ADNI tau-PET)"))
+        raise ValueError(f"{path}: row and column region names differ")
+    return W
+
+
+def load_regions(path, names) -> pd.DataFrame:
+    reg = pd.read_csv(analysis_input(REPO_ROOT / path, provided_by="researcher (node table)"))
+    if list(reg.columns) != REGION_COLUMNS:
+        raise ValueError(f"regions.csv columns must be exactly {REGION_COLUMNS}")
+    return reg.set_index("region").loc[names]  # KeyError if a connectome region is missing
+
+
+def load_tau(path) -> pd.Series:
+    tau = pd.read_csv(analysis_input(REPO_ROOT / path, provided_by="researcher (ADNI group tau map, adni_tau.py)"))
     if list(tau.columns) != ["region", "value"] or tau["value"].isna().any():
-        raise ValueError("tau_regional.csv must have columns region,value and no missing values")
-    return W, reg, tau.set_index("region")["value"]
+        raise ValueError(f"{path}: columns must be region,value with no missing values")
+    return tau.set_index("region")["value"]
+
+
+def bilateral_seeds(names: list[str]) -> dict[str, list[str]]:
+    """Every left/right pair of nodes (ctx-lh-x / ctx-rh-x, Left-x / Right-x, LC-lh / LC-rh)."""
+    out = {}
+    for n in names:
+        for a, b in (("ctx-lh-", "ctx-rh-"), ("Left-", "Right-")):
+            if n.startswith(a) and n.replace(a, b, 1) in names:
+                out[n[len(a):]] = [n, n.replace(a, b, 1)]
+        if n.endswith("-lh") and n[:-3] + "-rh" in names:
+            out[n[:-3]] = [n, n[:-3] + "-rh"]
+    return out
 
 
 def main() -> int:
@@ -55,70 +80,90 @@ def main() -> int:
     with start_run(module="network", config_path=CONFIG, seed=cfg.get("seed"),
                    packages=["numpy", "scipy", "pandas"], preregistration=prereg) as run:
         TABLES_DIR.mkdir(parents=True, exist_ok=True)
-        W, reg, tau = load_inputs(cfg)
-        names = list(W.index)
-        cort = reg["cortical"].astype(bool).to_numpy()
-        lh = np.where(cort & (reg["hemisphere"] == "L").to_numpy())[0]
-        rh = np.where(cort & (reg["hemisphere"] == "R").to_numpy())[0]
-        ev = np.concatenate([lh, rh])
-        missing = [names[i] for i in ev if names[i] not in tau.index]
-        if missing:
-            raise KeyError(f"tau values missing for cortical regions {missing[:10]} (no imputation)")
-        observed = tau.loc[[names[i] for i in ev]].to_numpy(float)
-        xyz = reg[["sphere_x", "sphere_y", "sphere_z"]].to_numpy(float)
-        if np.isnan(xyz[ev]).any():
-            raise ValueError("cortical regions need sphere coordinates for the spin test")
-
-        diff = Diffuser.from_laplacian(laplacian(W.to_numpy(float), cfg.get("model.laplacian")))
         taus = np.geomspace(cfg.get("model.tau_min"), cfg.get("model.tau_max"), cfg.get("model.n_tau"))
         seeds = {"LC": cfg.get("seeds.lc"), "entorhinal": cfg.get("seeds.entorhinal"), **cfg.get("seeds.controls")}
-        x0 = {}
-        for label, regions in seeds.items():
-            absent = [r for r in regions if r not in names]
-            if absent:
-                raise KeyError(f"seed {label}: regions {absent} not in the connectome")
-            x0[label] = seed_vector(len(names), [names.index(r) for r in regions])
         run.info("uniform growth (alpha) cannot change spatial correlations and is not fitted")
 
-        perms = spin_permutations(xyz[lh], xyz[rh], cfg.get("spin.n_perm"), seed=cfg.get("seed"),
-                                  method=cfg.get("spin.method"))
-        fits = {s: best_fit(diff, x, observed, ev, taus) for s, x in x0.items()}
-        null_max = {s: np.empty(len(perms)) for s in x0}
-        for k, p in enumerate(perms):
-            spun = observed[p]
-            for s, x in x0.items():
-                null_max[s][k] = best_fit(diff, x, spun, ev, taus)[0]
-        rows = []
-        for s, (r, t_best, curve) in fits.items():
-            p_spin = float((1 + np.sum(null_max[s] >= r)) / (1 + len(perms)))  # one-sided: better fit than null maxima
-            rows.append({"seed": s, "best_r": r, "best_tau": t_best, "spin_p": p_spin, "n_perm": len(perms)})
-            run.info(f"seed {s}: max r = {r:.3f} at tau {t_best:.3g}, spin p = {p_spin:.4f}")
-        d_obs = fits["LC"][0] - fits["entorhinal"][0]
-        d_null = null_max["LC"] - null_max["entorhinal"]
-        p_diff = perm_pvalue(d_obs, d_null - d_null.mean())
-        cross = crossover_tau(diff, x0["LC"], x0["entorhinal"], ev, taus, cfg.get("model.crossover_threshold"))
-        run.info(f"LC - entorhinal: delta r = {d_obs:.3f}, spin p (two-sided, centred null) = {p_diff:.4f}; "
-                 f"crossover tau = {cross if cross is not None else 'not reached in grid'}")
-        for s in ("LC", "entorhinal"):
-            if cross is not None and fits[s][1] >= cross:
-                run.warning(f"{s} best fit lies beyond the crossover time: at this stage the seeds are not distinguishable")
-        res = pd.DataFrame(rows)
-        res["lc_minus_entorhinal_r"] = d_obs
-        res["lc_minus_entorhinal_spin_p"] = p_diff
-        res["crossover_tau"] = cross
-        res.to_csv(TABLES_DIR / "network_seed_comparison.csv", index=False)
+        primary = {"connectome": "connectome", "tau": "tau", "laplacian": cfg.get("model.laplacian"),
+                   "correlation": cfg.get("evaluation.correlation"), "spin_method": cfg.get("spin.method"),
+                   "exclude": list(cfg.get("evaluation.exclude")), "lc_projection": "tractography"}
+        analyses = {"primary": primary}
+        for name, change in cfg.get("sensitivity").items():
+            unknown = set(change) - set(primary)
+            if unknown:
+                raise KeyError(f"sensitivity {name}: unknown settings {unknown}")
+            analyses[name] = {**primary, **change}
+
+        perms_cache, rows, verdicts, results = {}, [], {}, {}
+        for name, spec in analyses.items():
+            Wdf = load_connectome(cfg.get(f"data.{spec['connectome']}"))
+            names = list(Wdf.index)
+            reg = load_regions(cfg.get("data.regions"), names)
+            cort = reg["cortical"].astype(bool).to_numpy()
+            lh = np.where(cort & (reg["hemisphere"] == "L").to_numpy())[0]
+            rh = np.where(cort & (reg["hemisphere"] == "R").to_numpy())[0]
+            cort_nodes = np.concatenate([lh, rh])
+            W = Wdf.to_numpy(float)
+            if spec["lc_projection"] == "uniform_ipsilateral_cortex":
+                for lc_name in cfg.get("seeds.lc"):
+                    side = reg.loc[lc_name, "hemisphere"]
+                    W = uniform_projection(W, names.index(lc_name), list(lh if side == "L" else rh))
+            elif spec["lc_projection"] != "tractography":
+                raise ValueError(f"unknown lc_projection {spec['lc_projection']!r}")
+            tau = load_tau(cfg.get(f"data.{spec['tau']}"))
+            missing = [names[i] for i in cort_nodes if names[i] not in tau.index]
+            if missing:
+                raise KeyError(f"tau values missing for cortical regions {missing[:10]} (no imputation)")
+            observed = tau.loc[[names[i] for i in cort_nodes]].to_numpy(float)
+            xyz = reg[["sphere_x", "sphere_y", "sphere_z"]].to_numpy(float)
+            if np.isnan(xyz[cort_nodes]).any():
+                raise ValueError("cortical regions need sphere coordinates for the spin test")
+            key = (spec["spin_method"], tuple(cort_nodes))
+            if key not in perms_cache:
+                perms_cache[key] = spin_permutations(xyz[lh], xyz[rh], cfg.get("spin.n_perm"), seed=cfg.get("seed"),
+                                                     method=spec["spin_method"])
+            res = analyse(W, names, cort_nodes, observed, perms_cache[key], seeds, spec["exclude"], taus=taus,
+                          laplacian_kind=spec["laplacian"], method=spec["correlation"],
+                          crossover_threshold=cfg.get("model.crossover_threshold"), alpha=cfg.get("alpha"))
+            results[name], verdicts[name] = res, res.verdict
+            c = res.comparison
+            for s, f in res.fits.items():
+                rows.append({"analysis": name, "seed": s, "best_r": f.r, "best_tau": f.tau, "spin_p": f.p_spin,
+                             "n_eval_regions": f.n_eval, "n_perm": len(perms_cache[key])})
+            rows.append({"analysis": name, "seed": "LC minus entorhinal", "best_r": res.delta,
+                         "spin_p_lc_better": c.p_lc_better, "spin_p_ec_better": c.p_ec_better,
+                         "crossover_tau": c.crossover, "verdict": res.verdict})
+            run.info(f"[{name}] r_LC {c.r_lc:.3f} (tau {c.tau_lc:.3g}, p {c.p_lc:.4f}); r_EC {c.r_ec:.3f} "
+                     f"(tau {c.tau_ec:.3g}); delta {res.delta:.3f}, p(LC better) {c.p_lc_better:.4f}, "
+                     f"p(EC better) {c.p_ec_better:.4f}; crossover {c.crossover}; verdict {res.verdict}")
+            if name == "primary":
+                ranking = seed_ranking(W, names, cort_nodes, observed, bilateral_seeds(names), spec["exclude"],
+                                       taus=taus, laplacian_kind=spec["laplacian"], method=spec["correlation"])
+                pd.DataFrame(ranking, columns=["seed", "best_r"]).assign(rank=lambda d: np.arange(1, len(d) + 1)) \
+                    .to_csv(TABLES_DIR / "network_seed_ranking.csv", index=False)
+                run.record_output(TABLES_DIR / "network_seed_ranking.csv")
+                lc_rank = [s for s, _ in ranking].index("LC") + 1 if "LC" in dict(ranking) else None
+                run.info(f"descriptive: LC ranks {lc_rank} of {len(ranking)} bilateral seeds")
+
+        is_robust = robust(verdicts["primary"], verdicts, list(cfg.get("robustness_set")))
+        run.info(f"PRIMARY VERDICT: {verdicts['primary']}; robust across {list(cfg.get('robustness_set'))}: {is_robust}")
+        out = pd.DataFrame(rows)
+        out["primary_verdict_robust"] = is_robust
+        out.to_csv(TABLES_DIR / "network_seed_comparison.csv", index=False)
         run.record_output(TABLES_DIR / "network_seed_comparison.csv")
 
         apply_theme()
+        res = results["primary"]
         fig, ax = plt.subplots(figsize=(6, 4))
-        for (s, (_, _, curve)), c in zip(fits.items(), series_colors(len(fits))):
-            ax.plot(taus, curve, color=c, label=s)
-        if cross is not None:
-            ax.axvline(cross, color=INK["muted"], ls=":", lw=1)
-            ax.text(cross, ax.get_ylim()[0], " crossover", fontsize=7, color=INK["secondary"], va="bottom")
+        for (s, f), col in zip(res.fits.items(), series_colors(len(res.fits))):
+            ax.plot(taus, f.curve, color=col, label=s)
+        if res.comparison.crossover is not None:
+            ax.axvline(res.comparison.crossover, color=INK["muted"], ls=":", lw=1)
+            ax.text(res.comparison.crossover, ax.get_ylim()[0], " crossover", fontsize=7, color=INK["secondary"],
+                    va="bottom")
         ax.set_xscale("log")
         ax.set_xlabel("diffusion time tau = beta t")
-        ax.set_ylabel("Pearson r with observed regional tau")
+        ax.set_ylabel("correlation with observed regional tau")
         ax.legend()
         save_figure(fig, "network_seed_fits", run)
     return 0

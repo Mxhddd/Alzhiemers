@@ -1,46 +1,185 @@
 # Module 6 — network diffusion (Killer 1's geometric cousin), PROJECT_BRIEF.md §5.
-# `null` = researcher must supply. Real data (HCP connectome, ADNI tau-PET) are
-# not yet available; the real path fails loudly until they are.
+# Pre-registration: prereg/network.md (every value below is stated there; the
+# pairing is checked by tests/unit/test_prereg_network_consistency.py).
+# No ADNI or HCP data have been requested, downloaded or seen. Names marked
+# "to be confirmed on access" come from public documentation only.
 
-# Seed for the spin rotations.
+# Seed for the spin rotations (fixed so the null is reproducible).
 seed: 20261021
+# One-sided significance level for every spin test in the verdict (one primary comparison, no correction needed).
+alpha: 0.05
 
 data:
-  # RESEARCHER: square, symmetric structural connectome; header row and first
-  # column are region names (same order).
-  connectome: data/raw/connectome.csv
-  # RESEARCHER: one row per region: region, hemisphere (L/R/none), cortical
-  # (true/false), sphere_x, sphere_y, sphere_z (centroid on the hemisphere's
-  # spherical surface; needed only for cortical regions, blank otherwise).
-  regions: data/raw/regions.csv
-  # RESEARCHER: observed regional tau (columns region, value) — the EARLIEST
-  # stage pattern available (late patterns are nearly seed-independent).
-  tau: data/raw/tau_regional.csv
+  # Node table built at the HCP step: region, hemisphere (L/R/none), cortical, sphere_x/y/z (fsaverage sphere centroid, cortical only).
+  regions: data/processed/network/regions.csv
+  # Primary group connectome: HCP tractography, LC nodes from the Ye 2021 atlas at its 5% threshold, plain group mean.
+  connectome: data/processed/network/connectome_lc5.csv
+  # Sensitivity 6: same, LC nodes from the 25% (stringent) version of the atlas.
+  connectome_lc25: data/processed/network/connectome_lc25.csv
+  # Sensitivity 7: primary connectome keeping only edges present in at least half the subjects.
+  connectome_consistent: data/processed/network/connectome_lc5_consistency50.csv
+  # Primary tau map: mean W-score of amyloid-positive cognitively normal people, partial-volume-corrected SUVR.
+  tau: data/processed/network/tau_map_apos_cu_pvc.csv
+  # Sensitivity 8: same group, SUVR without partial-volume correction.
+  tau_nopvc: data/processed/network/tau_map_apos_cu_nopvc.csv
+  # Sensitivity 9: amyloid-positive MCI (a later stage), partial-volume-corrected.
+  tau_mci: data/processed/network/tau_map_apos_mci_pvc.csv
 
 seeds:
-  # RESEARCHER: LC region name(s) in the connectome.
-  lc: null
-  # RESEARCHER: entorhinal region name(s).
-  entorhinal: null
-  # RESEARCHER: control seeds, {label: [region names]} (e.g. a primary sensory area).
-  controls: null
+  # The LC is bilateral, so both LC nodes are seeded together (mass split equally).
+  lc: [LC-lh, LC-rh]
+  # The comparison seed named in the brief; bilateral for symmetry with the LC seed.
+  entorhinal: [ctx-lh-entorhinal, ctx-rh-entorhinal]
+  # Control seeds: primary visual cortex (late in Braak staging) and precuneus (a default-mode hub).
+  controls:
+    # Pericalcarine = V1 in the Desikan-Killiany atlas.
+    V1: [ctx-lh-pericalcarine, ctx-rh-pericalcarine]
+    # Precuneus: a highly connected hub; tests whether a hub seed fits as well by degree alone.
+    precuneus: [ctx-lh-precuneus, ctx-rh-precuneus]
+
+evaluation:
+  # The entorhinal regions are left out of every correlation: the entorhinal seed would otherwise be scored on its own value, which no LC-seeded prediction can match (the LC is not a cortical region). Every seed's own regions are also left out.
+  exclude: [ctx-lh-entorhinal, ctx-rh-entorhinal]
+  # Pearson r as in Raj 2012; Spearman is sensitivity 2.
+  correlation: pearson
 
 model:
-  # Raj 2012 used the degree-normalised Laplacian; normalisation stops hubs
-  # dominating purely by degree. A choice; the unnormalised one is the alternative.
+  # Raj 2012 used the degree-normalised Laplacian; normalisation stops hubs dominating purely by degree. Unnormalised is sensitivity 1.
   laplacian: normalized
-  # Diffusion-time grid (tau = beta * t) over which each seed's fit is maximised.
+  # Diffusion-time grid (tau = beta * t) over which every fit, and every null fit, is maximised: lower end.
   tau_min: 0.01
-  # Upper end of the grid.
+  # Upper end of the grid (beyond it every pattern has reached equilibrium on the normalised Laplacian of a connected graph).
   tau_max: 50.0
   # Grid points (log-spaced).
   n_tau: 400
-  # Two seeds are "indistinguishable" once their predicted cortical patterns
-  # correlate at least this much; the first such tau is the crossover time.
+  # Two seeds are "indistinguishable" once their predicted patterns correlate at least this much; the first such tau is the crossover time.
   crossover_threshold: 0.95
 
 spin:
   # Rotations for the spatial null; 10000 resolves p down to 1e-4.
   n_perm: 10000
-  # Parcel reassignment without duplicates (Váša 2018), not nearest-neighbour.
+  # Parcel reassignment without duplicates (Váša 2018); nearest-neighbour (Alexander-Bloch 2018) is sensitivity 3.
   method: hungarian
+
+# Pre-specified sensitivity analyses: each changes one thing from the primary analysis.
+sensitivity:
+  # 1: unnormalised Laplacian.
+  S1_unnormalized_laplacian: {laplacian: unnormalized}
+  # 2: rank correlation.
+  S2_spearman: {correlation: spearman}
+  # 3: spins with nearest-neighbour reassignment.
+  S3_nearest_spin: {spin_method: nearest}
+  # 4: entorhinal regions kept in the evaluation (the first draft's design; favours the entorhinal seed, shown for transparency).
+  S4_entorhinal_evaluated: {exclude: []}
+  # 5: each LC node's tractography edges replaced by equal weights to every cortical region of its hemisphere, total weight kept (assumption: diffuse projection; answers unreliable LC tractography).
+  S5_lc_uniform: {lc_projection: uniform_ipsilateral_cortex}
+  # 6: stringent LC mask.
+  S6_lc_mask_25: {connectome: connectome_lc25}
+  # 7: consistency-thresholded connectome.
+  S7_consistency_threshold: {connectome: connectome_consistent}
+  # 8: tau SUVR without partial-volume correction.
+  S8_no_pvc: {tau: tau_nopvc}
+  # 9: later-stage group (expected near or past the crossover; shown for transparency).
+  S9_apos_mci: {tau: tau_mci}
+# The primary verdict is called robust only if these analyses give the same direction (S4 and S9 are shown, not used for robustness).
+robustness_set: [S1_unnormalized_laplacian, S2_spearman, S3_nearest_spin, S5_lc_uniform, S6_lc_mask_25, S7_consistency_threshold, S8_no_pvc]
+
+# Structural connectome (HCP). The tractography runs outside this repository; these settings fix it.
+connectome:
+  # HCP Young Adult 1200 Subjects Release, 3T (Reference Manual, April 2018).
+  release: HCP-YA S1200 3T
+  # ConnectomeDB preset group of 100 unrelated subjects: no family-structure (restricted) data needed.
+  subject_group: 100 Unrelated Subjects
+  # Number of subjects in that group.
+  n_subjects: 100
+  # Diffusion Preprocessed (T1w/Diffusion: data.nii.gz, bvals, bvecs, nodif_brain_mask.nii.gz) and Structural Preprocessed (T1w/aparc+aseg.nii.gz, MNINonLinear/xfms/standard2acpc_dc.nii.gz); file names from Appendix III.
+  packages: [Diffusion Preprocessed, Structural Preprocessed]
+  # MRtrix3 for response estimation, CSD, tracking, SIFT2 and connectome construction.
+  software: MRtrix3 3.0.4
+  # Three-tissue response (dhollander) and multi-shell multi-tissue CSD: the HCP data are multi-shell.
+  fod: msmt_csd
+  # Probabilistic iFOD2 with anatomically constrained tractography (5TT from aparc+aseg), backtracking and dynamic seeding.
+  algorithm: iFOD2_ACT
+  # Streamlines per subject: a common setting that keeps per-subject run time to hours.
+  n_streamlines: 10000000
+  # Longest streamline kept, in mm.
+  max_length_mm: 250
+  # Streamline endpoints are assigned to the nearest node label within this radius (mm).
+  radial_search_mm: 2
+  # Edge weight: SIFT2-weighted streamline count times the subject's SIFT2 proportionality coefficient (mu).
+  weight: sift2_mu
+  # Nodes: 68 Desikan-Killiany cortical + 14 subcortical (aseg thalamus, caudate, putamen, pallidum, hippocampus, amygdala, accumbens; both sides) + 2 LC.
+  n_nodes: 84
+  # LC atlas: Ye et al. 2021 NeuroImage 225:117487, 7T probabilistic atlas, thresholded versions distributed at nitrc.org/projects/lc_7t_prob.
+  lc_atlas: ye2021_7t
+  # Primary atlas threshold in percent (the liberal version: more 1.25 mm diffusion voxels, so more streamline endpoints).
+  lc_threshold_primary: 5
+  # Sensitivity 6 threshold in percent (the stringent version).
+  lc_threshold_sensitivity: 25
+  # The LC mask is warped from MNI to each subject (standard2acpc_dc, nearest neighbour) and set as sub-cortical grey matter in the 5TT image so streamlines can end in it.
+  lc_in_5tt: sgm
+  # Sensitivity 7: keep an edge only if present in at least this fraction of subjects.
+  consistency_min_fraction: 0.5
+  # Per-subject matrices (CSV, node order of node_table) written by the researcher's tractography, one folder per LC mask.
+  subject_dir_lc5: data/raw/hcp_connectomes/lc5
+  # Same for the 25% LC mask.
+  subject_dir_lc25: data/raw/hcp_connectomes/lc25
+  # Node table for the connectome (region, hemisphere, cortical, sphere_x, sphere_y, sphere_z).
+  node_table: data/raw/hcp_connectomes/nodes.csv
+
+# ADNI tau-PET step (src/network/adni_tau.py). Run by the researcher on his own computer: the ADNI Data Use Agreement forbids AI tools on participant-level data.
+adni:
+  files:
+    # UC Berkeley Tau PET PVC 6mm Res analysis (table UCBERKELEY_TAUPVC_6MM; exact file name to be confirmed on access).
+    tau_pvc: data/raw/adni/UCBERKELEY_TAUPVC_6MM.csv
+    # UC Berkeley Tau PET 6mm Res analysis (table UCBERKELEY_TAU_6MM; to be confirmed on access).
+    tau_nopvc: data/raw/adni/UCBERKELEY_TAU_6MM.csv
+    # UC Berkeley Amyloid PET 6mm Res analysis (table UCBERKELEY_AMY_6MM).
+    amyloid: data/raw/adni/UCBERKELEY_AMY_6MM.csv
+    # Diagnostic Summary (table DXSUM).
+    diagnosis: data/raw/adni/DXSUM.csv
+    # Participant Demographics (table PTDEMOG).
+    demographics: data/raw/adni/PTDEMOG.csv
+  # Group maps are written here (group-level summaries only).
+  output_dir: data/processed/network
+  columns:
+    # Participant roster ID, shared by the tables (to be confirmed on access for the Berkeley tau file).
+    id: RID
+    # Tau scan acquisition date (SCANDATE in the Berkeley tau tables).
+    tau_date: SCANDATE
+    # Tau tracer column (TRACER).
+    tracer: TRACER
+    # Visual QC flag (qc_flag: 2 pass, 1 partial, 0 fail).
+    qc: qc_flag
+    # Amyloid scan date (SCANDATE in UCBERKELEY_AMY_6MM).
+    amyloid_date: SCANDATE
+    # Berkeley amyloid positivity flag (whole-cerebellum reference, the lab's own threshold).
+    amyloid_status: AMYLOID_STATUS
+    # Diagnostic summary date (EXAMDATE in DXSUM).
+    dx_date: EXAMDATE
+    # Diagnosis (DIAGNOSIS: 1 CN, 2 MCI, 3 dementia).
+    diagnosis: DIAGNOSIS
+    # Year of birth (PTDOBYY).
+    birth_year: PTDOBYY
+    # Sex (PTGENDER: 1 male, 2 female).
+    sex: PTGENDER
+  # Regional SUVR columns, e.g. CTX_LH_ENTORHINAL_SUVR (pattern confirmed in the public data dictionary).
+  suvr_column: "CTX_{hemi}_{region}_SUVR"
+  # Flortaucipir only: SUVRs from different tau tracers are not comparable (the tables carry that warning). Value label to be confirmed on access.
+  tau_tracer: FTP
+  # Visual QC pass only.
+  qc_pass: [2]
+  # Value of AMYLOID_STATUS meaning positive (to be confirmed on access).
+  amyloid_positive_value: 1
+  # Amyloid scan must be within this many days of the tau scan (a year: amyloid status changes slowly).
+  amyloid_window_days: 365
+  # Diagnosis must be within this many days of the tau scan.
+  diagnosis_window_days: 180
+  # DIAGNOSIS codes used.
+  diagnosis_codes: {cu: 1, mci: 2}
+  # PTGENDER code for female (covariate coded 1 = female).
+  female_code: 2
+  # W-scores adjust for these, fitted in the amyloid-negative cognitively normal reference group.
+  w_score_covariates: [age, sex]
+  # A group map (and the reference group) needs at least this many people; below it the map is not built (assumption: smaller group means are dominated by individual noise).
+  min_group_n: 30

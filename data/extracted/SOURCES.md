@@ -116,3 +116,50 @@ Oddities the second reader noticed in cells NOT extracted (left as printed):
   - The footnote prints "Mo estimate" for "No estimate".
 - **Ossenkoppele 2022 Table 2:** all-cause dementia, A+T− at 80+, is printed "0.90 (0.50–15.98)". That CI does not fit the point estimate on the log scale. It is not used.
 - **Braak 2011 abstract:** two numbers are written in words ("Two thousand three hundred and thirty two"; "Fifty-eight").
+
+## Module 3 validation: published mediation analyses (added 2026-10-21)
+
+File: `data/extracted/mediation_validation_published.csv` (all rows `verified: false`).
+Extracted by Claude from the open full texts; used only to validate the
+estimator in `tests/validation/test_mediation.py`, never as Module 3 data.
+
+- `imai_keele_tingley2010`: Imai K, Keele L, Tingley D. A general approach to
+  causal mediation analysis. *Psychol Methods* 2010;15(4):309–334.
+  doi:10.1037/a0020761. Read from the authors' copy
+  (https://imai.fas.harvard.edu/research/files/BaronKenny.pdf), Table 1 and its note.
+  Data and code: the authors' replication archive, Harvard Dataverse
+  doi:10.7910/DVN/UMEYXD (CC0 1.0), file `Jobs-NoMiss-Cont.dta` (n = 1,285) and
+  `Table-1.R` (model: `depress2 ~ treat + job_seek + depress1 + age + educ + sex +
+  nonwhite + econ_hard + marital + occp + income`, factors as stored).
+- `imai_keele_yamamoto2010`: Imai K, Keele L, Yamamoto T. Identification,
+  inference and sensitivity analysis for causal mediation effects. *Stat Sci*
+  2010;25(1):51–71. doi:10.1214/10-STS321; arXiv:1011.1079 (read there).
+  Table 3 and Section 6.2. Data and code: Harvard Dataverse
+  doi:10.7910/DVN/APNMP7 (CC0 1.0), `nelson_data.RData` (n = 136),
+  `nelson-analysis.R`, `sem-sens.R` (models without covariates:
+  `idisord ~ vidcdum`, `kspeech ~ vidcdum + idisord`).
+- Download and conversion: `python -m src.mediation.fetch_validation_data`
+  (sha256-pinned; writes `data/raw/validation/`, not committed).
+- Note: the `jobs` data shipped in the R package `mediation` (n = 899) is a
+  different extract and does NOT reproduce Table 1 (effect on the mediator
+  0.077 against the published .100); only the Dataverse file is used.
+
+## Module 6: locus coeruleus atlas (added 2026-10-21)
+
+File: `data/extracted/network_lc_atlas.csv` (both rows `verified: false`).
+Extracted by Claude through the NCBI E-utilities PMC XML (the PMC web page
+showed a browser check and was not used). No atlas file was downloaded.
+
+- `ye2021`: Ye R, Rua C, O'Callaghan C, et al. An in vivo probabilistic atlas
+  of the human locus coeruleus at ultra-high field. *NeuroImage*
+  2021;225:117487. doi:10.1016/j.neuroimage.2020.117487. PMC7779564. The two
+  thresholds (5% liberal, 25% stringent) name the two distributed versions of
+  the atlas; the "Data and code availability statement" says: "The thresholded
+  atlases are freely available at https://www.nitrc.org/projects/lc_7t_prob/ ."
+- `keren2009`: Keren NI, Lozar CT, Harris KC, Morgan PS, Eckert MA. In vivo
+  mapping of the human locus coeruleus. *NeuroImage* 2009;47:1261–1267.
+  doi:10.1016/j.neuroimage.2009.06.012. PMC3671394. Not used. Recorded because
+  the 2026-10-13 Module 6 draft described this map as "thresholded at 25%";
+  the paper (Discussion) distributes "two binary templates representing the
+  1 SD and 2 SD extents of LC spatial distribution", so that description was
+  wrong.
