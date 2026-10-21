@@ -64,3 +64,19 @@ checksummed only, **not read** (header line only) until `prereg/mr.md` is frozen
 
 Downloaded 2026-10-15 UTC (per-file times in MANIFEST.tsv). The MAGMA zip is
 unpacked in place to `ld_1kg_eur/g1000_eur.{bed,bim,fam,synonyms}`.
+
+## Module 3 downloads (`data/raw/validation/`, 2026-10-21)
+
+Script: `python -m src.mediation.fetch_validation_data` (sha256-pinned; converts
+with base R; writes `data/raw/validation/MANIFEST_mediation.tsv`). Validation
+only, never Module 3 data. Both files are the authors' CC0 replication archives.
+
+| Path | URL | sha256 (download) |
+|---|---|---|
+| validation/jobs_ii_ikt2010.csv | https://dataverse.harvard.edu/api/access/datafile/1576667?format=original (doi:10.7910/DVN/UMEYXD) | `c152ee529c51ff6303cdd562238dd1a89603fbb5e7b7125767055e3e58fe21df` |
+| validation/nelson_iky2010.csv | https://dataverse.harvard.edu/api/access/datafile/1545812 (doi:10.7910/DVN/APNMP7) | `6b566febe6620553943ed839ab40bc67874bc9b7cb46372dc42e395ccb9c4d69` |
+
+Module 3 real data (researcher, on receipt; never created by code): the RADC
+ROS/MAP Standard dataset as `radc/radc_standard_basic.csv` (one row per
+participant) and `radc/radc_standard_long.csv` (one row per visit), paths and
+names set in `config/mediation.yaml`.
