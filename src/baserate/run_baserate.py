@@ -38,6 +38,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import pickle
 import sys
 import time
 from dataclasses import dataclass, field, replace
@@ -254,15 +255,25 @@ def audit(model, theta, data, *, step, start, eval_mode, n_points) -> tuple[floa
     return float(np.abs(P_h - P_ode).max()), abs(ll(P_h) - ll(P_ode))
 
 
-def fit_audited(model, data, *, cfg, step, start, eval_mode, n_points, seed, run, warm=None):
+def fit_audited(model, data, *, cfg, step, start, eval_mode, n_points, seed, run, warm=None, cache=None, tag=None):
     """MLE, then the pre-registered step audit; halve h and refit on failure.
-    `warm` (e.g. the primary fit) is added as one extra start."""
+    `warm` (e.g. the primary fit) is added as one extra start. `cache`
+    (a SubCheckpoints) saves each attempt under `tag`, so a long run resumes
+    per attempt; every attempt is an independent fit, so a cached one is the
+    same computation as a fresh one."""
     for _attempt in range(4):
-        fit = fit_mle(model, data, step=step, start_age=start, cfg_mle=cfg.get("mle"), seed=seed,
-                      eval_mode=eval_mode, n_points=n_points, extra_starts=None if warm is None else [warm])
-        dp, dll = audit(model, fit.theta, data, step=step, start=start, eval_mode=eval_mode, n_points=n_points)
-        end = max(a.max() for a, _ in (g.eval_points(eval_mode, n_points) for g in data))
-        bound = step**2 * error_bound(model, fit.theta, start_age=start, end_age=end)
+        label = f"{tag}/step{step:g}"
+        rec = cache.get(label) if cache is not None and tag else None
+        if rec is None:
+            fit = fit_mle(model, data, step=step, start_age=start, cfg_mle=cfg.get("mle"), seed=seed,
+                          eval_mode=eval_mode, n_points=n_points, extra_starts=None if warm is None else [warm])
+            dp, dll = audit(model, fit.theta, data, step=step, start=start, eval_mode=eval_mode, n_points=n_points)
+            end = max(a.max() for a, _ in (g.eval_points(eval_mode, n_points) for g in data))
+            bound = step**2 * error_bound(model, fit.theta, start_age=start, end_age=end)
+            if cache is not None and tag:
+                cache.put(label, {"fit": fit, "dp": dp, "dll": dll, "bound": bound})
+        else:
+            fit, dp, dll, bound = rec["fit"], rec["dp"], rec["dll"], rec["bound"]
         ok = (dp < cfg.get("solver.max_prob_error") and dll < cfg.get("solver.max_loglik_error")
               and bound <= cfg.get("solver.max_prob_error"))
         run.info(f"{model.name}: step {step:g} y: bound h^2*Phi = {bound:.2e}, Radau audit max|dp| = {dp:.2e}, "
@@ -426,6 +437,46 @@ class Checkpoints:
         return json.loads(text)["data"]
 
 
+class SubCheckpoints:
+    """Finer-grained saves inside a stage (a step-size attempt, a NUTS chain,
+    a cross-validation fold), so a stage longer than the machine's lifetime
+    still makes progress. Same key rule as Checkpoints; pickled because the
+    items are fit objects and arrays."""
+
+    def __init__(self, directory: Path, key: str, run):
+        self.dir = Path(directory)
+        self.dir.mkdir(parents=True, exist_ok=True)
+        self.key = key
+        self.run = run
+
+    def _path(self, label: str) -> Path:
+        return self.dir / (label.replace("/", "__") + ".pkl")
+
+    def get(self, label: str):
+        p = self._path(label)
+        if not p.exists():
+            return None
+        with p.open("rb") as fh:
+            rec = pickle.load(fh)
+        if rec.get("key") != self.key:
+            self.run.warning(f"sub-checkpoint {p.name} was written under different code/config/settings: ignored")
+            return None
+        self.run.info(f"reusing sub-checkpoint {label}")
+        return rec["data"]
+
+    def put(self, label: str, data) -> None:
+        tmp = self._path(label).with_suffix(".tmp")
+        with tmp.open("wb") as fh:
+            pickle.dump({"key": self.key, "label": label, "data": data,
+                         "finished_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}, fh)
+        tmp.replace(self._path(label))
+        self.run.info(f"sub-checkpoint written: {label}")
+
+    def pair(self, prefix: str):
+        """(get, put) functions for code that takes a plain callable pair."""
+        return (lambda i: self.get(f"{prefix}/{i}"), lambda i, d: self.put(f"{prefix}/{i}", d))
+
+
 def checkpoint_key(cfg_path: Path, settings: dict, input_files: list[Path]) -> str:
     h = hashlib.sha256()
     h.update(sha256_file(cfg_path).encode())
@@ -491,6 +542,7 @@ def main(argv=None) -> int:
         ck = Checkpoints(ck_dir, checkpoint_key(CONFIG, {"dry": dry, "nuts": args.dry_run_nuts,
                                                          "mle_starts": args.dry_run_mle_starts},
                                                 inputs.files), run)
+        sub = SubCheckpoints(ck_dir / "sub", ck.key, run)
 
         variants = list(cfg.get("variants.fit"))
         a_name = cfg.get("variants.lc_first")
@@ -540,14 +592,16 @@ def main(argv=None) -> int:
         def primary_fit(name):
             m = models[name]
             fit, step, dp, dll, bound = fit_audited(m, inputs.data, cfg=cfg, step=step0, start=start,
-                                                    eval_mode=primary.eval_mode, n_points=npts, seed=seed, run=run)
+                                                    eval_mode=primary.eval_mode, n_points=npts, seed=seed, run=run,
+                                                    cache=sub, tag=f"primary/{name}/mle")
             for msg in fit.messages:
                 if msg.startswith(("WARNING", "NOT")):
                     run.warning(f"{name}: {msg}")
             run.info(f"{name}: MLE logLik {fit.loglik:.2f}, AIC {fit.aic:.2f}, {fit.n_at_best}/{fit.converged_starts} "
                      f"starts at best, Hessian {'ok' if fit.hessian_ok else 'NOT positive definite'}")
             _, summ, diag = fit_bayesian(m, inputs.data, step=step, start_age=start, cfg_bayes=bayes, seed=seed,
-                                         init_theta=fit.theta, eval_mode=primary.eval_mode, n_points=npts)
+                                         init_theta=fit.theta, eval_mode=primary.eval_mode, n_points=npts,
+                                         chain_cache=sub.pair(f"primary/{name}/nuts/chain"))
             clean = diag["max_rhat"] <= bayes["max_rhat"] and diag["divergences"] <= bayes["max_divergences"]
             (run.info if clean else run.warning)(
                 f"{name} NUTS: max R-hat {diag['max_rhat']:.3f}, min bulk ESS {diag['min_ess_bulk']:.0f}, "
@@ -575,7 +629,8 @@ def main(argv=None) -> int:
                                start_age=start, cfg_mle=cfg.get("mle"), seed=seed, eval_mode=primary.eval_mode,
                                n_points=npts, warm_starts={name: np.array(prim[name]["fit"]["theta"])},
                                n_random=cfg.get("cross_validation.n_random_starts"), scheme=scheme,
-                               split_seed=cfg.get("cross_validation.split_seed"))[0]
+                               split_seed=cfg.get("cross_validation.split_seed"),
+                               fold_cache=sub.pair("cv"))[0]
             (run.info if r["unverified_folds"] == 0 else run.warning)(
                 f"cross-validation ({scheme}) {name}: held-out logLik {r['cv_heldout_loglik']:.2f}; "
                 f"folds without a verified fit: {r['unverified_folds']} of {r['k']}")
@@ -589,7 +644,8 @@ def main(argv=None) -> int:
                     m.param_names) else None
                 fit, step, _, _, _ = fit_audited(m, inputs.data, cfg=cfg, step=step0, start=start,
                                                  eval_mode=sc.eval_mode, n_points=npts, seed=seed, run=run,
-                                                 warm=None if warm is None else np.array(warm))
+                                                 warm=None if warm is None else np.array(warm),
+                                                 cache=sub, tag=f"sensitivity/{sc.name}/{name}/mle")
                 fd = _fit_dict(fit)
             else:
                 fd, step = prim[name]["fit"], prim[name]["step"]

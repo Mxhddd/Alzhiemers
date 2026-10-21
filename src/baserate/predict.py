@@ -92,14 +92,17 @@ def brain_split(data: list[StageCounts], k: int, seed: int) -> list[tuple[list[S
 def compare_models(models: list[StageModel], data: list[StageCounts], *, k: int, step: float,
                    start_age: float, cfg_mle: dict, seed: int, eval_mode: str = "midpoint",
                    n_points: int = 10, warm_starts: dict | None = None, n_random: int | None = None,
-                   scheme: str = "brains_within_band", split_seed: int | None = None) -> list[dict]:
+                   scheme: str = "brains_within_band", split_seed: int | None = None,
+                   fold_cache=None) -> list[dict]:
     """k-fold cross-validated held-out log-likelihood per model (higher is better).
     scheme: "brains_within_band" (primary, brain_split) or "whole_age_band"
     (sensitivity: whole bands held out, age_band_folds). warm_starts: {model
     name: theta} added as a start in every fold (the full-data MLE); n_random:
     number of additional random starts per fold. A fold fit with no start
     passing the convergence test uses the best start and is counted in
-    `unverified_folds` (prereg §5), never silently."""
+    `unverified_folds` (prereg §5), never silently. fold_cache: optional
+    (get, put) pair keyed by a fold label, so a long run resumes per fold;
+    a cached fold is the same computation as a fresh one."""
     if scheme == "brains_within_band":
         splits = brain_split(data, k, seed if split_seed is None else split_seed)
     elif scheme == "whole_age_band":
@@ -113,13 +116,20 @@ def compare_models(models: list[StageModel], data: list[StageCounts], *, k: int,
         held = 0.0
         per_fold, unverified = [], 0
         for f, (train, test) in enumerate(splits):
-            ws = [warm_starts[m.name]] if warm_starts and m.name in warm_starts else None
-            fit = fit_mle(m, train, step=step, start_age=start_age, cfg_mle=cfg_mle, seed=seed + f,
-                          eval_mode=eval_mode, n_points=n_points, extra_starts=ws, n_random=n_random,
-                          allow_unverified=True)
-            unverified += int(not fit.verified)
-            ll = log_likelihood(m, fit.theta, test, step=step, start_age=start_age, eval_mode=eval_mode,
-                                n_points=n_points)
+            label = f"{m.name}/{scheme}/fold{f}"
+            rec = fold_cache[0](label) if fold_cache else None
+            if rec is None:
+                ws = [warm_starts[m.name]] if warm_starts and m.name in warm_starts else None
+                fit = fit_mle(m, train, step=step, start_age=start_age, cfg_mle=cfg_mle, seed=seed + f,
+                              eval_mode=eval_mode, n_points=n_points, extra_starts=ws, n_random=n_random,
+                              allow_unverified=True)
+                rec = {"verified": bool(fit.verified),
+                       "ll": float(log_likelihood(m, fit.theta, test, step=step, start_age=start_age,
+                                                  eval_mode=eval_mode, n_points=n_points))}
+                if fold_cache:
+                    fold_cache[1](label, rec)
+            unverified += int(not rec["verified"])
+            ll = rec["ll"]
             per_fold.append(ll)
             held += ll
         out.append({"model": m.name, "cv_heldout_loglik": held, "per_fold": per_fold, "k": k,

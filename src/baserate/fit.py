@@ -228,7 +228,7 @@ def fit_mle(model: StageModel, data: list[StageCounts], *, step: float, start_ag
 
 def fit_bayesian(model: StageModel, data: list[StageCounts], *, step: float, start_age: float,
                  cfg_bayes: dict, seed: int, init_theta: np.ndarray, eval_mode: str = "midpoint",
-                 n_points: int = 10):
+                 n_points: int = 10, chain_cache=None):
     """NUTS posterior (NumPyro: the same NUTS algorithm as PyMC, compiled end
     to end in JAX together with the likelihood).
 
@@ -280,13 +280,36 @@ def fit_bayesian(model: StageModel, data: list[StageCounts], *, step: float, sta
     starts = rng.multivariate_normal(init_theta, (k ** 2) * cov, size=chains)
     kernel = NUTS(npmodel, target_accept_prob=cfg_bayes["target_accept"], dense_mass=True,
                   inverse_mass_matrix=jnp.asarray(cov))
-    method = "parallel" if jax.local_device_count() >= chains else "sequential"
-    mc = MCMC(kernel, num_warmup=cfg_bayes["tune"], num_samples=cfg_bayes["draws"], num_chains=chains,
-              chain_method=method, progress_bar=False)
-    mc.run(jax.random.PRNGKey(seed), init_params={"theta": jnp.asarray(starts)},
-           extra_fields=("diverging", "num_steps"))
-    draws = np.asarray(mc.get_samples(group_by_chain=True)["theta"])          # (chains, draws, P)
-    extra = mc.get_extra_fields(group_by_chain=True)
+    if chain_cache is None:
+        method = "parallel" if jax.local_device_count() >= chains else "sequential"
+        mc = MCMC(kernel, num_warmup=cfg_bayes["tune"], num_samples=cfg_bayes["draws"], num_chains=chains,
+                  chain_method=method, progress_bar=False)
+        mc.run(jax.random.PRNGKey(seed), init_params={"theta": jnp.asarray(starts)},
+               extra_fields=("diverging", "num_steps"))
+        draws = np.asarray(mc.get_samples(group_by_chain=True)["theta"])          # (chains, draws, P)
+        extra = mc.get_extra_fields(group_by_chain=True)
+    else:
+        # One chain at a time, each saved when it finishes, so a long run
+        # resumes per chain. Chain i gets the key NumPyro itself derives for
+        # it (random.split of the run key) and the same start as above.
+        method = "per-chain (checkpointed)"
+        keys = jax.random.split(jax.random.PRNGKey(seed), chains)
+        per = []
+        for i in range(chains):
+            rec = chain_cache[0](i)
+            if rec is None:
+                mc = MCMC(kernel, num_warmup=cfg_bayes["tune"], num_samples=cfg_bayes["draws"], num_chains=1,
+                          progress_bar=False)
+                mc.run(keys[i], init_params={"theta": jnp.asarray(starts[i])},
+                       extra_fields=("diverging", "num_steps"))
+                ex = mc.get_extra_fields()
+                rec = {"draws": np.asarray(mc.get_samples()["theta"]),
+                       "diverging": np.asarray(ex["diverging"]), "num_steps": np.asarray(ex["num_steps"])}
+                chain_cache[1](i, rec)
+            per.append(rec)
+        draws = np.stack([np.asarray(r["draws"]) for r in per])
+        extra = {"diverging": np.stack([np.asarray(r["diverging"]) for r in per]),
+                 "num_steps": np.stack([np.asarray(r["num_steps"]) for r in per])}
     idata = az.from_dict(posterior={nm: draws[:, :, i] for i, nm in enumerate(names)},
                          sample_stats={"diverging": np.asarray(extra["diverging"]),
                                        "n_steps": np.asarray(extra["num_steps"])})

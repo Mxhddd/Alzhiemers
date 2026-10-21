@@ -394,3 +394,85 @@ def test_fit_mle_falls_back_to_the_best_start_only_when_allowed(monkeypatch):
     r = fitmod.fit_mle(m, g, step=0.5, start_age=1.0, cfg_mle=cfg, seed=1, allow_unverified=True)
     assert r.verified is False and np.isfinite(r.loglik)
     assert any("verified = False" in msg for msg in r.messages)
+
+
+def _two_state_data():
+    from sim.baserate_sim import simulate_counts
+    m = Sequential(ChainSpec(("0", "1"), first_cortical=1), 50, 10)
+    truth = np.array([np.log(0.02), 0.0])
+    data = simulate_counts(m, truth, [(a, a + 10) for a in range(0, 100, 10)], 500, step=1.0, start_age=0, seed=3)
+    return m, truth, data
+
+
+class _Run:
+    def __init__(self):
+        self.msgs = []
+
+    def info(self, m):
+        self.msgs.append(m)
+
+    warning = info
+
+
+@pytest.mark.slow
+def test_per_chain_nuts_reproduces_the_multichain_run_and_resumes_from_its_saves(monkeypatch):
+    """Checkpointed NUTS (one chain at a time) gives the same draws as one
+    multi-chain run, and a resume reuses saved chains instead of re-sampling."""
+    import src.baserate.fit as fitmod
+    m, truth, data = _two_state_data()
+    cfg = {"log_rate_prior": {"mu": -5.0, "sigma": 3.0}, "slope_prior": {"mu": 0.0, "sigma": 1.0},
+           "log_hr_prior": {"mu": 0.0, "sigma": 1.0}, "draws": 100, "tune": 100, "chains": 2,
+           "init_overdispersion": 2.0, "target_accept": 0.9, "ci_level": 0.95}
+    kw = dict(step=1.0, start_age=0, cfg_bayes=cfg, seed=1, init_theta=truth)
+    _, _, ref = fitmod.fit_bayesian(m, data, **kw)
+    store = {}
+    cache = (lambda i: store.get(i), lambda i, d: store.__setitem__(i, d))
+    _, _, d1 = fitmod.fit_bayesian(m, data, chain_cache=cache, **kw)
+    assert sorted(store) == [0, 1]
+    np.testing.assert_allclose(d1["draws"], ref["draws"], rtol=1e-6, atol=1e-8)
+
+    class _NoSampling:
+        def __init__(self, *a, **k):
+            raise AssertionError("a saved chain was sampled again")
+
+    monkeypatch.setattr(fitmod, "MCMC", _NoSampling, raising=False)
+    import numpyro.infer
+    monkeypatch.setattr(numpyro.infer, "MCMC", _NoSampling)
+    _, _, d2 = fitmod.fit_bayesian(m, data, chain_cache=cache, **kw)
+    np.testing.assert_array_equal(d2["draws"], d1["draws"])
+
+
+def test_cross_validation_resumes_per_fold_with_identical_results(monkeypatch):
+    import src.baserate.predict as pr
+    m, truth, data = _two_state_data()
+    cfg_mle = {"method": "l-bfgs-b", "n_starts": 2, "maxiter": 500, "newton_steps": 10,
+               "max_newton_decrement": 1e-3, "init": {"log_rate": [-5.0, -3.0], "slope": [-0.1, 0.1]},
+               "bounds": {"log_rate": [-20.0, 2.0], "slope": [-2.0, 2.0], "log_hr": [-5.0, 5.0]}}
+    kw = dict(k=3, step=1.0, start_age=0, cfg_mle=cfg_mle, seed=5, n_random=2, split_seed=7)
+    fresh = pr.compare_models([m], data, **kw)[0]
+    store = {}
+    cache = (lambda i: store.get(i), lambda i, d: store.__setitem__(i, d))
+    first = pr.compare_models([m], data, fold_cache=cache, **kw)[0]
+    assert len(store) == 3 and first == fresh
+
+    def _no_fit(*a, **k):
+        raise AssertionError("a saved fold was refitted")
+
+    monkeypatch.setattr(pr, "fit_mle", _no_fit)
+    assert pr.compare_models([m], data, fold_cache=cache, **kw)[0] == fresh
+
+
+def test_sub_checkpoints_round_trip_and_ignore_a_different_key(tmp_path):
+    from src.baserate.run_baserate import SubCheckpoints
+    run = _Run()
+    sc = SubCheckpoints(tmp_path, "key1", run)
+    assert sc.get("primary/A/mle/step0.25") is None
+    sc.put("primary/A/mle/step0.25", {"theta": np.array([1.0, 2.0]), "bound": 2e-2})
+    back = sc.get("primary/A/mle/step0.25")
+    np.testing.assert_array_equal(back["theta"], [1.0, 2.0])
+    assert not list(tmp_path.glob("*.tmp"))
+    get, put = sc.pair("cv")
+    put(3, {"ll": -1.5})
+    assert get(3) == {"ll": -1.5}
+    assert SubCheckpoints(tmp_path, "key2", run).get("primary/A/mle/step0.25") is None
+    assert any("different code/config" in m for m in run.msgs)
