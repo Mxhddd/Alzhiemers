@@ -349,10 +349,10 @@ Eg = 2 / (ww + np.sqrt(ww * ww + 4 * p["kappa"] * grid * ww))
 xg = p["m"] * p["phi"] * uu * Eg / (p["v"] + p["m"])
 Phi_g = (p["r_rep"] / p["r_dam"]) * (1 - grid) / grid - np.array([H_(z, p) for z in xg])
 inc = np.where(np.diff(Phi_g) > 0)[0]
-w_lo, w_hi = Phi_g[inc[0]], Phi_g[inc[-1] + 1]
+w_lo, w_hi = max(Phi_g[inc[0]], Phi_g[-1]), Phi_g[inc[-1] + 1]    # third root needs R <= 1: hA >= Phi(1) = -H(x*(1))
 scan = np.linspace(w_lo - 0.2 * (w_hi - w_lo), w_hi + 0.2 * (w_hi - w_lo), 201)   # hA < 0 allowed: algebra only
 three = [h for h in scan if len(roots_num(dict(p, hA=h), 4001)) >= 3]
-check("B5  the hA window with three fixed points equals (local min of Phi, local max of Phi) to scan resolution",
+check("B5  the hA window with three fixed points equals (max(local min of Phi, Phi(1)), local max of Phi) to scan resolution",
       len(three) > 0 and abs(min(three) - w_lo) <= scan[1] - scan[0] and abs(max(three) - w_hi) <= scan[1] - scan[0],
       f"Phi window ({w_lo:.5f}, {w_hi:.5f}); scan ({min(three):.5f}, {max(three):.5f})")
 
@@ -426,6 +426,10 @@ check("C4  src/dynamics/lc_model.T_star (the registered readout) equals T* at th
 pv = dict(kappa=4.0, u0=0.5, phi=1.0, v=1.0, m=1.0, K=0.125, q=3.0, r_rep=0.05, r_dam=0.05, hA=0.5, sigma=8.0,
           eta=2.0, eps=0.25, c0=0.01)
 fps = L.fixed_points(pv)
+bw = L.bistable_window(p, -1.0, 1.0)
+check("C4b src/dynamics/lc_model.bistable_window gives the same window as B5",
+      len(bw["windows"]) == 1 and abs(bw["windows"][0][0] - w_lo) < 1e-6 and abs(bw["windows"][0][1] - w_hi) < 1e-6,
+      f"{bw['windows']}")
 check("C5  implementation at the validation point: one fixed point (1/2, 1/8, 1/2, 12), stable",
       len(fps) == 1 and np.allclose(fps[0]["y"], [0.5, 0.125, 0.5, 12.0], atol=1e-12) and fps[0]["stable"])
 

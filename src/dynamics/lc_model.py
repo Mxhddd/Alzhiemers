@@ -291,25 +291,27 @@ def dose_response(p: dict, drug: str, doses) -> np.ndarray:
 
 def bistable_window(p: dict, lo: float = 0.0, hi: float = 1.0, grid: np.ndarray | None = None) -> dict:
     """The set of second-hit values hA in [lo, hi] with >= 2 stable fixed
-    points, from the increasing stretches of Phi (derivation §5). Returns the
-    windows (intersected with [lo, hi]) and their total length."""
+    points (derivation §5). Fixed points at hA are the crossings of Phi(R) = hA
+    on (0, 1]. Phi is monotone between consecutive points of the refined grid,
+    so the number of crossings is constant between the breakpoints {Phi at its
+    extrema, Phi(1)}; it is counted exactly at the midpoint of each interval
+    between breakpoints. Three or more crossings = two or more stable states
+    (crossings alternate stable / saddle, starting stable at the largest R).
+    Returns the windows (intersected with [lo, hi]) and their total length."""
     g = _refine_extrema(lambda r: phi_prime(r, p), r_grid() if grid is None else grid)
     ph = phi_curve(g, p)
-    inc = np.diff(ph) > 0
+    interior = np.where(np.sign(np.diff(ph[:-1])) != np.sign(np.diff(ph[1:])))[0] + 1
+    brk = np.unique(np.concatenate([[lo, hi], ph[interior], [ph[-1]]]))
+    brk = brk[(brk >= lo) & (brk <= hi)]
     windows = []
-    i = 0
-    while i < len(inc):
-        if inc[i]:
-            j = i
-            while j + 1 < len(inc) and inc[j + 1]:
-                j += 1
-            a, b = float(ph[i]), float(ph[j + 1])
-            a2, b2 = max(a, lo), min(b, hi)
-            if b2 > a2:
-                windows.append((a2, b2))
-            i = j + 1
-        else:
-            i += 1
+    for a, b in zip(brk[:-1], brk[1:]):
+        h = 0.5 * (a + b)
+        n_cross = int(np.sum((ph[:-1] - h) * (ph[1:] - h) < 0))
+        if n_cross >= 3:
+            if windows and windows[-1][1] == a:
+                windows[-1] = (windows[-1][0], float(b))
+            else:
+                windows.append((float(a), float(b)))
     return {"windows": windows, "length": float(sum(b - a for a, b in windows)), "bistable": bool(windows)}
 
 
