@@ -110,7 +110,7 @@ def summarise() -> None:
              "Verdicts use the pre-registered rules (Bonferroni within family; practically-null band ln(1/0.9)).", ""]
     p = NOTES / "module3_power_assoc.csv"
     if p.exists():
-        d = pd.read_csv(p)
+        d = pd.read_csv(p, keep_default_na=False)
         t = (d.assign(sup=d.verdict.eq("supports"), ag=d.verdict.str.startswith("AGAINST"),
                       null=d.verdict.eq("AGAINST (practically null)"))
              .groupby(["world", "n", "p0", "test"]).agg(reps=("rep", "nunique"), n_used=("n_used", "median"),
@@ -121,7 +121,7 @@ def summarise() -> None:
                   _md(t, ".2f"), ""]
     p = NOTES / "module3_power_ident.csv"
     if p.exists():
-        d = pd.read_csv(p)
+        d = pd.read_csv(p, keep_default_na=False)
         t = (d.assign(nie_sup=d.verdict.str.startswith("NIE in the predicted"), h3_sup=d.h3_verdict.eq("supports"))
              .groupby(["world", "n"]).agg(reps=("rep", "nunique"), mean_h3_log_or=("h3_log_or", "mean"),
                                          h3_supports=("h3_sup", "mean"), mean_nie=("nie", "mean"),
@@ -132,7 +132,7 @@ def summarise() -> None:
                   "the NIE separates them.", "", _md(t, ".3f"), ""]
     p = NOTES / "module3_power_lc.csv"
     if p.exists():
-        d = pd.read_csv(p)
+        d = pd.read_csv(p, keep_default_na=False)
         t = (d.assign(nie_sup=d.verdict.str.startswith("NIE in the predicted"),
                       opp=d.verdict.str.contains("OPPOSITE"))
              .groupby(["world", "n"]).agg(reps=("rep", "nunique"), mean_nie=("nie", "mean"),
