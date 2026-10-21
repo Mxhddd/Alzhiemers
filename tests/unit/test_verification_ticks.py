@@ -96,3 +96,37 @@ def test_blank_sheet_changes_nothing_and_never_sets_false(setup):
     assert v.apply(sheet, write=True, target=target, log_path=tmp / "log.md") == []
     assert target.path.read_bytes() == raw
 
+
+
+def test_combined_sheet_routes_ticks_to_each_file_and_is_all_or_nothing(tmp_path):
+    targets = {}
+    for key, real in v.TARGETS.items():
+        dst = tmp_path / real.path.name
+        shutil.copy(real.path, dst)
+        targets[key] = v.Target(real.key, dst, real.prefix)
+    sheet = tmp_path / v.COMBINED
+    with sheet.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=v.COMBINED_COLS, lineterminator="\n")
+        w.writeheader()
+        w.writerows(v._braak_rows(targets["braak2011_stage_counts"]))
+        w.writerows(v._meta_rows(targets["meta_extraction"]))
+    rows = list(csv.DictReader(sheet.open(encoding="utf-8")))
+    assert [r["id"][0] for r in rows].count("B") == 120 and [r["id"][0] for r in rows].count("M") == 37
+    assert rows[0]["id"] == "B-001" and rows[120]["id"] == "M-01"
+    for r in rows:
+        if r["id"] in ("B-001", "B-050", "M-02"):
+            r["tick"] = "x"
+    raw = {k: t.path.read_bytes() for k, t in targets.items()}
+    bad = [dict(r) for r in rows]
+    bad[1]["tick"] = "maybe"                     # one unclear tick: nothing written anywhere
+    with sheet.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=v.COMBINED_COLS, lineterminator="\n"); w.writeheader(); w.writerows(bad)
+    with pytest.raises(v.TickError):
+        v.apply_combined(sheet, write=True, targets=targets, log_path=tmp_path / "log.md")
+    assert {k: t.path.read_bytes() for k, t in targets.items()} == raw
+    with sheet.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=v.COMBINED_COLS, lineterminator="\n"); w.writeheader(); w.writerows(rows)
+    out = v.apply_combined(sheet, write=True, targets=targets, log_path=tmp_path / "log.md")
+    assert out == {"braak2011_stage_counts": ["B-001", "B-050"], "meta_extraction": ["M-02"]}
+    assert _verified(targets["braak2011_stage_counts"]).count("true") == 2
+    assert _verified(targets["meta_extraction"]).count("true") == 1

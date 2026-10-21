@@ -234,7 +234,7 @@ td.verb { font-style: italic; } .excl { color: var(--warn); font-size: .85rem; m
 
 def checklist(out_dir: Path = OUT_DIR, pdf: bool = True) -> list[Path]:
     out_dir.mkdir(parents=True, exist_ok=True)
-    written = [write_tick_sheet(t, out_dir) for t in TARGETS.values()]
+    written = [write_tick_sheet(t, out_dir) for t in TARGETS.values()] + [write_combined_sheet(out_dir)]
     stamp = iso_utc(utc_now())
     hashes = " · ".join(f"<code>{t.path.name}</code> sha256 {sha256_file(t.path)[:12]}…" for t in TARGETS.values())
     doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
@@ -287,13 +287,20 @@ class TickError(ValueError):
     pass
 
 
-def plan(tick_path: Path, target: Target) -> list[tuple[int, str]]:
+def _sheet_rows(tick_path: Path) -> list[tuple[int, dict]]:
+    with tick_path.open(encoding="utf-8-sig", newline="") as fh:
+        return list(enumerate(csv.DictReader(fh), start=2))
+
+
+def plan(tick_path: Path, target: Target, sheet: list[tuple[int, dict]] | None = None) -> list[tuple[int, str]]:
     """(row index, row id) for every ticked row; raises TickError on anything doubtful."""
     header, rows, _ = read_rows(target.path)
     by_id = {row_id(target, i, len(rows)): i for i in range(len(rows))}
     problems, todo = [], []
-    with tick_path.open(encoding="utf-8", newline="") as fh:
-        for line_no, t in enumerate(csv.DictReader(fh), start=2):
+    if sheet is None:
+        sheet = _sheet_rows(tick_path)
+    if True:
+        for line_no, t in sheet:
             tick = (t.get("tick") or "").strip().lower()
             if not tick:
                 continue
@@ -305,7 +312,7 @@ def plan(tick_path: Path, target: Target) -> list[tuple[int, str]]:
                 problems.append(f"line {line_no}: unknown row id {rid!r} for {target.path.name}")
                 continue
             i = by_id[rid]
-            if fingerprint(header, rows[i]) != (t.get("fingerprint") or "").strip():
+            if fingerprint(header, rows[i]) != (t.get("fingerprint") or "").strip().removeprefix("fp-"):
                 problems.append(f"line {line_no}: {rid} has changed since the checklist was printed "
                                 f"(fingerprint {t.get('fingerprint')!r} != {fingerprint(header, rows[i])!r}); "
                                 "print a fresh checklist and check it again")
@@ -327,7 +334,11 @@ def target_for(tick_path: Path) -> Target:
 def apply(tick_path: Path, *, write: bool, target: Target | None = None,
           log_path: Path | None = None) -> list[str]:
     target = target or target_for(tick_path)
-    todo = plan(tick_path, target)
+    return _apply_planned(tick_path, target, plan(tick_path, target), write=write, log_path=log_path)
+
+
+def _apply_planned(tick_path: Path, target: Target, todo: list[tuple[int, str]], *, write: bool,
+                   log_path: Path | None = None) -> list[str]:
     header, rows, le = read_rows(target.path)
     col = header.index("verified")
     flipped, already = [], []
@@ -358,6 +369,85 @@ def apply(tick_path: Path, *, write: bool, target: Target | None = None,
     return flipped
 
 
+# --------------------------------------------------------------------------- one combined sheet
+COMBINED = "verification_sheet.csv"
+COMBINED_COLS = ["id", "file", "fingerprint", "currently_verified", "what_to_check", "value_in_file",
+                 "source", "where_in_source", "link", "verbatim_or_description", "tick", "note"]
+
+
+def _braak_rows(target: Target):
+    header, rows, _ = read_rows(target.path)
+    for i, r in enumerate(rows):
+        rec = dict(zip(header, r))
+        stage = "No changes (stage 0)" if rec["stage"] == "0" else f"stage {rec['stage']}"
+        yield {"id": row_id(target, i, len(rows)), "file": target.path.name, "fingerprint": "fp-" + fingerprint(header, r),
+               "currently_verified": rec["verified"],
+               "what_to_check": f"number of brains, age {rec.get('age_label_printed') or rec['age_lower'] + '-' + rec['age_upper']}, {stage}",
+               "value_in_file": rec["n"],
+               "source": "Braak H, Thal DR, Ghebremedhin E, Del Tredici K. J Neuropathol Exp Neurol 2011;70:960-969",
+               "where_in_source": f"{rec['locator']}: row 'age {rec.get('age_label_printed', '')}', column '{rec['stage'] if rec['stage'] != '0' else 'No changes'}'",
+               "link": "http://links.lww.com/NEN/A273",
+               "verbatim_or_description": rec.get("quantity", ""), "tick": "", "note": ""}
+
+
+def _meta_rows(target: Target):
+    header, rows, _ = read_rows(target.path)
+    for i, r in enumerate(rows):
+        rec = dict(zip(header, r))
+        sid = rec["source_id"]
+        link = f"https://pmc.ncbi.nlm.nih.gov/articles/{sid}/" if sid.upper().startswith("PMC") else ""
+        inv = "; invert_ratio = true (the code flips it; check the numbers as printed)" \
+            if rec.get("invert_ratio", "").lower() == "true" else ""
+        excl = "" if rec.get("include", "").lower() == "true" else f"; EXCLUDED from analysis: {rec.get('exclusion_reason', '')}"
+        yield {"id": row_id(target, i, len(rows)), "file": target.path.name, "fingerprint": "fp-" + fingerprint(header, r),
+               "currently_verified": rec["verified"],
+               "what_to_check": (f"{rec['study_id']}: {rec['drug_class']} ({rec['drug']}) vs {rec['comparator_type']} "
+                                 f"comparator ({rec['comparator']}); outcome {rec['outcome']}; also check the measure "
+                                 f"and that exposure/comparator are the right way round{inv}{excl}"),
+               "value_in_file": (f"{rec['effect_measure']} {rec['estimate']} ({_pct(rec['ci_level'])} CI "
+                                 f"{rec['ci_lower']} to {rec['ci_upper']})"),
+               "source": sid, "where_in_source": rec["locator"], "link": link,
+               "verbatim_or_description": rec["verbatim"], "tick": "", "note": ""}
+
+
+def write_combined_sheet(out_dir: Path = OUT_DIR) -> Path:
+    """One CSV for checking on a laptop: the 120 Braak counts first, then the
+    37 meta-analysis rows. Put x in `tick` for each row checked."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / COMBINED
+    with out.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=COMBINED_COLS, lineterminator="\n")
+        w.writeheader()
+        w.writerows(_braak_rows(TARGETS["braak2011_stage_counts"]))
+        w.writerows(_meta_rows(TARGETS["meta_extraction"]))
+    return out
+
+
+def apply_combined(tick_path: Path, *, write: bool, targets: dict[str, Target] | None = None,
+                   log_path: Path | None = None) -> dict[str, list[str]]:
+    """Apply a sheet holding rows for several files (routed by row-ID prefix).
+    Every file is planned before any is written: all or nothing."""
+    targets = targets or TARGETS
+    sheet = _sheet_rows(tick_path)
+    by_prefix = {t.prefix: t for t in targets.values()}
+    groups: dict[str, list] = {k: [] for k in targets}
+    bad = []
+    for line_no, t in sheet:
+        pre = (t.get("id") or "").split("-")[0]
+        if pre not in by_prefix:
+            if (t.get("tick") or "").strip():
+                bad.append(f"line {line_no}: row id {t.get('id')!r} belongs to no known file")
+            continue
+        groups[by_prefix[pre].key].append((line_no, t))
+    if bad:
+        raise TickError("nothing written:\n  " + "\n  ".join(bad))
+    plans = {k: plan(tick_path, targets[k], groups[k]) for k in targets}   # raises before any write
+    out = {}
+    for k, todo in plans.items():
+        out[k] = _apply_planned(tick_path, targets[k], todo, write=write, log_path=log_path)
+    return out
+
+
 def _main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m src.extraction.verification", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -373,7 +463,11 @@ def _main(argv: list[str] | None = None) -> int:
             print(f"wrote {p.relative_to(REPO_ROOT)}")
         return 0
     try:
-        apply(args.ticks, write=args.apply)
+        if "id" in (_sheet_rows(args.ticks)[0][1] if _sheet_rows(args.ticks) else {}) and \
+                "file" in _sheet_rows(args.ticks)[0][1]:
+            apply_combined(args.ticks, write=args.apply)
+        else:
+            apply(args.ticks, write=args.apply)
     except TickError as e:
         print(str(e), file=sys.stderr)
         return 2
