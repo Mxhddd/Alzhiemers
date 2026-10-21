@@ -76,8 +76,8 @@ replication:
   # researcher said R10 is not needed). FinnGen is GRCh38: the copy is lifted
   # to GRCh37 (src/mr/liftover.py) after prereg/mr.md is frozen. Null until then.
   release: R13
-  finngen_endpoint: G6_ALZHEIMER
-  file: null
+  finngen_endpoint: G6_ALZHEIMER  # see above
+  file: null  # null until the freeze (lifting reads rows)
   # From the R13 file's header line only (2026-10-21): "#chrom pos ref alt
   # rsids nearest_genes pval mlogp beta sebeta af_alt af_alt_cases
   # af_alt_controls" (same as R10). FinnGen's beta and af are for the alt allele.
@@ -156,7 +156,7 @@ exposures:
     # Consequence: at most one MetaBrain instrument per gene (Wald ratio), and no
     # cis-window colocalisation with this source (needs the full file).
     tissue: cortex
-    file: data/interim/mr/metabrain_cortex_eur_rank1_targets_grch37.tsv
+    file: data/interim/mr/metabrain_cortex_eur_rank1_targets_grch37.tsv  # derived by src/mr/prepare_qtl_sources.py (see above)
     columns:
       SNP: rsid  # from MetaBrain's SNP id chr:pos:rsid:alleles
       chrom: chrom_grch37  # lifted from GRCh38 (src/mr/liftover.py)
@@ -190,7 +190,7 @@ exposures:
     # instrument per protein. Among the targets only ADRA2A, DBH and LGMN are on
     # the Olink panel (Supplementary Table 3); ADRA2A has no cis pQTL there.
     tissue: plasma
-    file: data/interim/mr/ukbppp_discovery_st9_targets_grch37.tsv
+    file: data/interim/mr/ukbppp_discovery_st9_targets_grch37.tsv  # derived by src/mr/prepare_qtl_sources.py (see above)
     columns:
       SNP: rsID  # Supplementary Table 9
       chrom: chrom_grch37  # lifted from GENPOS (hg38)
@@ -203,7 +203,7 @@ exposures:
       p: P  # 10^-log10(p) (discovery)
       "n": N  # discovery cohort size 34,557 (Sun 2023, Results), per-protein N not given
       gene: Assay_Target  # ST9 column "Assay Target" (gene symbol), renamed without the space
-    build: GRCh37
+    build: GRCh37  # after liftover from GRCh38 (checked against the hg37 position in the ST9 id)
   pqtl_decode:
     # Plasma cis-pQTLs: deCODE, Ferkingstad et al. 2021 Nat Genet 53:1712
     # (doi 10.1038/s41588-021-00978-w), SomaScan, 35,559 Icelanders. Decision
@@ -216,9 +216,9 @@ exposures:
     # positive control (untestable whatever the instrument). So no deCODE file is
     # built: null = "not run: exposure file not supplied".
     tissue: plasma
-    file: null
-    columns: null
-    build: null
+    file: null  # no open file usable for any testable target (see above)
+    columns: null  # no file, so no column map
+    build: null  # no file, so no build
 
 # How a target's PRIMARY instrument source is chosen when several sources give
 # instruments. Decided 2026-10-21, before any new-source positive control was
@@ -238,8 +238,8 @@ exposures:
 #  4. The blood-only result (eQTLGen alone, the 2026-10-15 design) is always
 #     reported alongside, labelled "option (a), blood only".
 source_selection:
-  hierarchy: [pqtl_ukbppp, pqtl_decode, metabrain, eqtlgen]
-  blood_only_source: eqtlgen
+  hierarchy: [pqtl_ukbppp, pqtl_decode, metabrain, eqtlgen]  # order and reasons: points 2-3 above
+  blood_only_source: eqtlgen  # option (a), point 4 above
   # Instrument orientation. eQTL instruments: effect allele = expression-
   # increasing allele; pQTL instruments: effect allele = protein-increasing
   # allele. The Wald ratio and IVW are invariant to which allele is coded, so
@@ -317,7 +317,7 @@ gene_deserts:
   # mapped back from GRCh38). Downloaded 2026-10-21 from
   # https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_19/gencode.v19.annotation.gtf.gz
   annotation: GENCODE release 19 (GRCh37.p13), gene records
-  annotation_file: data/raw/mr/gencode_v19/gencode.v19.annotation.gtf.gz
+  annotation_file: data/raw/mr/gencode_v19/gencode.v19.annotation.gtf.gz  # local copy of the GENCODE 19 GTF (URL above)
   # Which gene records count as genes: protein-coding only, as in the paper's
   # definition ("devoid of protein-coding genes", abstract).
   gene_types: [protein_coding]
@@ -334,9 +334,9 @@ gene_deserts:
   # GCA_000001405.14_GRCh37.p13_genomic_gaps.txt.gz (UCSC's hg19 gap table was
   # unreachable on 2026-10-21: TLS chain failure; NCBI's is the source assembly).
   gaps_file: data/raw/mr/ncbi_grch37/GCA_000001405.14_GRCh37.p13_genomic_gaps.txt.gz
-  assembly_report: data/raw/mr/ncbi_grch37/GCA_000001405.14_GRCh37.p13_assembly_report.txt
-  boundary_gap_types: [centromere, telomere, heterochromatin, short_arm]
-  boundary_gap_min_bp: 250000
+  assembly_report: data/raw/mr/ncbi_grch37/GCA_000001405.14_GRCh37.p13_assembly_report.txt  # GRCh37.p13 chromosome lengths (chromosome ends are segment boundaries)
+  boundary_gap_types: [centromere, telomere, heterochromatin, short_arm]  # gap types that always end a segment (paper: telomere, centromere)
+  boundary_gap_min_bp: 250000  # paper's Methods: an assembly gap of size >250 kb ends a segment
   # Variants for the null test, from the LD reference panel (1000G EUR,
   # instruments.ld_reference_bfile): bi-allelic SNVs with an rsID, MAF >=
   # instruments.maf_min, at least variant_margin_kb inside the desert from both
@@ -345,9 +345,9 @@ gene_deserts:
   # r^2 < instruments.ld_r2_max within instruments.ld_window_kb (PLINK
   # --indep-pairwise), so draws are near-independent like clumped instruments.
   variant_margin_kb: 100
-  thin_bp: 50000
-  regions_file: data/interim/mr/gene_deserts/gene_deserts_grch37_gencode19_protein_coding.tsv
-  variants_file: data/interim/mr/gene_deserts/gene_desert_variants.csv
+  thin_bp: 50000  # spacing before LD pruning, so pruning runs on a manageable set
+  regions_file: data/interim/mr/gene_deserts/gene_deserts_grch37_gencode19_protein_coding.tsv  # output of src/mr/gene_deserts.py: one row per desert
+  variants_file: data/interim/mr/gene_deserts/gene_desert_variants.csv  # output of src/mr/gene_deserts.py: the null test's variant list (SNP column)
 
 # Pre-registered targets (brief §5 table). `predicted_lower_activity` is copied
 # from the brief. Expression eQTLs are oriented to the expression-INCREASING
