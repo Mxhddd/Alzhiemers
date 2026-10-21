@@ -92,3 +92,9 @@ Notes so far (not departures):
    lost. `scripts/ensure_baserate_running.sh` now restarts the run unchanged
    whenever it has died, and an hourly scheduled check calls it. Not a
    departure.
+5. *Third container restart (2026-10-21, after 12:13 UTC; resumed 15:38).*
+   Variant A's MLE at h = 0.03125 y passed the step rule (bound 3.6×10⁻⁴,
+   Radau max |Δp| 1.1×10⁻⁷) and was saved at 12:13. The container was then
+   reclaimed while the first NUTS chain was sampling, during a gap in which
+   this session was paused by the account's usage limit. The resume reused
+   all four saved MLE attempts. Not a departure.
