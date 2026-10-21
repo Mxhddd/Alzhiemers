@@ -80,3 +80,19 @@ Module 3 real data (researcher, on receipt; never created by code): the RADC
 ROS/MAP Standard dataset as `radc/radc_standard_basic.csv` (one row per
 participant) and `radc/radc_standard_long.csv` (one row per visit), paths and
 names set in `config/mediation.yaml`.
+
+## Module 1 additions (`data/raw/mr/`, `data/raw/validation/`, `data/raw/papers/mr/`, 2026-10-21)
+
+Added to `src/mr/download_inputs.sh` and `data/raw/mr/MANIFEST.tsv` (path, URL,
+bytes, sha256, time): FinnGen R13 manifest and R13 G6_ALZHEIMER (quarantined,
+header line only; sha256 `9cfdf75f996ca688eb9de4638fa0dc5249b102c8e65da0423769b5ce4324e8eb`);
+the open supplements of UKB-PPP (Sun 2023), deCODE (Ferkingstad 2021) and
+MetaBrain (de Klein 2023); the MetaBrain public browser table (6 API pages);
+GENCODE release 19 GTF; NCBI GRCh37.p13 gap table and assembly report. The
+FinnGen R10 Alzheimer's file was deleted unread on 2026-10-21. The full
+UKB-PPP (Synapse account), deCODE (form) and MetaBrain (form) files were not
+downloaded. `validation/mr_ldl_hmgcr_cad_{exposure,outcome}.csv` are built by
+`src/mr/build_hmgcr_validation_inputs.py` from the GLGC and CARDIoGRAMplusC4D
+files (researcher decision 2026-10-21). `papers/mr/` holds the open-access
+sources of the Module 1 extractions (`data/extracted/mr_sources.md`).
+Details: `manuscript/notes/module1_sources_step.md`.

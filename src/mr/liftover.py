@@ -1,11 +1,9 @@
 """Lift a GRCh38 summary-statistics table to GRCh37 (UCSC hg38ToHg19 chain).
 
-    <python with pyliftover> -I src/mr/liftover.py IN OUT --chrom COL --pos COL \\
+    uv run --frozen python -m src.mr.liftover IN OUT --chrom COL --pos COL \\
         [--chain data/raw/mr/liftover/hg38ToHg19.over.chain.gz] [--log OUT.liftover_log.tsv]
 
-pyliftover is not in uv.lock (adding it is the coordinating session's call);
-the data step used a dedicated venv: python3 -m venv <dir> && <dir>/bin/pip
-install pyliftover==0.4.1. Standard library otherwise.
+pyliftover==0.4.1 is in uv.lock (added 2026-10-21). Standard library otherwise.
 
 Output = every input column unchanged plus chrom_grch37 and pos_grch37
 (1-based). A row is DROPPED - and counted by reason in the log - when the
