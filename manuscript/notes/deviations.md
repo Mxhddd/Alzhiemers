@@ -76,3 +76,12 @@ Notes so far (not departures):
    still running. That stage held both the maximum-likelihood fit and NUTS,
    so no checkpoint had been written. The run was restarted unchanged, as a
    detached process. Stage checkpoints protect every finished stage.
+3. *Container restart (2026-10-15 → 2026-10-21).* The second attempt ran as
+   a detached process. It was lost when the cloud container was reclaimed:
+   its last log line is 15:57 UTC on 15 October, while it was fitting
+   variant A at h = 0.03125 y. Again, no stage had finished. Checkpoints were
+   then added inside stages (each step-size attempt, each NUTS chain, each
+   cross-validation fold; commit 498a664). Tests show this changes no
+   computation: the per-chain NUTS draws equal those of the multi-chain run.
+   Module 2 was re-validated on the new code before the run restarted.
+   Not a departure: no setting, rule or input changed.
