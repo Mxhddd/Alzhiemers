@@ -74,9 +74,19 @@ Gp_formula = rr + rd * (Hx + hA - (kap * R * Ex / (1 + 2 * kap * R * Ex)) * q * 
 rng = np.random.default_rng(11)
 
 
-def rat(z):
-    """Exact rational test value (so only the algebra, not float rounding, is compared)."""
-    return sp.Rational(str(round(float(z), 12)))
+import mpmath  # noqa: E402
+
+mpmath.mp.dps = 40
+
+
+def mp_compare(e1, e2, vals):
+    """Evaluate two expressions at the same point in 40-digit arithmetic (mpmath), so only the
+    algebra, not float rounding, is compared."""
+    syms = list(vals)
+    f1, f2 = (sp.lambdify(syms, e, "mpmath") for e in (e1, e2))
+    args = [mpmath.mpf(str(round(float(vals[k_]), 12))) for k_ in syms]
+    a = f1(*args)
+    return float(abs(a - f2(*args)) / max(mpmath.mpf("1e-30"), abs(a)))
 
 
 worst = 0.0
@@ -84,10 +94,8 @@ for _ in range(40):
     vals = {kap: 10**rng.uniform(-1, 2), w: rng.uniform(0.2, 2), R: rng.uniform(0.01, 1), phi: rng.uniform(0.1, 1),
             u: rng.uniform(0.05, 0.9), v: 10**rng.uniform(-1, 1), m: 10**rng.uniform(-1, 1), rr: 10**rng.uniform(-3, -1),
             rd: 10**rng.uniform(-3, 0), hA: rng.uniform(0, 1), K: 10**rng.uniform(-2, 0), q: rng.uniform(1, 4)}
-    vals = {k_: rat(v_) for k_, v_ in vals.items()}
-    a, b = sp.N(Gp_sym.subs(vals), 40), sp.N(Gp_formula.subs(vals), 40)
-    worst = max(worst, float(abs(a - b) / max(1e-30, abs(a))))
-check("A3b G'(R) = r_rep + r_dam [H + hA - eps_E q H(1 - H)] (sympy derivative vs formula, 40 random rational points, 40 digits)",
+    worst = max(worst, mp_compare(Gp_sym, Gp_formula, vals))
+check("A3b G'(R) = r_rep + r_dam [H + hA - eps_E q H(1 - H)] (sympy derivative vs formula, 40 random points, 40-digit arithmetic)",
       worst < 1e-20, f"max relative difference {worst:.1e}")
 
 # A4. characteristic polynomial of the (E, Y, R) block and Routh-Hurwitz
@@ -141,10 +149,8 @@ for _ in range(30):
     vals = {kap: 10**rng.uniform(-1, 2), w: rng.uniform(0.2, 2), R: rng.uniform(0.01, 1), phi: rng.uniform(0.1, 1),
             u: rng.uniform(0.05, 0.9), v: 10**rng.uniform(-1, 1), m: 10**rng.uniform(-1, 1), rr: 10**rng.uniform(-3, -1),
             rd: 10**rng.uniform(-3, 0), K: 10**rng.uniform(-2, 0), q: rng.uniform(1, 4)}
-    vals = {k_: rat(v_) for k_, v_ in vals.items()}
-    a, b = sp.N(sp.diff(PhiR, R).subs(vals), 40), sp.N(Phip_formula.subs(vals), 40)
-    worst = max(worst, float(abs(a - b) / max(1e-30, abs(a))))
-check("A7b Phi'(R) = [-r_rep/(r_dam R) + eps_E q H(1 - H)]/R (30 random rational points, 40 digits)", worst < 1e-20, f"{worst:.1e}")
+    worst = max(worst, mp_compare(sp.diff(PhiR, R), Phip_formula, vals))
+check("A7b Phi'(R) = [-r_rep/(r_dam R) + eps_E q H(1 - H)]/R (30 random points, 40-digit arithmetic)", worst < 1e-20, f"{worst:.1e}")
 
 # A8. readouts do not depend on c0, and depend on r_rep, r_dam only through their ratio
 Tstar = (1 + sig * x) * (1 + eta * s * E) * (1 + hA) / (c * R)
