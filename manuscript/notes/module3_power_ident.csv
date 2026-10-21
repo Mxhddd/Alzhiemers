@@ -1,0 +1,201 @@
+cell,rep,world,n,nie,rho_star,verdict,h3_log_or,h3_verdict
+world=all_through_LC|n=1000,0,all_through_LC,1000,0.3900645886186318,0.393486685305159,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.20206614915417023,supports
+world=all_through_LC|n=1000,1,all_through_LC,1000,0.3290909098979853,0.3680041891403482,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.1917550928688424,supports
+world=all_through_LC|n=1000,2,all_through_LC,1000,0.3437873668669118,0.3206295651503146,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.27989203265311885,supports
+world=all_through_LC|n=1000,3,all_through_LC,1000,0.3077015200937345,0.33770939370377584,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.1460762950756958,supports
+world=all_through_LC|n=1000,4,all_through_LC,1000,0.3804729214278324,0.3588444921345709,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2007071434882563,supports
+world=all_through_LC|n=1000,5,all_through_LC,1000,0.42161494147480383,0.4002626639267932,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.29366438314626053,supports
+world=all_through_LC|n=1000,6,all_through_LC,1000,0.20578284350766474,0.39382833796836847,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.1456437941969438,supports
+world=all_through_LC|n=1000,7,all_through_LC,1000,0.4074538061316124,0.3875150911071677,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2194694384619131,supports
+world=all_through_LC|n=1000,8,all_through_LC,1000,0.2242740422565137,0.2634473942120626,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.16107781848236657,supports
+world=all_through_LC|n=1000,9,all_through_LC,1000,0.3113361222681461,0.34108856012127015,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.21131776644760628,supports
+world=all_through_LC|n=1000,10,all_through_LC,1000,0.22528117318732344,0.31834082403121516,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.13420465290480832,inconclusive
+world=all_through_LC|n=1000,11,all_through_LC,1000,0.29703451992691843,0.31767523047371476,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.17927370154407526,supports
+world=all_through_LC|n=1000,12,all_through_LC,1000,0.35762914282846836,0.3699145875995797,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2659782553116902,supports
+world=all_through_LC|n=1000,13,all_through_LC,1000,0.2972487488777804,0.2733838298124928,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.17685992558957242,supports
+world=all_through_LC|n=1000,14,all_through_LC,1000,0.3191799715943744,0.35418939292427887,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.1316694164389776,inconclusive
+world=all_through_LC|n=1000,15,all_through_LC,1000,0.3300002375841813,0.34184008567412383,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.26829265833823496,supports
+world=all_through_LC|n=1000,16,all_through_LC,1000,0.38083849825432425,0.3575188910611889,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.21327192185410176,supports
+world=all_through_LC|n=1000,17,all_through_LC,1000,0.36639215719308504,0.3227485054317934,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2963278864836661,supports
+world=all_through_LC|n=1000,18,all_through_LC,1000,0.32171784336716636,0.34194262497512157,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.19697143380113427,supports
+world=all_through_LC|n=1000,19,all_through_LC,1000,0.32776523969165705,0.326496560532567,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.15409994122980614,supports
+world=all_through_LC|n=1000,20,all_through_LC,1000,0.33477908577195103,0.3462572338335825,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.23543128550602546,supports
+world=all_through_LC|n=1000,21,all_through_LC,1000,0.3566085957663687,0.3884108482344237,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.23013154680210773,supports
+world=all_through_LC|n=1000,22,all_through_LC,1000,0.34993417976858243,0.3354225468044452,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.22389044418410423,supports
+world=all_through_LC|n=1000,23,all_through_LC,1000,0.37178919805486865,0.3581933656841052,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.22853146458728563,supports
+world=all_through_LC|n=1000,24,all_through_LC,1000,0.27088070543234855,0.29792859715534065,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.1739666945247127,supports
+world=all_through_LC|n=1000,25,all_through_LC,1000,0.19368570779099503,0.2945861294794993,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.22950302286315286,supports
+world=all_through_LC|n=1000,26,all_through_LC,1000,0.33954693684741866,0.3405513175865967,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.16738307805073996,supports
+world=all_through_LC|n=1000,27,all_through_LC,1000,0.36168946501929833,0.33366654185332584,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2219447969682247,supports
+world=all_through_LC|n=1000,28,all_through_LC,1000,0.38535449928623544,0.3587948973068437,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2767077967189792,supports
+world=all_through_LC|n=1000,29,all_through_LC,1000,0.3720362100231793,0.35362659538486674,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.22621782040626842,supports
+world=all_through_LC|n=1000,30,all_through_LC,1000,0.3487868593204895,0.33299309314636677,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.16740097112363633,supports
+world=all_through_LC|n=1000,31,all_through_LC,1000,0.37741116806111696,0.35583302440043146,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2152262603814766,supports
+world=all_through_LC|n=1000,32,all_through_LC,1000,0.40302337214923245,0.4131216842821197,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.21324218752583451,supports
+world=all_through_LC|n=1000,33,all_through_LC,1000,0.3735513997900264,0.37656580259802624,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.26182432960107305,supports
+world=all_through_LC|n=1000,34,all_through_LC,1000,0.14101232564209543,0.3173786012410776,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.1807084631946371,supports
+world=all_through_LC|n=1000,35,all_through_LC,1000,0.3066561173502458,0.31894969552939395,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.18192838234980455,supports
+world=all_through_LC|n=1000,36,all_through_LC,1000,0.3037309553297183,0.309124328432956,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.21127156208750336,supports
+world=all_through_LC|n=1000,37,all_through_LC,1000,0.38465742421118065,0.33535981117399927,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.24489211029288524,supports
+world=all_through_LC|n=1000,38,all_through_LC,1000,0.17072515072426553,0.3583020351842213,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.21443868485480058,supports
+world=all_through_LC|n=1000,39,all_through_LC,1000,0.34786926633945114,0.3470921097126926,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.24987283169366462,supports
+world=all_through_LC|n=1000,40,all_through_LC,1000,0.3379211135955069,0.34926400875852137,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.17253704798479053,supports
+world=all_through_LC|n=1000,41,all_through_LC,1000,0.4527076354226125,0.3825662050766795,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2728872316232453,supports
+world=all_through_LC|n=1000,42,all_through_LC,1000,0.3376404034479292,0.34805695535529313,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.17392406638221986,supports
+world=all_through_LC|n=1000,43,all_through_LC,1000,0.42393915207018473,0.3859507663625888,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2348054169570257,supports
+world=all_through_LC|n=1000,44,all_through_LC,1000,0.3444528846956443,0.3680264063364112,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.20053829559341607,supports
+world=all_through_LC|n=1000,45,all_through_LC,1000,0.39416261529907004,0.3375946639726599,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.15689954023807384,supports
+world=all_through_LC|n=1000,46,all_through_LC,1000,0.4039611753766432,0.41009946247698087,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2547377968581964,supports
+world=all_through_LC|n=1000,47,all_through_LC,1000,0.2911134140128473,0.32123710379799364,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.15754831541344982,supports
+world=all_through_LC|n=1000,48,all_through_LC,1000,0.32005866560543916,0.3186073388978906,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.21569252862105745,supports
+world=all_through_LC|n=1000,49,all_through_LC,1000,0.3688105015165313,0.3413019436797342,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.20217817158671886,supports
+world=all_through_LC|n=1000,50,all_through_LC,1000,0.27606903606786926,0.27953409009394664,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.24102412119108568,supports
+world=all_through_LC|n=1000,51,all_through_LC,1000,0.33051518294523063,0.31227406730762963,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.22796435727458214,supports
+world=all_through_LC|n=1000,52,all_through_LC,1000,0.3280588433883822,0.30056488859100705,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2282113216666927,supports
+world=all_through_LC|n=1000,53,all_through_LC,1000,0.3863560620938351,0.3797838128092275,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.23256509052365232,supports
+world=all_through_LC|n=1000,54,all_through_LC,1000,0.4187268029696214,0.3623779395033,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.25413369713833944,supports
+world=all_through_LC|n=1000,55,all_through_LC,1000,0.4347812409673302,0.4280668913076271,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2912437482546106,supports
+world=all_through_LC|n=1000,56,all_through_LC,1000,0.3144484564232579,0.33780266948492726,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.14905228038890467,supports
+world=all_through_LC|n=1000,57,all_through_LC,1000,0.3258110012294506,0.36270808777170666,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.12716960609908512,inconclusive
+world=all_through_LC|n=1000,58,all_through_LC,1000,0.37297961166694993,0.38194554159949623,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2519006862865452,supports
+world=all_through_LC|n=1000,59,all_through_LC,1000,0.37085620471390124,0.37453076383488604,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.19759688914993775,supports
+world=all_through_LC|n=1000,60,all_through_LC,1000,0.30334412229643215,0.3272654301614153,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.1420276548348111,supports
+world=all_through_LC|n=1000,61,all_through_LC,1000,0.14890473017410422,0.3055446033976917,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2835239125916474,supports
+world=all_through_LC|n=1000,62,all_through_LC,1000,0.48018882675302565,0.39994365115714087,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.27828392100160143,supports
+world=all_through_LC|n=1000,63,all_through_LC,1000,0.33141866131797126,0.32851607345632194,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2797613662928132,supports
+world=all_through_LC|n=1000,64,all_through_LC,1000,0.3089277669207684,0.3481600959611421,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.276378627640115,supports
+world=all_through_LC|n=1000,65,all_through_LC,1000,0.2976807761752309,0.32269557107428876,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.27634839362082,supports
+world=all_through_LC|n=1000,66,all_through_LC,1000,0.2756133391006359,0.33759837339657545,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.193175308371447,supports
+world=all_through_LC|n=1000,67,all_through_LC,1000,0.3808793479928876,0.35502052760377445,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.33849470532579745,supports
+world=all_through_LC|n=1000,68,all_through_LC,1000,0.3869885009422216,0.38035343058029897,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.21163733146386016,supports
+world=all_through_LC|n=1000,69,all_through_LC,1000,0.3253658509844839,0.3442644926792838,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2051020154650427,supports
+world=all_through_LC|n=1000,70,all_through_LC,1000,0.3620556531329222,0.3587259015038094,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.16113454471661298,supports
+world=all_through_LC|n=1000,71,all_through_LC,1000,0.27989717227367494,0.3534030618459322,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.20775953091430316,supports
+world=all_through_LC|n=1000,72,all_through_LC,1000,0.22259412404211076,0.36981617292837515,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.1903658741353735,supports
+world=all_through_LC|n=1000,73,all_through_LC,1000,0.33848426022393463,0.342419748055224,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.15422589723479932,supports
+world=all_through_LC|n=1000,74,all_through_LC,1000,0.4087682976162017,0.39370555933434154,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.1983640217364355,supports
+world=all_through_LC|n=1000,75,all_through_LC,1000,0.34195173339726104,0.3624921121464465,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.21450549530221638,supports
+world=all_through_LC|n=1000,76,all_through_LC,1000,0.34002003380992774,0.3985974978902733,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.22121917110894987,supports
+world=all_through_LC|n=1000,77,all_through_LC,1000,0.3779401732975405,0.314092416809316,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.3282120687851881,supports
+world=all_through_LC|n=1000,78,all_through_LC,1000,0.20347504711558484,0.3873703130655304,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.14926151908910854,supports
+world=all_through_LC|n=1000,79,all_through_LC,1000,0.3458958744049849,0.36900084568142016,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.24726578170482963,supports
+world=all_through_LC|n=1000,80,all_through_LC,1000,0.4428970201367788,0.3530289877622442,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.25550996915478874,supports
+world=all_through_LC|n=1000,81,all_through_LC,1000,0.39172711212146893,0.41423836640165174,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2993952850875679,supports
+world=all_through_LC|n=1000,82,all_through_LC,1000,0.4073468551046857,0.4124333779451502,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.10561886527748468,inconclusive
+world=all_through_LC|n=1000,83,all_through_LC,1000,0.35155420421758743,0.3337747166394025,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.10349195415602745,inconclusive
+world=all_through_LC|n=1000,84,all_through_LC,1000,0.34374618359617193,0.33017522169464836,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.23503094358766555,supports
+world=all_through_LC|n=1000,85,all_through_LC,1000,0.38124474404836484,0.34074541878060755,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.23124327301141082,supports
+world=all_through_LC|n=1000,86,all_through_LC,1000,0.3007295284631404,0.3661122779337303,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.07420237377680948,inconclusive
+world=all_through_LC|n=1000,87,all_through_LC,1000,0.38890044242841704,0.399896406619392,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.19301536671239775,supports
+world=all_through_LC|n=1000,88,all_through_LC,1000,0.2728727840638192,0.3043787616786564,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.23639727650114178,supports
+world=all_through_LC|n=1000,89,all_through_LC,1000,0.34125109763618333,0.2907466222373524,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.19441130412426202,supports
+world=all_through_LC|n=1000,90,all_through_LC,1000,0.41586708187094157,0.3564413174561073,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.22810027636694652,supports
+world=all_through_LC|n=1000,91,all_through_LC,1000,0.3549512914328887,0.347953992183201,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.21848317928675354,supports
+world=all_through_LC|n=1000,92,all_through_LC,1000,0.37855383261408804,0.3636410386751692,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2258974678776979,supports
+world=all_through_LC|n=1000,93,all_through_LC,1000,0.32864445553493216,0.3108502841061747,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.3024148823587001,supports
+world=all_through_LC|n=1000,94,all_through_LC,1000,0.3647083044792052,0.3647806125135667,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.19823233504685878,supports
+world=all_through_LC|n=1000,95,all_through_LC,1000,0.2249953353967138,0.39662644923692525,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.1380009643351481,inconclusive
+world=all_through_LC|n=1000,96,all_through_LC,1000,0.3159861721247905,0.31548777922765187,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2273872942398725,supports
+world=all_through_LC|n=1000,97,all_through_LC,1000,0.3051284034371746,0.30681304358455636,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.1792304573085891,supports
+world=all_through_LC|n=1000,98,all_through_LC,1000,0.35955455056016516,0.3203014057287643,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.255227100930272,supports
+world=all_through_LC|n=1000,99,all_through_LC,1000,0.33713446561659177,0.3706980742266208,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.16850115244433972,supports
+world=none_through_LC|n=1000,0,none_through_LC,1000,0.02201900381891564,0.2667983333285258,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.20206614915417023,supports
+world=none_through_LC|n=1000,1,none_through_LC,1000,-0.01019083730844006,0.28628651151480905,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.1917550928688424,supports
+world=none_through_LC|n=1000,2,none_through_LC,1000,0.02478120895819602,0.2281124055710626,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.27989203265311885,supports
+world=none_through_LC|n=1000,3,none_through_LC,1000,-0.005011925367476522,0.2500229907532299,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.1460762950756958,supports
+world=none_through_LC|n=1000,4,none_through_LC,1000,0.008830881534136914,0.2785629499520262,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2007071434882563,supports
+world=none_through_LC|n=1000,5,none_through_LC,1000,-0.0005097401277431857,0.28457401757953016,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.29366438314626053,supports
+world=none_through_LC|n=1000,6,none_through_LC,1000,0.020649544177343326,0.26702752720804496,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.1456437941969438,supports
+world=none_through_LC|n=1000,7,none_through_LC,1000,0.003868219392104244,0.28829684648239906,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2194694384619131,supports
+world=none_through_LC|n=1000,8,none_through_LC,1000,-0.04264718087024777,0.20443323573926644,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.16107781848236657,supports
+world=none_through_LC|n=1000,9,none_through_LC,1000,-0.00542060057885152,0.24817969934002482,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.21131776644760628,supports
+world=none_through_LC|n=1000,10,none_through_LC,1000,-0.052762382337101066,0.23218240716101873,NIE OPPOSITE to prediction: Killer 2 MET (hypothesis fails) for this exposure,0.13420465290480832,inconclusive
+world=none_through_LC|n=1000,11,none_through_LC,1000,-0.015748613895075092,0.2589821540034641,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.17927370154407526,supports
+world=none_through_LC|n=1000,12,none_through_LC,1000,0.00031184417784446694,0.3049679099938936,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2659782553116902,supports
+world=none_through_LC|n=1000,13,none_through_LC,1000,-0.003109955482229587,0.19609581050434471,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.17685992558957242,supports
+world=none_through_LC|n=1000,14,none_through_LC,1000,-0.02196507975998241,0.2568987341200732,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.1316694164389776,inconclusive
+world=none_through_LC|n=1000,15,none_through_LC,1000,0.012340689741632715,0.24580627690728582,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.26829265833823496,supports
+world=none_through_LC|n=1000,16,none_through_LC,1000,0.008064290483084768,0.28004485853860744,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.21327192185410176,supports
+world=none_through_LC|n=1000,17,none_through_LC,1000,0.0317142245094546,0.27510418205390275,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2963278864836661,supports
+world=none_through_LC|n=1000,18,none_through_LC,1000,-0.01816672567980815,0.26059518452177693,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.19697143380113427,supports
+world=none_through_LC|n=1000,19,none_through_LC,1000,-0.0007112686167167759,0.23805444709187662,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.15409994122980614,supports
+world=none_through_LC|n=1000,20,none_through_LC,1000,-0.021444874373673706,0.2401233752400907,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.23543128550602546,supports
+world=none_through_LC|n=1000,21,none_through_LC,1000,-0.009327330550361612,0.28379907974378576,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.23013154680210773,supports
+world=none_through_LC|n=1000,22,none_through_LC,1000,-0.024618978764419985,0.24411503032617785,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.22389044418410423,supports
+world=none_through_LC|n=1000,23,none_through_LC,1000,-0.014064118749050891,0.27102407496191305,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.22853146458728563,supports
+world=none_through_LC|n=1000,24,none_through_LC,1000,-0.01125157763255924,0.2169936169600426,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.1739666945247127,supports
+world=none_through_LC|n=1000,25,none_through_LC,1000,0.020689917029570903,0.2514015310774123,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.22950302286315286,supports
+world=none_through_LC|n=1000,26,none_through_LC,1000,-0.0228478128342946,0.2226191030276452,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.16738307805073996,supports
+world=none_through_LC|n=1000,27,none_through_LC,1000,0.03598510004049338,0.2584369464936033,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2219447969682247,supports
+world=none_through_LC|n=1000,28,none_through_LC,1000,0.021063185368735304,0.27061117548213787,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2767077967189792,supports
+world=none_through_LC|n=1000,29,none_through_LC,1000,-0.0002719037121390322,0.2469192951687036,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.22621782040626842,supports
+world=none_through_LC|n=1000,30,none_through_LC,1000,0.006510195726971535,0.25141174524296545,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.16740097112363633,supports
+world=none_through_LC|n=1000,31,none_through_LC,1000,-0.009067838040660803,0.2817881930668533,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2152262603814766,supports
+world=none_through_LC|n=1000,32,none_through_LC,1000,-0.02685401305497903,0.31011060180763644,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.21324218752583451,supports
+world=none_through_LC|n=1000,33,none_through_LC,1000,0.0022412178488386836,0.2861783261707595,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.26182432960107305,supports
+world=none_through_LC|n=1000,34,none_through_LC,1000,-0.018533933940172886,0.22378581919090165,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.1807084631946371,supports
+world=none_through_LC|n=1000,35,none_through_LC,1000,-0.024403466298586807,0.2306050765231744,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.18192838234980455,supports
+world=none_through_LC|n=1000,36,none_through_LC,1000,0.0018289473198094264,0.21252657840613576,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.21127156208750336,supports
+world=none_through_LC|n=1000,37,none_through_LC,1000,0.02750029055517711,0.23683995973902477,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.24489211029288524,supports
+world=none_through_LC|n=1000,38,none_through_LC,1000,-0.0015624495738983946,0.2618488235680664,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.21443868485480058,supports
+world=none_through_LC|n=1000,39,none_through_LC,1000,-0.01218416715521542,0.26257976382173664,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.24987283169366462,supports
+world=none_through_LC|n=1000,40,none_through_LC,1000,0.012822755367803307,0.26509770020348666,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.17253704798479053,supports
+world=none_through_LC|n=1000,41,none_through_LC,1000,0.01846586939906203,0.28001581636959255,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2728872316232453,supports
+world=none_through_LC|n=1000,42,none_through_LC,1000,0.009820929906536602,0.2533898698342323,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.17392406638221986,supports
+world=none_through_LC|n=1000,43,none_through_LC,1000,0.05189906100923336,0.30265209289988804,NIE in the predicted direction: Killer 2 NOT met for this exposure,0.2348054169570257,supports
+world=none_through_LC|n=1000,44,none_through_LC,1000,-0.016676561824007674,0.28716928931396685,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.20053829559341607,supports
+world=none_through_LC|n=1000,45,none_through_LC,1000,0.03641385839322053,0.2536957069852068,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.15689954023807384,supports
+world=none_through_LC|n=1000,46,none_through_LC,1000,-0.012861833785948296,0.30573120657209346,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2547377968581964,supports
+world=none_through_LC|n=1000,47,none_through_LC,1000,-0.00835633967406979,0.265399678806682,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.15754831541344982,supports
+world=none_through_LC|n=1000,48,none_through_LC,1000,-0.021941384599238223,0.2401367758572626,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.21569252862105745,supports
+world=none_through_LC|n=1000,49,none_through_LC,1000,-0.00327673066961065,0.22915689434320063,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.20217817158671886,supports
+world=none_through_LC|n=1000,50,none_through_LC,1000,-0.0005767688685001104,0.201285499908842,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.24102412119108568,supports
+world=none_through_LC|n=1000,51,none_through_LC,1000,-0.02628292444893665,0.2219715113337245,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.22796435727458214,supports
+world=none_through_LC|n=1000,52,none_through_LC,1000,0.0193292759063306,0.2266226085740366,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2282113216666927,supports
+world=none_through_LC|n=1000,53,none_through_LC,1000,0.013363567284585098,0.2877777521858953,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.23256509052365232,supports
+world=none_through_LC|n=1000,54,none_through_LC,1000,0.021335288849400946,0.2881111759587434,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.25413369713833944,supports
+world=none_through_LC|n=1000,55,none_through_LC,1000,0.013260190534192251,0.34617053814626864,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2912437482546106,supports
+world=none_through_LC|n=1000,56,none_through_LC,1000,-0.006400620859774442,0.23616458628335738,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.14905228038890467,supports
+world=none_through_LC|n=1000,57,none_through_LC,1000,-0.01885273477384164,0.2985687398388928,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.12716960609908512,inconclusive
+world=none_through_LC|n=1000,58,none_through_LC,1000,-0.012614701623202329,0.29432913098393837,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2519006862865452,supports
+world=none_through_LC|n=1000,59,none_through_LC,1000,-0.010040821190635985,0.2915850732939965,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.19759688914993775,supports
+world=none_through_LC|n=1000,60,none_through_LC,1000,-0.02871376859270036,0.25846284908320627,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.1420276548348111,supports
+world=none_through_LC|n=1000,61,none_through_LC,1000,-0.012103152708301756,0.22929509879068516,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2835239125916474,supports
+world=none_through_LC|n=1000,62,none_through_LC,1000,0.06387535238797737,0.26519060636266556,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.27828392100160143,supports
+world=none_through_LC|n=1000,63,none_through_LC,1000,0.005144614738791908,0.244714532679146,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2797613662928132,supports
+world=none_through_LC|n=1000,64,none_through_LC,1000,-0.05380986879620808,0.27767459595474164,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.276378627640115,supports
+world=none_through_LC|n=1000,65,none_through_LC,1000,-0.01310256747737304,0.23758209637104527,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.27634839362082,supports
+world=none_through_LC|n=1000,66,none_through_LC,1000,-0.03864306872838519,0.2283853804403169,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.193175308371447,supports
+world=none_through_LC|n=1000,67,none_through_LC,1000,0.03442777527219487,0.2581262069353386,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.33849470532579745,supports
+world=none_through_LC|n=1000,68,none_through_LC,1000,0.032247191457051905,0.2926128335758406,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.21163733146386016,supports
+world=none_through_LC|n=1000,69,none_through_LC,1000,-0.04139139738188735,0.2596294483639969,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2051020154650427,supports
+world=none_through_LC|n=1000,70,none_through_LC,1000,-0.03970752459117444,0.24118562402217655,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.16113454471661298,supports
+world=none_through_LC|n=1000,71,none_through_LC,1000,-0.0245905981835981,0.23667854919641912,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.20775953091430316,supports
+world=none_through_LC|n=1000,72,none_through_LC,1000,0.015423271308745434,0.25673956780265994,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.1903658741353735,supports
+world=none_through_LC|n=1000,73,none_through_LC,1000,-0.010785480971351014,0.24157838726293435,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.15422589723479932,supports
+world=none_through_LC|n=1000,74,none_through_LC,1000,0.0013696278196029255,0.3151986170918205,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.1983640217364355,supports
+world=none_through_LC|n=1000,75,none_through_LC,1000,-0.027633320656985205,0.24394488798310593,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.21450549530221638,supports
+world=none_through_LC|n=1000,76,none_through_LC,1000,-0.04347561776129405,0.28648560536267587,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.22121917110894987,supports
+world=none_through_LC|n=1000,77,none_through_LC,1000,0.040268012986194535,0.24392867263876775,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.3282120687851881,supports
+world=none_through_LC|n=1000,78,none_through_LC,1000,-3.736116255170785e-05,0.26890418557127466,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.14926151908910854,supports
+world=none_through_LC|n=1000,79,none_through_LC,1000,-0.009381692940524378,0.24712611567551343,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.24726578170482963,supports
+world=none_through_LC|n=1000,80,none_through_LC,1000,0.05355514475287704,0.24875401045887305,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.25550996915478874,supports
+world=none_through_LC|n=1000,81,none_through_LC,1000,-0.027978583690282388,0.3283515907892243,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2993952850875679,supports
+world=none_through_LC|n=1000,82,none_through_LC,1000,-0.015167966186321546,0.29784062811182965,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.10561886527748468,inconclusive
+world=none_through_LC|n=1000,83,none_through_LC,1000,0.020492572676763743,0.2074066404824181,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.10349195415602745,inconclusive
+world=none_through_LC|n=1000,84,none_through_LC,1000,0.007261683570058963,0.22979731545937368,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.23503094358766555,supports
+world=none_through_LC|n=1000,85,none_through_LC,1000,0.02106261691740663,0.2495021808490179,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.23124327301141082,supports
+world=none_through_LC|n=1000,86,none_through_LC,1000,-0.027699574367033186,0.2582197903855996,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.07420237377680948,inconclusive
+world=none_through_LC|n=1000,87,none_through_LC,1000,-0.026846442259412573,0.30325751294928116,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.19301536671239775,supports
+world=none_through_LC|n=1000,88,none_through_LC,1000,-0.01699332296992262,0.2435706763182691,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.23639727650114178,supports
+world=none_through_LC|n=1000,89,none_through_LC,1000,0.03902708610244243,0.2416303520935979,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.19441130412426202,supports
+world=none_through_LC|n=1000,90,none_through_LC,1000,0.03340758538288657,0.2700172515534118,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.22810027636694652,supports
+world=none_through_LC|n=1000,91,none_through_LC,1000,-0.0094913744634475,0.27088071916827966,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.21848317928675354,supports
+world=none_through_LC|n=1000,92,none_through_LC,1000,-0.020405663689026632,0.30632755844442283,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2258974678776979,supports
+world=none_through_LC|n=1000,93,none_through_LC,1000,0.02852188332826966,0.2464912789415936,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.3024148823587001,supports
+world=none_through_LC|n=1000,94,none_through_LC,1000,0.03295640091568863,0.28474385672277813,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.19823233504685878,supports
+world=none_through_LC|n=1000,95,none_through_LC,1000,0.004467508214567317,0.31387903937902767,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.1380009643351481,inconclusive
+world=none_through_LC|n=1000,96,none_through_LC,1000,-0.013002772574450372,0.20615562992808284,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.2273872942398725,supports
+world=none_through_LC|n=1000,97,none_through_LC,1000,0.02591108166285805,0.24716846611748763,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.1792304573085891,supports
+world=none_through_LC|n=1000,98,none_through_LC,1000,0.014993485861157563,0.22436896747432838,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.255227100930272,supports
+world=none_through_LC|n=1000,99,none_through_LC,1000,-0.03391524185039074,0.28379071636375575,NIE interval includes 0: Killer 2 MET (no evidence of mediation by the LC) for this exposure,0.16850115244433972,supports

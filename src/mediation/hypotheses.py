@@ -121,7 +121,8 @@ def multiply_imputed_association(df: pd.DataFrame, *, columns: list[str], n_impu
         est.append(r["log_or"])
         ses.append(r["se"])
     b, se = rubin(est, ses)
-    return {"log_or": b, "se": se, "n": int(len(data)), "m": n_imputations}
+    return {"log_or": b, "se": se, "n": int(len(data)), "m": n_imputations,
+            "dropped_constant": r["dropped_constant"], "levels": r["levels"]}
 
 
 def autopsy_weights(people: pd.DataFrame, *, predictors: list[str], observed: str, truncate_q: float) -> pd.Series:

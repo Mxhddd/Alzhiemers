@@ -17,7 +17,7 @@ neither was downloaded. The open versions used:
   position is checked against the hg37 position inside the variant id, and the
   alleles A0/A1 are taken from that id.
 * MetaBrain: the table behind the public cis-eQTL browser (MOLGENIS API pages
-  saved by src/mr/download_inputs.sh, merged to
+  api_page_<start>.json saved by src/mr/download_inputs.sh, merged here to
   metabrain_cis_eqtl_v2_browser.tsv). Cortex-EUR, QTLRank 1, target genes.
   GRCh38 positions are lifted to GRCh37; the allele frequency comes from the
   1000 Genomes EUR panel (non-palindromic SNVs only; palindromic -> NA).
@@ -31,7 +31,7 @@ logs it). Every count is logged.
 from __future__ import annotations
 
 import csv
-import math
+import json
 import subprocess
 from collections import Counter
 from pathlib import Path
@@ -164,7 +164,25 @@ def ukbppp(genes: set[str], run) -> Path:
     return path
 
 
+def merge_metabrain_pages(run) -> None:
+    """API pages (10,000 rows each) -> one TSV with the API's own column names."""
+    pages = sorted(METABRAIN_TSV.parent.glob("api_page_*.json"), key=lambda p: int(p.stem.split("_")[-1]))
+    if not pages:
+        raise FileNotFoundError(f"no MetaBrain API pages in {METABRAIN_TSV.parent}: run src/mr/download_inputs.sh")
+    cols, rows, total = None, [], None
+    for p in pages:
+        d = json.loads(p.read_text(encoding="utf-8"))
+        if cols is None:
+            cols, total = [a["name"] for a in d["meta"]["attributes"]], d["total"]
+        rows += [["" if it.get(c) is None else str(it.get(c)) for c in cols] for it in d["items"]]
+    if len(rows) != total:
+        raise RuntimeError(f"MetaBrain API pages hold {len(rows)} rows but the API reports {total}")
+    write_tsv(METABRAIN_TSV, cols, rows)
+    run.info(f"MetaBrain browser table: {len(rows)} rows from {len(pages)} API pages (API total {total})")
+
+
 def metabrain(genes: set[str], run) -> Path:
+    merge_metabrain_pages(run)
     h, recs = read_tsv(METABRAIN_TSV)
     n = Counter()
     kept = []
@@ -239,13 +257,11 @@ def main() -> int:
     genes = set(target_genes())
     with start_run(module="mr_prepare_qtl_sources", config_path=CONFIG_DIR / "mr_targets.yaml", seed=None,
                    packages=["pyyaml", "pyliftover"]) as run:
-        for p in (UKBPPP_XLSX, METABRAIN_TSV, DEFAULT_CHAIN):
+        for p in (UKBPPP_XLSX, DEFAULT_CHAIN):
             if not p.exists():
                 raise FileNotFoundError(f"{p} missing: run bash src/mr/download_inputs.sh")
         run.record_output(ukbppp(genes, run))
         run.record_output(metabrain(genes, run))
-        if not math.isfinite(UKBPPP_DISCOVERY_N):
-            raise AssertionError
     return 0
 
 
