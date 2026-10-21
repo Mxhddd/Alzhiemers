@@ -28,7 +28,7 @@ RSCRIPT := Rscript
 BUILT_MODULES := mr baserate metaanalysis dynamics mediation network
 
 .PHONY: help todo setup test test-py test-r test-slow validate validate-mr validate-baserate validate-metaanalysis validate-dynamics validate-mediation validate-network check-validated provenance-check all lock \
-        freeze-prereg check-prereg clean-results check-derivations prereg-package verification-checklist apply-verification \
+        freeze-prereg check-prereg clean-results check-derivations prereg-package verification-checklist apply-verification prereg-pdf check-osf-answers \
         mr baserate baserate-dryrun baserate-power mediation dynamics metaanalysis network
 
 help:
@@ -126,6 +126,13 @@ verification-checklist:
 apply-verification:
 	@test -n "$(TICKS)" || { echo "usage: make apply-verification TICKS=data/extracted/verification/ticks_<file>.csv [APPLY=1]"; exit 2; }
 	$(PY) -m src.extraction.verification apply $(TICKS) $(if $(APPLY),--apply,)
+# Registration package helpers (outside src/common, so no module fingerprint changes).
+prereg-pdf:
+	@test -n "$(NAME)" || { echo "usage: make prereg-pdf NAME=<module>"; exit 2; }
+	$(PY) -m src.registration.pdf $(NAME)
+check-osf-answers:
+	@test -n "$(NAME)" || { echo "usage: make check-osf-answers NAME=<module>"; exit 2; }
+	$(PY) -m src.registration.osf_answers $(NAME)
 # Machine checks of Claude's derivations (manuscript/derivations/checks/):
 # symbolic/exact/numerical re-derivations. Machine-checked is NOT human-checked.
 check-derivations:
