@@ -1,0 +1,111 @@
+ATTACH prereg/dynamics.pdf TO THESE FILE BOXES: Study design; Statistical models
+
+STEP 1 - METADATA
+
+Title:
+Can one regulatory mechanism make opposite noradrenergic drugs protective? A pre-registered simulation study of the locus coeruleus as rate controller
+
+Description:
+A pre-registered simulation study (Module 4 of the LC-First project). A small dimensionless ODE model of the locus coeruleus (LC) as the rate controller of tau progression is used to ask three questions: can one parameter set make both atomoxetine and prazosin protective; is the atomoxetine dose-response U-shaped; and is LC regulation bistable (a tipping point) in a second-hit parameter. No patient data, measured outcomes or published values are used; every parameter is an assumption swept over a stated range. The plan fixes the model, the ranges and the rules for what counts against the hypothesis before the registered simulations are run. The full plan is in the attached PDF.
+
+License:
+CC0 1.0 Universal
+
+Subjects:
+Neuroscience and Neurobiology; Computational Neuroscience; Mathematical Biology
+
+Tags:
+locus coeruleus; noradrenaline; Alzheimer's disease; tau; dynamical systems; bistability; atomoxetine; prazosin; simulation study; pre-registration
+
+STEP 2 - OVERVIEW
+
+Research questions or hypotheses:
+All questions are about the model class of section 4 of the plan. Each fraction is the share of 1,000 Latin-hypercube parameter sets with the property, with its Wilson 95% CI. It is labelled fragile if the upper bound is below 10%, robust if the lower bound is at least 50%, and intermediate otherwise.
+
+Q1. Can one parameter set make both atomoxetine and prazosin protective (tau burden ratio below 0.95 at 1 IC50)? Prediction of the LC rate-controller account: yes, robustly. Counts against: the fraction of sets with both drugs protective is fragile.
+
+Q2. Is the atomoxetine dose-response U-shaped (over 0 plus 41 log-spaced doses from 0.01 to 10 IC50, interior minimum with both ends more than 5% higher)? Prediction: yes, robustly. Counts against: the U-shape fraction is fragile.
+
+Q3. Is LC regulation bistable for some second-hit value hA in [0, 1] (a tipping point)? Prediction: yes, robustly. Counts against: the bistability fraction is fragile; if no sampled set is bistable, that is stated.
+
+Q4 and Q5. Do the drugs come out harmful (ratio above 1.05)? A robust harmful fraction for atomoxetine, or for prazosin, counts against the directions predicted in Module 1 of the project.
+
+Intermediate fractions are reported as depending on parameters the model cannot pin down, not as support. A verdict is called robust to the modelling choices only if its label is the same in sensitivity analyses SA1 to SA4. The model assumes, and cannot test, that LC regulation controls tau.
+
+Foreknowledge of data or evidence:
+Authors have observed the data, but have not performed the proposed analyses.
+
+Explanation of foreknowledge and managing unintended influences:
+No empirical data are used, and no published value sets any parameter. The "data" of a simulation study are model outputs. The registered analyses (the Latin-hypercube fractions with seed 20261019, the Sobol indices and the sensitivity analyses) have not been run. While the model was being built, these outputs were seen. (1) The analytic derivation shows that a tipping point needs q > 2 and r_rep/r_dam + hA < (q - 2)^2/(8q), at most 1/8 in my ranges; that the prazosin dose-response is monotone; and that atomoxetine cannot be U-shaped without the regulation feedback. (2) In an existence search over a wide test distribution (not the registered ranges), the first U-shaped atomoxetine curve appeared at draw 1,681 and the first inverted U at draw 2. (3) A pilot screening with its own seed 20261021 (Morris elementary effects over the registered ranges, 750 model evaluations, and one-at-a-time sweeps) found a bistable window of zero length at every one of the 750 points. I therefore expect bistability to be rare and the U-shape uncommon. The model, the ranges and the reading rules were fixed before the pilot and were not changed after it, and the plan states in advance that these outcomes count against the hypothesis. The pilot computed no registered fraction and no Sobol index. All of this is listed in the Tools section of the plan.
+
+STEP 3 - RESEARCH DESIGN
+
+Study type:
+Simulation study
+A deterministic ODE model is evaluated over a sampled space of assumed parameter values.
+
+Intention for causal interpretation:
+No causal relationship inferred
+The results are statements about a model class, not causal claims about patients or drugs.
+
+Blinding of experimental treatments:
+No blinding is involved in this study.
+
+Additional blinding during research or analysis:
+None. The registered simulations are deterministic given the seed, and the reading rules are fixed in advance.
+
+Study design:
+A four-variable dimensionless ODE model: extracellular noradrenaline E, cytosolic noradrenaline Y, LC regulatory integrity R and cortical tau burden T. Atomoxetine enters as NET blockade and prazosin as alpha1 blockade. The readout is the steady-state tau burden reached from the healthy start, which is provably the fixed point with the largest R (section 4 and the derivation). For every parameter set I compute the drug ratios at 1 IC50, the atomoxetine and prazosin dose-responses, and the exact bistable window in hA. Over a Latin hypercube of 1,000 sets I report fractions with Wilson 95% CIs. See sections 4 to 6 of the plan.
+
+Randomization:
+Not applicable. Parameter sets are drawn by a seeded Latin hypercube (seed 20261019); this is sampling of the model's parameter space, not randomization of units.
+
+STEP 4 - SAMPLING
+
+Data collection procedures:
+No data are collected. Model outputs are generated by the code in the project repository (src/dynamics/) from the settings in config/dynamics.yaml and config/dynamics_params.yaml, at the registered commit.
+
+Sample size:
+1,000 Latin-hypercube parameter sets for the robustness fractions and for each of sensitivity analyses SA1 to SA5. Sobol indices use Saltelli sampling with N = 1,024 base samples.
+
+Sample size rationale:
+1,000 sets give a Wilson 95% CI half-width of at most about 3 percentage points, enough to separate the 10% and 50% label thresholds. N = 1,024 gives Sobol confidence intervals of a few percent for smooth outputs.
+
+Starting and stopping rules:
+Fixed sizes; no early stopping. The analysis does not start unless Module 4's validation passes on the current code (12 of 12 targets). It stops without interpretation if Radau and BDF disagree by more than a relative 10⁻³ at the reference point, or if ODE integration on the first 50 Latin-hypercube sets does not reproduce the analytic readout within a relative 10⁻³.
+
+STEP 5 - VARIABLES
+
+Manipulated variables:
+The 14 model parameters, each sampled over its stated range (log-uniform for rates and gains, uniform for shares and the Hill coefficient q); the atomoxetine and prazosin doses (0 plus 41 log-spaced doses from 0.01 to 10 IC50); and the second-hit parameter hA over [0, 1] for the bistability window.
+
+Measured variables:
+Steady-state tau burden T* from the healthy start; the drug ratio T*(drug at 1 IC50) / T*(no drug) for each drug; the dose-response curves; the set of hA values in [0, 1] with two stable fixed points.
+
+Indices:
+Protective: ratio below 0.95. Harmful: ratio above 1.05. U-shape: interior minimum with both ends more than 5% higher. Inverted U: interior maximum more than 5% above both ends. Bistable: the hA window is non-empty. Fractions over the Latin hypercube with Wilson 95% CIs and the labels fragile, intermediate and robust.
+
+STEP 6 - ANALYSIS PLAN
+
+Statistical models:
+No statistical model is fitted. Fixed points are the roots of a scalar function G(R), and stability follows from the sign of G'(R) (Routh-Hurwitz; derived and machine-checked, section 5 of the plan and the derivation files). Sensitivity is measured with Sobol first- and total-order indices for log T*, the log drug ratios, and the three yes/no outcomes.
+
+Transformations:
+Parameters are sampled on log10 scale where marked log. T* and the drug ratios are log-transformed for the Sobol analysis.
+
+Inference criteria:
+For each fraction: fragile if the upper Wilson 95% bound is below 10%, robust if the lower bound is at least 50%, intermediate otherwise. Fragile for both drugs protective, the atomoxetine U-shape or bistability counts against the corresponding claim. Robust for either drug harmful counts against the Module 1 direction. Robust for the first three counts in favour. A verdict is robust to the modelling choices only if its label is the same in SA1 to SA4.
+
+Data inclusion and exclusion:
+Every sampled parameter set is kept. A set whose numerical checks fail stops the analysis rather than being dropped.
+
+Missing data:
+Not applicable: a deterministic simulation has no missing values. A non-finite model output raises an error.
+
+Other planned analysis:
+Sensitivity analyses: SA1, every range shrunk to its central half; SA2, eps = 0 (no alpha1-dependent clearance); SA3, eta uniform on [0, 10]; SA4, K log-uniform on [0.1, 10]; SA5, effect thresholds 0.90/1.10 and 0.99/1.01 (reported only). Illustrative reference-point figures (trajectory, bifurcation diagram, dose-responses) are not results.
+
+STEP 7 - OTHER
+
+Context and additional information:
+This is Module 4 of the LC-First project, which tests the hypothesis that the locus coeruleus is the rate controller, not the origin, of Alzheimer's disease progression. Earlier registrations from the same project: the base-rate model, https://osf.io/xb7fy/, and the meta-analysis, https://osf.io/9kb4w/. AI use: I used Claude, Anthropic's AI model, through Claude Code to write the code, derive and machine-check the fixed points and their stability, and draft the plan. Methodological choices were delegated to it with reasons recorded in the config files; by registering I adopt them as mine. The derivations are machine-checked, not human-checked, and the analytic fixed point used by the validation gate was derived by Claude, not by me.

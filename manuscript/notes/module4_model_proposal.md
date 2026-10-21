@@ -1,5 +1,9 @@
 # Module 4 — candidate model structure (PROPOSAL for the researcher)
 
+> **Superseded 2026-10-21.** The implemented model is in
+> `manuscript/derivations/module4_lc_model.md` (changes and reasons: change log of
+> `prereg/dynamics.md`). Kept for the record.
+
 > Written by Claude as a starting point. **No parameter values are given and
 > none should be inferred from this note.** The researcher decides the
 > equations, derives the analytic fixed point by hand (Session 5 gate) and
