@@ -50,8 +50,9 @@ Implementation notes:
 
 ## Module 2 — base-rate model (osf.io/xb7fy)
 
-Run in progress (started 2026-10-15). This section is completed when the run
-ends.
+Run completed 2026-10-22 21:38 UTC ("ALL STAGES COMPLETE", log
+results/logs/real/baserate_run8.log). All results rest on extracted values
+marked `verified: false`; they are provisional.
 
 Notes so far (not departures):
 
@@ -98,3 +99,19 @@ Notes so far (not departures):
    reclaimed while the first NUTS chain was sampling, during a gap in which
    this session was paused by the account's usage limit. The resume reused
    all four saved MLE attempts. Not a departure.
+6. *Robustness rule could not be applied in full (implementation gap, reported,
+   not fixed after the fact).* §8 says a §2 conclusion is robust only if it
+   holds in sensitivity analyses 1–5. The registered code re-evaluates the
+   falsification test under analyses 1–5, but not criterion 2: the
+   cross-validation is run only for the primary design and for analysis 7.
+   So it cannot be shown that the criterion-2 verdict holds in 1–5, and the
+   conclusion is therefore **not** called robust. Re-running the
+   cross-validation under analyses 3–5 would be an addition made after
+   seeing the result. It is left to the researcher; if it is done, it must
+   be labelled as such.
+7. *Whole-band cross-validation (analysis 7): unverified fold fits.* One of 5
+   fold fits had no start passing the convergence test, for B and for C
+   (A: 0 of 5). As §5 prescribes, each used its best start and is reported as
+   unverified. Analysis 7 is shown for transparency only.
+
+**Departures: none.** Every setting, rule and input is as registered.
